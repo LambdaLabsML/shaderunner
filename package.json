@@ -10,6 +10,7 @@
     "package": "plasmo package"
   },
   "dependencies": {
+    "@mozilla/readability": "^0.4.4",
     "plasmo": "0.83.0",
     "react": "18.2.0",
     "react-dom": "18.2.0"
@@ -27,7 +28,6 @@
     "host_permissions": [
       "https://*/*"
     ],
-    "permissions": [
-    ]
+    "permissions": []
   }
 }
