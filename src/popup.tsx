@@ -1,7 +1,26 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { Storage } from "@plasmohq/storage"
+const storage = new Storage()
 
 function IndexPopup() {
-  const [data, setData] = useState("")
+  const [openaikey, setOpenaiKey] = useState('')
+
+  useEffect(() => {
+    async function getKey() {
+      setOpenaiKey(await storage.get('OPENAI_API_KEY'))
+    }
+
+    if (!openaikey)
+      getKey();
+  }, [])
+
+  useEffect(() => {
+    async function setKey() {
+      await storage.set('OPENAI_API_KEY', openaikey)
+    }
+
+    setKey();
+  }, [openaikey])
 
   return (
     <div
@@ -12,11 +31,8 @@ function IndexPopup() {
         width: "300px",
         height: "300px",
       }}>
-      <h1>
-        Welcome to your <a href="https://www.plasmo.com">Plasmo</a> Extension!
-      </h1>
-      <input onChange={(e) => setData(e.target.value)} value={data} />
-      <footer>Crafted by @PlamoHQ</footer>
+      <h1>ShadeRunner</h1>
+      OPENAI_API_KEY: <input onChange={(e) => setOpenaiKey(e.target.value)} value={openaikey} />
     </div>
   )
 }
