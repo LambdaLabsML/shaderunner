@@ -80,6 +80,49 @@ function findSentence(textNodes, sentence_str) {
   return [texts, nodes];
 }
 
+
+function markSentence(texts, nodes) {
+  if (nodes.length !== texts.length) {
+    throw new Error('The length of nodes and texts should be the same.');
+  }
+
+  const backgroundColor = "rgba(255,0,0,0.2)";
+
+  nodes.forEach((node, i) => {
+    const text = texts[i];
+    
+    if (node.nodeType === Node.TEXT_NODE) {
+      const textContent = node.textContent;
+      const index = textContent.indexOf(text);
+      
+      if (index !== -1) {
+        const beforeText = textContent.substring(0, index);
+        const afterText = textContent.substring(index + text.length);
+        
+        if (beforeText) {
+          const beforeSpan = document.createElement('span');
+          beforeSpan.textContent = beforeText;
+          node.parentNode.insertBefore(beforeSpan, node);
+        }
+        
+        const span = document.createElement('span');
+        span.textContent = text;
+        span.style.backgroundColor = backgroundColor; // Set the background color
+        node.parentNode.insertBefore(span, node);
+        
+        if (afterText) {
+          const afterSpan = document.createElement('span');
+          afterSpan.textContent = afterText;
+          node.parentNode.insertBefore(afterSpan, node.nextSibling);
+        }
+        
+        node.parentNode.removeChild(node);
+      }
+    } else {
+      throw new Error(`Node at position ${i} is not a text node.`);
+    }
+  });
+}
 window.addEventListener("load", async () => {
   console.log("1 very new content script loaded")
 
@@ -98,7 +141,9 @@ window.addEventListener("load", async () => {
   console.log(sentences);
 
   // mark sentence
-  console.log(findSentence(textNodes, sentences[5]));
+  const [texts, nodes] = findSentence(textNodes, sentences[5]);
+  console.log(texts, nodes);
+  markSentence(texts, nodes);
 
 
   return;
