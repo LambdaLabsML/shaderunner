@@ -4,7 +4,7 @@ import { Storage } from "@plasmohq/storage"
 import nlp from 'compromise'
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { text } from "stream/consumers";
+import Big from 'big.js';
 
 
 const storage = new Storage()
@@ -138,11 +138,14 @@ function markSentence(texts, nodes) {
 async function compute_embeddings(sentences) {
   const api_key = await storage.get("OPENAI_API_KEY");
 
+  //const modelName = 'text-similarity-davinci-001'
+  const modelName = 'text-embedding-ada-002'
+
   // Compute embeddings
   const vectorStore = await MemoryVectorStore.fromTexts(
     sentences,
     [],
-    new OpenAIEmbeddings({openAIApiKey:api_key})
+    new OpenAIEmbeddings({openAIApiKey:api_key, modelName:modelName})
   );
   const embeddings = {};
   for (let obj of vectorStore.memoryVectors) {
@@ -150,6 +153,52 @@ async function compute_embeddings(sentences) {
   }
 
   return [ vectorStore, embeddings ];
+}
+
+
+function dotProduct(A, B) {
+  if (A.length !== B.length) {
+    throw new Error("Vectors must have the same dimension");
+  }
+  
+  let sum = new Big(0);
+  for (let i = 0; i < A.length; i++) {
+    sum = sum.plus(new Big(A[i]).times(new Big(B[i])));
+  }
+  return sum;
+}
+
+function magnitude(vector) {
+  return new Big(vector.reduce((sum, val) => {
+    const bigVal = new Big(val);
+    return new Big(sum).plus(bigVal.pow(2));
+  }, new Big(0))).sqrt();
+}
+
+function cosineSimilarity(A, B) {
+  if (A.length !== B.length) {
+    throw new Error("Vectors must have the same dimension");
+  }
+  
+  const dotProd = dotProduct(A, B);
+  const magProduct = magnitude(A).times(magnitude(B));
+  
+  return Number(dotProd.div(magProduct).toFixed(10));  // converting to float and limiting decimal places for precision
+}
+
+
+function labelScores(sentenceEmbedding, labelEmbeddings) {
+  return labelEmbeddings.map(embedding => cosineSimilarity(sentenceEmbedding, embedding));
+}
+
+function getPrediction(scores, classes) {
+  let maxIndex = 0;
+  for (let i = 1; i < scores.length; i++) {
+    if (scores[i] > scores[maxIndex]) {
+      maxIndex = i;
+    }
+  }
+  return classes[maxIndex];
 }
 
 
@@ -168,31 +217,48 @@ window.addEventListener("load", async () => {
   console.log(sentences);
 
   // classes to use
-  const classes = ["about a planet", "not about a planet"];
+  //const classes = ["is a sentence", "is a single word"];
+  //const classes = ["cosine"];
+  //const classes = ["math sentence", "normal text"];
+  //const classes = ["name, a person, personal pronouns, person's carrer", "a thing, it"];
+  //const classes = ["time, date, year, month, day", "not mentioning a date or time, no historical data"];
+  //const classes = ["time, date, year, month, day", "not mentioning a date or time, no historical data"];
+  //const classes = ["specific space discovery that is non-biographic", "biography, something that happened on earth"];
+  //const classes = ["", ""];
 
   // compute embeddings of sentences & classes
-  //const [sentenceStore, sentenceEmbeddings] = await compute_embeddings(sentences)
+  const [sentenceStore, sentenceEmbeddings] = await compute_embeddings(sentences)
   const [classStore, classEmbeddings] = await compute_embeddings(classes)
 
   // FOR DEBUGGING
-  //console.log(sentenceStore, sentenceEmbeddings);
-  //console.log(classStore, classEmbeddings);
+  console.log(sentenceStore, sentenceEmbeddings);
+  console.log(classStore, classEmbeddings);
 
   //for (const sentence in sentenceEmbeddings) {
   for (const i in sentences) {
     const sentence = sentences[i];
 
-    // using precomputed embeddings
-    //const embedding = sentenceEmbeddings[sentence].embedding
-    //const closest = (await classStore.similaritySearchVectorWithScore(embedding, k = 1))[0][0].pageContent;
+    //if (i > 15)
+    //  break;
 
-    // using embedding
-    const closest = (await classStore.similaritySearchWithScore(sentence, k = 1))[0]
-    console.log(closest)
+    /*
+    // using precomputed embeddings
+    const embedding = sentenceEmbeddings[sentence].embedding
+    const closest = (await classStore.similaritySearchVectorWithScore(embedding, k = 1))[0][0].pageContent;
+
+    // using sentence
+    //const closest = (await classStore.similaritySearchWithScore(sentence, k = 1))
 
     // apply color if is first class
     if (closest == classes[0]) {
       console.log("marking sentence:", sentence, closest)
+    */
+
+    const scores = labelScores(sentenceEmbeddings[sentence].embedding, classes.map((c) => classEmbeddings[c].embedding));
+    const closest = getPrediction(scores, classes)
+    console.log(scores)
+    if ( closest == classes[0] ) {
+
 
       // get all text nodes
       const textNodes = textNodesUnder(document.body);
