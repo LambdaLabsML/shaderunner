@@ -4,7 +4,6 @@ import { Storage } from "@plasmohq/storage"
 import nlp from 'compromise'
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import Big from 'big.js';
 
 
 const storage = new Storage()
@@ -156,52 +155,6 @@ async function compute_embeddings(sentences) {
 }
 
 
-function dotProduct(A, B) {
-  if (A.length !== B.length) {
-    throw new Error("Vectors must have the same dimension");
-  }
-  
-  let sum = new Big(0);
-  for (let i = 0; i < A.length; i++) {
-    sum = sum.plus(new Big(A[i]).times(new Big(B[i])));
-  }
-  return sum;
-}
-
-function magnitude(vector) {
-  return new Big(vector.reduce((sum, val) => {
-    const bigVal = new Big(val);
-    return new Big(sum).plus(bigVal.pow(2));
-  }, new Big(0))).sqrt();
-}
-
-function cosineSimilarity(A, B) {
-  if (A.length !== B.length) {
-    throw new Error("Vectors must have the same dimension");
-  }
-  
-  const dotProd = dotProduct(A, B);
-  const magProduct = magnitude(A).times(magnitude(B));
-  
-  return Number(dotProd.div(magProduct).toFixed(10));  // converting to float and limiting decimal places for precision
-}
-
-
-function labelScores(sentenceEmbedding, labelEmbeddings) {
-  return labelEmbeddings.map(embedding => cosineSimilarity(sentenceEmbedding, embedding));
-}
-
-function getPrediction(scores, classes) {
-  let maxIndex = 0;
-  for (let i = 1; i < scores.length; i++) {
-    if (scores[i] > scores[maxIndex]) {
-      maxIndex = i;
-    }
-  }
-  return classes[maxIndex];
-}
-
-
 window.addEventListener("load", async () => {
   console.log("1 very new content script loaded")
 
@@ -220,7 +173,7 @@ window.addEventListener("load", async () => {
   //const classes = ["is a sentence", "is a single word"];
   //const classes = ["cosine"];
   //const classes = ["math sentence", "normal text"];
-  //const classes = ["name, a person, personal pronouns, person's carrer", "a thing, it"];
+  const classes = ["name, a person, personal pronouns, person's carrer", "a thing, it"];
   //const classes = ["time, date, year, month, day", "not mentioning a date or time, no historical data"];
   //const classes = ["time, date, year, month, day", "not mentioning a date or time, no historical data"];
   //const classes = ["specific space discovery that is non-biographic", "biography, something that happened on earth"];
@@ -241,7 +194,6 @@ window.addEventListener("load", async () => {
     //if (i > 15)
     //  break;
 
-    /*
     // using precomputed embeddings
     const embedding = sentenceEmbeddings[sentence].embedding
     const closest = (await classStore.similaritySearchVectorWithScore(embedding, k = 1))[0][0].pageContent;
@@ -252,13 +204,6 @@ window.addEventListener("load", async () => {
     // apply color if is first class
     if (closest == classes[0]) {
       console.log("marking sentence:", sentence, closest)
-    */
-
-    const scores = labelScores(sentenceEmbeddings[sentence].embedding, classes.map((c) => classEmbeddings[c].embedding));
-    const closest = getPrediction(scores, classes)
-    console.log(scores)
-    if ( closest == classes[0] ) {
-
 
       // get all text nodes
       const textNodes = textNodesUnder(document.body);
