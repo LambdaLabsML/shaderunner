@@ -1,6 +1,15 @@
 import type { PlasmoCSConfig } from "plasmo"
 const { Readability } = require('@mozilla/readability');
+import { Storage } from "@plasmohq/storage"
 import nlp from 'compromise'
+import { MemoryVectorStore } from "langchain/vectorstores/memory";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { text } from "stream/consumers";
+
+
+const storage = new Storage()
+
+
 
 export const config: PlasmoCSConfig = {
   //matches: ["<all_urls>"],
@@ -123,6 +132,27 @@ function markSentence(texts, nodes) {
     }
   });
 }
+
+
+
+async function compute_embeddings(sentences) {
+  const api_key = await storage.get("OPENAI_API_KEY");
+
+  // Compute embeddings
+  const vectorStore = await MemoryVectorStore.fromTexts(
+    sentences,
+    [],
+    new OpenAIEmbeddings({openAIApiKey:api_key})
+  );
+  const embeddings = {};
+  for (let obj of vectorStore.memoryVectors) {
+    embeddings[obj.content] = obj
+  }
+
+  return [ vectorStore, embeddings ];
+}
+
+
 window.addEventListener("load", async () => {
   console.log("1 very new content script loaded")
 
@@ -132,22 +162,45 @@ window.addEventListener("load", async () => {
   const mainEl = article || document.body;
   const content = mainEl.textContent;
 
-  // get all text nodes
-  const textNodes = textNodesUnder(document.body);
-
   // split to senteces
   const doc = nlp(content)
   const sentences = doc.sentences().out('array')
   console.log(sentences);
 
-  // mark sentence
-  const [texts, nodes] = findSentence(textNodes, sentences[5]);
-  console.log(texts, nodes);
-  markSentence(texts, nodes);
+  // classes to use
+  const classes = ["about a planet", "not about a planet"];
 
+  // compute embeddings of sentences & classes
+  //const [sentenceStore, sentenceEmbeddings] = await compute_embeddings(sentences)
+  const [classStore, classEmbeddings] = await compute_embeddings(classes)
 
-  return;
+  // FOR DEBUGGING
+  //console.log(sentenceStore, sentenceEmbeddings);
+  //console.log(classStore, classEmbeddings);
 
+  //for (const sentence in sentenceEmbeddings) {
+  for (const i in sentences) {
+    const sentence = sentences[i];
 
+    // using precomputed embeddings
+    //const embedding = sentenceEmbeddings[sentence].embedding
+    //const closest = (await classStore.similaritySearchVectorWithScore(embedding, k = 1))[0][0].pageContent;
 
+    // using embedding
+    const closest = (await classStore.similaritySearchWithScore(sentence, k = 1))[0]
+    console.log(closest)
+
+    // apply color if is first class
+    if (closest == classes[0]) {
+      console.log("marking sentence:", sentence, closest)
+
+      // get all text nodes
+      const textNodes = textNodesUnder(document.body);
+
+      // mark sentence
+      const [texts, nodes] = findSentence(textNodes, sentence);
+      markSentence(texts, nodes);
+
+    }
+  }
 })
