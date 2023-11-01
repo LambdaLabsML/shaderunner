@@ -67,7 +67,7 @@ function findSentence(textNodes, sentence_str) {
 
       // we found a word from the sentence
       //nodes.push(node)
-      texts[texts.length-1] += word_sentence
+      texts[texts.length-1] += word_node
       pos_sentence += 1;
 
     }
