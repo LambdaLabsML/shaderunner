@@ -1,11 +1,13 @@
 import type { PlasmoCSConfig } from "plasmo"
 const { Readability } = require('@mozilla/readability');
 import { textNodesUnderElem, findSentence, markSentence  } from './utilDOM'
-import { computeEmbeddings } from './embeddings'
+import { computeEmbeddingsCached, computeEmbeddingsLocal } from './embeddings'
+import { sendToBackground } from "@plasmohq/messaging"
 
 import nlp from 'compromise'
 import plg from 'compromise-paragraphs'
 nlp.plugin(plg)
+
 
 
 export const config: PlasmoCSConfig = {
@@ -38,9 +40,19 @@ window.addEventListener("load", async () => {
   const url = window.location.hostname + window.location.pathname
   console.log("content script loaded for", url)
 
+  // init pinecone
+  /*
+
+  */
+
   // extract main content
   const mainEl = getMainContent(true);
   const splitsData = splitContent(mainEl.textContent, "sentences", url)
+
+  // compute embeddings (uses cache if possible)
+  const splitEmbeddings = await sendToBackground({ name: "embedding", collectionName: url, data: splitsData })
+  console.log(splitEmbeddings);
+  return;
 
   // classes to use
   //const classes = ["is a sentence", "is a single word"];
@@ -65,7 +77,6 @@ window.addEventListener("load", async () => {
   return;
 
   // compute embeddings of sentences & classes
-  const [sentenceStore, sentenceEmbeddings] = await computeEmbeddings(sentences, metadata)
   const [classStore, classEmbeddings] = await computeEmbeddings(classes, [])
 
   // FOR DEBUGGING
