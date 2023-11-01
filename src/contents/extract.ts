@@ -26,7 +26,8 @@ window.addEventListener("load", async () => {
   // split to senteces
   const doc = nlp(content)
   const sentences = doc.sentences().out('array')
-  console.log(sentences);
+  const metadata = sentences.map(() => ({"url": url, "data-type": "sentence"}))
+  return;
 
   // classes to use
   //const classes = ["is a sentence", "is a single word"];
@@ -42,8 +43,8 @@ window.addEventListener("load", async () => {
   //const classes = ["", ""];
 
   // compute embeddings of sentences & classes
-  const [sentenceStore, sentenceEmbeddings] = await computeEmbeddings(sentences)
-  const [classStore, classEmbeddings] = await computeEmbeddings(classes)
+  const [sentenceStore, sentenceEmbeddings] = await computeEmbeddings(sentences, metadata)
+  const [classStore, classEmbeddings] = await computeEmbeddings(classes, [])
 
   // FOR DEBUGGING
   console.log(sentenceStore, sentenceEmbeddings);
