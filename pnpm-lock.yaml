@@ -8,9 +8,15 @@ dependencies:
   '@mozilla/readability':
     specifier: ^0.4.4
     version: 0.4.4
+  '@plasmohq/messaging':
+    specifier: ^0.5.0
+    version: 0.5.0(react@18.2.0)
   '@plasmohq/storage':
     specifier: ^1.8.1
     version: 1.8.1(react@18.2.0)
+  chromadb:
+    specifier: ^1.5.11
+    version: 1.5.11
   compromise:
     specifier: ^14.10.0
     version: 14.10.0
@@ -45,7 +51,7 @@ devDependencies:
     version: 18.2.7
   langchain:
     specifier: ^0.0.176
-    version: 0.0.176(@mozilla/readability@0.4.4)
+    version: 0.0.176(@mozilla/readability@0.4.4)(chromadb@1.5.11)
   prettier:
     specifier: 3.0.3
     version: 3.0.3
@@ -1674,6 +1680,18 @@ packages:
     resolution: {integrity: sha512-P75g48dqOGneJ+n0AcqnLE/TYflcaPc3B7h6EopnCBBYUDnCNBMwYmKAkaf5pnhsEB0ybPS6TU1C2DTGfqaW7A==}
     dev: false
 
+  /@plasmohq/messaging@0.5.0(react@18.2.0):
+    resolution: {integrity: sha512-cYF750rguJDvnyJls2IHVAJTPVFtCEaMHMhnRsENfGaNqcRfXVfzwBGOABPg3k1iSBWBYLySh3Ht7QvFSnB3RQ==}
+    peerDependencies:
+      react: ^16.8.6 || ^17 || ^18
+    peerDependenciesMeta:
+      react:
+        optional: true
+    dependencies:
+      nanoid: 4.0.2
+      react: 18.2.0
+    dev: false
+
   /@plasmohq/parcel-bundler@0.5.5:
     resolution: {integrity: sha512-QCMmmfic514CfdXMJ7JMWUnqDzIHKVKyYeqPpUDsXON6JvA1yTmO5mEQSls8+5u/HpocP9QmTskQOHu3RCNX9A==}
     engines: {node: '>= 16.0.0', parcel: '>= 2.7.0'}
@@ -2929,6 +2947,22 @@ packages:
     resolution: {integrity: sha512-jJ0bqzaylmJtVnNgzTeSOs8DPavpbYgEr/b0YL8/2GO3xJEhInFmhKMUnEJQjZumK7KXGFhUy89PrsJWlakBVg==}
     dev: false
 
+  /chromadb@1.5.11:
+    resolution: {integrity: sha512-mIg0DtWZFsf4hl05orRixIw3lBYKUc4AGydbUQVwd7sjwaCsgP1j0qHwYxoopj2H1L7yc8OUyFKhi79MoFMoMQ==}
+    engines: {node: '>=14.17.0'}
+    peerDependencies:
+      cohere-ai: ^5.0.0 || ^6.0.0
+      openai: ^3.0.0 || ^4.0.0
+    peerDependenciesMeta:
+      cohere-ai:
+        optional: true
+      openai:
+        optional: true
+    dependencies:
+      isomorphic-fetch: 3.0.0
+    transitivePeerDependencies:
+      - encoding
+
   /chrome-trace-event@1.0.3:
     resolution: {integrity: sha512-p3KULyQg4S7NIHixdwbGX+nFHkoBiA4YQmyWtjb8XngSKV124nJmRysgAeujbUVb15vh+RvFUfCPqU7rXk+hZg==}
     engines: {node: '>=6.0'}
@@ -3996,6 +4030,14 @@ packages:
     resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
     dev: false
 
+  /isomorphic-fetch@3.0.0:
+    resolution: {integrity: sha512-qvUtwJ3j6qwsF3jLxkZ72qCgjMysPzDfeV240JHiGZsANBYd+EEuu35v7dfrJ9Up0Ak07D7GGSkGhCHTqg/5wA==}
+    dependencies:
+      node-fetch: 2.7.0
+      whatwg-fetch: 3.6.19
+    transitivePeerDependencies:
+      - encoding
+
   /joycon@3.1.1:
     resolution: {integrity: sha512-34wB/Y7MW7bzjKRjUKTa46I2Z7eV62Rkhva+KkopW7Qvv/OSWBqvkSY7vusOPrNuZcUG3tApvdVgNB8POj3SPw==}
     engines: {node: '>=10'}
@@ -4062,7 +4104,7 @@ packages:
       json-buffer: 3.0.1
     dev: false
 
-  /langchain@0.0.176(@mozilla/readability@0.4.4):
+  /langchain@0.0.176(@mozilla/readability@0.4.4)(chromadb@1.5.11):
     resolution: {integrity: sha512-yu5CYzrEK8aLiZE5wux1E2TDlX9HiMCJ/MupOAmbUU7VBaOGL/iaaqT+zQ2/BrRIUaiclqUZAV/My3ViJBehjQ==}
     engines: {node: '>=18'}
     peerDependencies:
@@ -4361,6 +4403,7 @@ packages:
       ansi-styles: 5.2.0
       binary-extensions: 2.2.0
       camelcase: 6.3.0
+      chromadb: 1.5.11
       decamelize: 1.2.0
       expr-eval: 2.0.2
       flat: 5.0.2
@@ -4890,6 +4933,12 @@ packages:
     hasBin: true
     dev: false
 
+  /nanoid@4.0.2:
+    resolution: {integrity: sha512-7ZtY5KTCNheRGfEFxnedV5zFiORN1+Y1N6zvPTnHQd8ENUvfaDBeuJDZb2bN/oXwXxu3qkTXDzy57W5vAmDTBw==}
+    engines: {node: ^14 || ^16 || >=18}
+    hasBin: true
+    dev: false
+
   /napi-build-utils@1.0.2:
     resolution: {integrity: sha512-ONmRUqK7zj7DWX0D9ADe03wbwOBZxNAfF20PlGfCWQcD3+/MakShIHrMqx9YwPTfxDdF1zLeL+RGZiR9kGMLdg==}
     dev: false
@@ -4949,7 +4998,6 @@ packages:
         optional: true
     dependencies:
       whatwg-url: 5.0.0
-    dev: true
 
   /node-gyp-build-optional-packages@5.0.6:
     resolution: {integrity: sha512-2ZJErHG4du9G3/8IWl/l9Bp5BBFy63rno5GVmjQijvTuUZKsl6g8RB4KH/x3NLcV5ZBb4GsXmAuTYr6dRml3Gw==}
@@ -5913,7 +5961,6 @@ packages:
 
   /tr46@0.0.3:
     resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
-    dev: true
 
   /tr46@1.0.1:
     resolution: {integrity: sha512-dTpowEjclQ7Kgx5SdBkqRzVhERQXov8/l9Ft9dVM9fmg0W0KQSVaXX9T4i6twCPNtYiZM53lpSSUAwJbFPOHxA==}
@@ -6100,18 +6147,19 @@ packages:
 
   /webidl-conversions@3.0.1:
     resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
-    dev: true
 
   /webidl-conversions@4.0.2:
     resolution: {integrity: sha512-YQ+BmxuTgd6UXZW3+ICGfyqRyHXVlD5GtQr5+qjiNW7bF0cqrzX500HVXPBOvgXb5YnzDd+h0zqyv61KUD7+Sg==}
     dev: false
+
+  /whatwg-fetch@3.6.19:
+    resolution: {integrity: sha512-d67JP4dHSbm2TrpFj8AbO8DnL1JXL5J9u0Kq2xW6d0TFDbCA3Muhdt8orXC22utleTVj7Prqt82baN6RBvnEgw==}
 
   /whatwg-url@5.0.0:
     resolution: {integrity: sha512-saE57nupxk6v3HY35+jzBwYa0rKSy0XR8JSxZPwgLr7ys0IBzhGviA1/TUGJLmSVqs8pb9AnvICXEuOHLprYTw==}
     dependencies:
       tr46: 0.0.3
       webidl-conversions: 3.0.1
-    dev: true
 
   /whatwg-url@7.1.0:
     resolution: {integrity: sha512-WUu7Rg1DroM7oQvGWfOiAK21n74Gg+T4elXEQYkOhtyLeWiJFoOGLXPKI/9gzIie9CtwVLm8wtw6YJdKyxSjeg==}
