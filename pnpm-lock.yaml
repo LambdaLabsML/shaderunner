@@ -14,6 +14,9 @@ dependencies:
   compromise:
     specifier: ^14.10.0
     version: 14.10.0
+  compromise-paragraphs:
+    specifier: ^0.1.0
+    version: 0.1.0(compromise@14.10.0)
   plasmo:
     specifier: 0.83.0
     version: 0.83.0(react-dom@18.2.0)(react@18.2.0)
@@ -3022,6 +3025,14 @@ packages:
   /commander@7.2.0:
     resolution: {integrity: sha512-QrWXB+ZQSVPmIWIhtEO9H+gwHaMGYiF5ChvoJ+K9ZGHG/sVsa6yiesAD1GC/x46sET00Xlwo1u49RVVVzvcSkw==}
     engines: {node: '>= 10'}
+    dev: false
+
+  /compromise-paragraphs@0.1.0(compromise@14.10.0):
+    resolution: {integrity: sha512-aeZnA6X5K6aJRo699zCRlAxbKHOXTmFEIzWl/VTHHmeBIIpXFScza1ZwmV739a/wuotDdXZmVfnmE9ZTdpN3ow==}
+    peerDependencies:
+      compromise: '>=14.0.0'
+    dependencies:
+      compromise: 14.10.0
     dev: false
 
   /compromise@14.10.0:
