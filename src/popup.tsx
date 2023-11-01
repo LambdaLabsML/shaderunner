@@ -1,26 +1,7 @@
-import { useEffect, useState } from "react"
-import { Storage } from "@plasmohq/storage"
-const storage = new Storage()
+import { useStorage } from "@plasmohq/storage/hook"
 
 function IndexPopup() {
-  const [openaikey, setOpenaiKey] = useState('')
-
-  useEffect(() => {
-    async function getKey() {
-      setOpenaiKey(await storage.get('OPENAI_API_KEY'))
-    }
-
-    if (!openaikey)
-      getKey();
-  }, [])
-
-  useEffect(() => {
-    async function setKey() {
-      await storage.set('OPENAI_API_KEY', openaikey)
-    }
-
-    setKey();
-  }, [openaikey])
+  const [openaikey, setOpenaiKey] = useStorage('OPENAI_API_KEY', (v) => v === undefined ? "": v)
 
   return (
     <div
