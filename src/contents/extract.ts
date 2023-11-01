@@ -1,9 +1,11 @@
 import type { PlasmoCSConfig } from "plasmo"
 const { Readability } = require('@mozilla/readability');
-import nlp from 'compromise'
 import { textNodesUnderElem, findSentence, markSentence  } from './utilDOM'
 import { computeEmbeddings } from './embeddings'
 
+import nlp from 'compromise'
+import plg from 'compromise-paragraphs'
+nlp.plugin(plg)
 
 
 export const config: PlasmoCSConfig = {
@@ -13,21 +15,32 @@ export const config: PlasmoCSConfig = {
 }
 
 
+// get main content parent element of page
+const getMainContent = (clone = true) => {
+  const reader = new Readability(document.cloneNode(clone));
+  const article = reader.parse()
+  return article || document.body;
+}
+
+
+// split content into paragraphs, sentences or words
+const splitContent = (content, type, url) => {
+  const doc = nlp(content)
+
+  const splits = (type == "sentences") ? doc.sentences().out('array') : (type == "paragraphs") ? doc.paragraphs().map((p) => p.text()).views : (type == "terms") ? doc.terms().out('array') : new Error(`Cannot split into ${type}. (Not known)`);
+  const metadata = splits.map(() => ({"url": url, "data-type": type}))
+
+  return [ splits, metadata ];
+}
+
+
 window.addEventListener("load", async () => {
-  console.log("content script loaded")
-  return;
+  const url = window.location.hostname + window.location.pathname
+  console.log("content script loaded for", url)
 
   // extract main content
-  const reader = new Readability(document.cloneNode(true));
-  const article = reader.parse()
-  const mainEl = article || document.body;
-  const content = mainEl.textContent;
-
-  // split to senteces
-  const doc = nlp(content)
-  const sentences = doc.sentences().out('array')
-  const metadata = sentences.map(() => ({"url": url, "data-type": "sentence"}))
-  return;
+  const mainEl = getMainContent(true);
+  const splitsData = splitContent(mainEl.textContent, "sentences", url)
 
   // classes to use
   //const classes = ["is a sentence", "is a single word"];
@@ -41,6 +54,15 @@ window.addEventListener("load", async () => {
   const classes2 = [["actual location", "place"], ["historic", "date"]]
   //const classes = ["job title"]//, "normal text"]
   //const classes = ["", ""];
+
+  const [sentences, metadata ] = splitContent(mainEl.textContent, "paragraphs", url)
+  const sentence = sentences[5];
+  console.log(sentence);
+  const textNodes = textNodesUnderElem(document.body);
+  const [texts, nodes] = findSentence(textNodes, sentence);
+  //console.log(texts)
+  markSentence(texts, nodes);
+  return;
 
   // compute embeddings of sentences & classes
   const [sentenceStore, sentenceEmbeddings] = await computeEmbeddings(sentences, metadata)
