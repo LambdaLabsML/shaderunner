@@ -49,20 +49,25 @@ function findSentence(textNodes, sentence_str) {
 
     // otherwise check equalness of all succeeding words
     for (let j = 1; pos_sentence < sentence.length && wordIndex + j < textContent.length; j++) {
-      const word = sentence[pos_sentence]
+      const word_sentence = sentence[pos_sentence]
+      const word_node = textContent[wordIndex + j]
 
       // if the next word of the node differs from the sentence, we haven't found the actual sentence
       // i.e. restart search with next node
-      if (word != textContent[wordIndex + j]) {
-        pos_sentence = 0;
-        nodes = [];
-        texts = [];
-        continue textNodeLoop;
+      // (also, if we would skip because of a whitespace, just skip it)
+      if (word_sentence != word_node && !(word_sentence == "-" && word_node == "—")) {
+        if (word_node.trim().length > 0) {
+          pos_sentence = 0;
+          nodes = [];
+          texts = [];
+          continue textNodeLoop;
+        }
+        continue;
       }
 
       // we found a word from the sentence
       //nodes.push(node)
-      texts[texts.length-1] += word
+      texts[texts.length-1] += word_sentence
       pos_sentence += 1;
 
     }
