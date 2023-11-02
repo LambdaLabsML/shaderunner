@@ -1,0 +1,41 @@
+//$primary-color: fade-out(#8136e2, 0.6);
+$primary-color: #8136e2;
+
+.ShadeRunner-Bar {
+    border-radius: 20px;
+    border: 3px solid $primary-color;
+    background: transparent;
+    width: 100%;
+    //padding: 0.5em 1.5em 0.5em;
+    padding: 0.5em;
+    display: flex;
+    flex-direction: column;
+    margin: 2em 0;
+
+    h1.title {
+        color: $primary-color;
+        margin-top: -1.75em;
+        position: absolute;
+        font-size: 125%;
+        margin-left: 0.5em;
+    }
+
+    textarea {
+        border: none;
+        font-size: 120%;
+        background: white;
+        padding: 1em;
+        border-radius: 10px;
+        color: $primary-color;
+        border:1px solid $primary-color;
+
+        &::placeholder {
+            color: $primary-color;
+        }
+
+        &:focus {
+            outline: none !important;
+            box-shadow: 0 0 10px #719ECE;
+        }
+    }
+}
