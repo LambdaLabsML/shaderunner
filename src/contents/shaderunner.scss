@@ -46,17 +46,44 @@ $primary-color: #8136e2;
 
     @keyframes pulse-animation {
         0% {
-          opacity: 0.2;
+            opacity: 0.2;
         }
+        
         100% {
-          opacity: 0.75;
+            opacity: 0.75;
         }
-      }
+    }
+
+    @keyframes next-message {
+        0% {
+            opacity: 1.0;
+            margin-top: 2em;
+        }
+        
+        100% {
+            opacity: 0.5;
+            margin-top: 0em;
+        }
+    }
 
     div.status {
         //color: mix($primary-color, black, 20%);
         color: black;
         font-size: 110%;
         padding: 0.5em;
+        margin: 0.5em 0;
+    }
+
+    p.status_msg {
+        animation: next-message 4s;
+        opacity: 0.5;
+        margin-top: 0em;
+        margin-bottom: 0em;
+    }
+
+    p.status_msg.processing:last-of-type {
+        animation: none;
+        opacity: 1.0;
+        margin-top: 2em;
     }
 }
