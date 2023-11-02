@@ -109,7 +109,6 @@ const ShadeRunnerBar = () => {
         return newStatus;
     })
 
-
     const onEnterPress = async (ev) => {
       if (ev.keyCode == 13 && ev.shiftKey == false) {
         ev.preventDefault(); 
@@ -122,27 +121,24 @@ const ShadeRunnerBar = () => {
         let status_msg = statusMsg.length;
 
 
-        const classes = await sendToBackground({ name: "query2classes", query: highlightQuery })
-        console.log(classes)
-
-        return;
+        // ask for classes
+        statusAdd(MSG_QUERY2CLASS.random())
+        const classes = await sendToBackground({ name: "query2classes", query: highlightQuery, url: url, title: document.title })
+        statusAdd("Positive Class: " + classes["classes_plus"].join(", "))
+        statusAdd("Negative Class: " + classes["classes_minus"].join(", "))
+        statusAppend(" done", status_msg+0)
 
         // extract main content & generate splits
         statusAdd(MSG_CONTENT.random())
         console.log(status_msg);
         const mainEl = getMainContent(true);
         const splitsData = splitContent(mainEl.textContent, mode, url)
-        statusAppend(" done", status_msg+0)
+        statusAppend(" done", status_msg+1)
 
         // retrieve embedding
         statusAdd(MSG_EMBED.random())
         console.log(status_msg);
         const splitEmbeddings = (await sendToBackground({ name: "embedding", collectionName: url, data: splitsData })).embeddings
-        statusAppend(" done", status_msg+1)
-
-        // ask for classes
-        statusAdd(MSG_QUERY2CLASS.random())
-        const classes = (await sendToBackground({ name: "query2classes", query: highlightQuery })).embeddings
         statusAppend(" done", status_msg+2)
 
         // mark closest sentences
