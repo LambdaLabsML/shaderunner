@@ -53,6 +53,15 @@ Thought: The page is about political events in 2021, the user is looking for spe
 Positive Class Topics: October 2021 Election Results, Political Decisions October 2021, Legislation Passed in October 2021, Summits and Meetings October 2021, Government Changes in October 2021, Policy Changes October 2021, International Relations in October 2021
 Negative Class Topics: Political Events October 2020, October 2019 Government Policies, Summits October 2018, Elections Results October 2022, Legislation Updates October 2017, Political Landscape October 2016, International Agreements October 2023
 
+# Training Example
+URL: en.wikipedia.org/wiki/Scientific_method
+Title: Scientific method - Wikipedia
+Query: Software Installation Instructions
+Thought: Wikipedia article is about research techniques, but the user asked for installation instructions. I should give no positive classes here.
+Positive Class Topics: 
+Negative Class Topics: anything
+
+
 # Incoming User Request
 URL: ${url}
 Page title: ${title}
