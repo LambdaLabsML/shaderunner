@@ -7,9 +7,73 @@ import { textNodesUnderElem, findText, markSentence, findMainContent  } from './
 import { computeEmbeddingsLocal } from './embeddings'
 import { sendToBackground } from "@plasmohq/messaging"
 import { useStorage } from "@plasmohq/storage/hook";
+//import { Histogram } from "./histogram";
 
-const EPS = 0.05;
+//const EPS = 0.05;
+const EPS = 0.025;
 
+import React from 'react';
+import { Bar } from 'react-chartjs-2';
+import 'chart.js/auto';
+
+const Histogram = ({ scoresA, scoresB }) => {
+  const numBins = 100;
+  let binsA = new Array(numBins).fill(0);
+  let binsB = new Array(numBins).fill(0);
+  const binSize = 1 / numBins;
+
+  if (!scoresA) return "";
+
+  const calculateBin = (score) => Math.floor(score / binSize);
+
+  scoresA.forEach(score => {
+    if (score >= 0 && score <= 1) {
+      binsA[calculateBin(score)]++;
+    }
+  });
+
+  scoresB.forEach(score => {
+    if (score >= 0 && score <= 1) {
+      binsB[calculateBin(score)]++;
+    }
+  });
+
+  const data = {
+    labels: binsA.map((_, index) => `${(index * binSize).toFixed(2)} - ${((index + 1) * binSize).toFixed(2)}`),
+    datasets: [
+      {
+        label: 'Scores A',
+        data: binsA,
+        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+        borderColor: 'rgba(255, 99, 132, 1)',
+        borderWidth: 1,
+      },
+      {
+        label: 'Scores B',
+        data: binsB,
+        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const options = {
+    indexAxis: 'x',
+    scales: {
+      y: {
+        beginAtZero: true,
+      },
+    },
+    plugins: {
+      legend: {
+        display: true,
+      },
+    },
+  };
+
+  return <Bar data={data} options={options} />;
+};
  
 // where to place the element
 export const getInlineAnchor: PlasmoGetInlineAnchor = async () => findMainContent()
@@ -36,8 +100,8 @@ export const getStyle: PlasmoGetStyle = () => {
 
 
 // let arrays have a random sample method
-Array.prototype.random = function () {
-  return this[Math.floor((Math.random()*this.length))];
+const random = function (A) {
+  return A[Math.floor((Math.random()*A.length))];
 }
 
 // messages
@@ -101,14 +165,15 @@ const MSG_QUERY2CLASS = [
 // the actual shaderunner bar
 const ShadeRunnerBar = () => {
 
-
     const [ highlightQuery, setHighlightQuery ] = useState("");
     const [ statusMsg, setStatusMsg ] = useState([]);
     const [ isThinking, setIsThinking ] = useState(false);
     const [ isActiveOn, setIsActiveOn ] = useStorage("isActiveOn", []);
+    const [ scores, setScores ] = useState([]);
 
     // show only when active
     if (!isActiveOn.includes(window.location.hostname)) return "";
+
 
     const statusAdd = (msg) => setStatusMsg((old) => [...old, msg]);
     const statusClear = () => setStatusMsg([]);
@@ -131,7 +196,7 @@ const ShadeRunnerBar = () => {
 
 
         // ask for classes
-        statusAdd(MSG_QUERY2CLASS.random())
+        statusAdd(random(MSG_QUERY2CLASS))
         const classes = await sendToBackground({ name: "query2classes", query: highlightQuery, url: url, title: document.title })
         statusAdd( ( <div className="indent"><b>Positive Class:</b> {classes["classes_plus"].join(", ")} </div> ) )
         statusAdd( ( <div className="indent"><b>Negative Class:</b> {classes["classes_minus"].join(", ")} </div> ) )
@@ -140,20 +205,20 @@ const ShadeRunnerBar = () => {
         status_msg += 4
 
         // extract main content & generate splits
-        statusAdd(MSG_CONTENT.random())
+        statusAdd(random(MSG_CONTENT))
         const mainEl = getMainContent(true);
         const [splits, metadata] = splitContent(mainEl.textContent, mode, url)
         statusAppend(" done", status_msg)
         status_msg++
 
         // retrieve embedding
-        statusAdd(MSG_EMBED.random())
+        statusAdd(random(MSG_EMBED))
         const splitEmbeddings = (await sendToBackground({ name: "embedding", collectionName: url, data: [splits, metadata]})).embeddings
         statusAppend(" done", status_msg)
         status_msg++
 
         // compute embeddings of classes
-        statusAdd(MSG_EMBED.random())
+        statusAdd(random(MSG_EMBED))
         const allclasses = [...classes["classes_plus"], ...classes["classes_minus"]]
         const [classStore, classEmbeddings] = await computeEmbeddingsLocal(allclasses, [])
         statusAppend(" done", status_msg)
@@ -161,6 +226,8 @@ const ShadeRunnerBar = () => {
 
         // mark sentences based on similarity
         statusAdd("Done. See below.")
+        let scores_plus = [];
+        let scores_minus = [];
         for (const i in splits) {
           const split = splits[i];
 
@@ -171,9 +238,13 @@ const ShadeRunnerBar = () => {
           const score_plus = classes["classes_plus"] ? closest.filter((c) => classes["classes_plus"].includes(c[0].pageContent)).reduce((a, c) => Math.max(a, c[1]), 0) : 0
           const score_minus = classes["classes_minus"] ? closest.filter((c) => classes["classes_minus"].includes(c[0].pageContent)).reduce((a, c) =>  Math.max(a, c[1]), 0) : 0
 
+          scores_plus.push(score_plus);
+          scores_minus.push(score_minus);
+
           // ignore anything that is not distinguishable
+          //if (score_plus < MIN_CLASS_EPS || Math.abs(score_plus - score_minus) < EPS) {
           if (Math.abs(score_plus - score_minus) < EPS) {
-            console.log("skipping")
+            console.log("skipping", split, score_plus, score_minus)
             continue
           }
 
@@ -187,9 +258,12 @@ const ShadeRunnerBar = () => {
             // mark sentence
             const [texts, nodes] = findText(textNodes, split);
             markSentence(texts, nodes);
+          } else {
+            console.log("reject", split, score_plus, score_minus)
           }
         }
 
+        setScores([scores_plus, scores_minus])
         setIsThinking(false);
       }
     }
@@ -213,6 +287,7 @@ const ShadeRunnerBar = () => {
         rows="4"
       />
       {statusMsg.length ? statusHtml : ""}
+      {scores.length ? ( <Histogram scoresA={scores[0]} scoresB={scores[1]} /> ) : ""}
     </div>
 }
 
