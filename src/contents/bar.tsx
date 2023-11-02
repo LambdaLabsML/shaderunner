@@ -6,7 +6,7 @@ import { findText, getMainContent, splitContent } from './extract'
 import { textNodesUnderElem, findText, markSentence, findMainContent  } from './utilDOM'
 import { computeEmbeddingsLocal } from './embeddings'
 import { sendToBackground } from "@plasmohq/messaging"
-
+import { useStorage } from "@plasmohq/storage/hook";
 
 const EPS = 0.05;
 
@@ -100,9 +100,15 @@ const MSG_QUERY2CLASS = [
 
 // the actual shaderunner bar
 const ShadeRunnerBar = () => {
+
+
     const [ highlightQuery, setHighlightQuery ] = useState("");
     const [ statusMsg, setStatusMsg ] = useState([]);
     const [ isThinking, setIsThinking ] = useState(false);
+    const [ isActiveOn, setIsActiveOn ] = useStorage("isActiveOn", []);
+
+    // show only when active
+    if (!isActiveOn.includes(window.location.hostname)) return "";
 
     const statusAdd = (msg) => setStatusMsg((old) => [...old, msg]);
     const statusClear = () => setStatusMsg([]);
