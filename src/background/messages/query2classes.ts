@@ -13,14 +13,14 @@ function parseInput(input) {
       // Check for the presence of "Negative Class:"
 
       if (line.includes('Though:')) {
-        line = line.replace('Thought', '').trim();
+        line = line.replace('Thought:', '').trim();
         return line
       } else if (line.includes('Positive Class Topics:')) {
-        line = line.replace('Positive Class Topics', '').trim();
-        return line.split(',').map(part => part.trim());
+        line = line.replace('Positive Class Topics:', '').trim();
+        return line ? line.split(',').map(part => part.trim()) : [];
       } else if (line.includes('Negative Class Topics:')) {
         line = line.replace('Negative Class Topics:', '').trim();
-        return line.split(',').map(part => part.trim());
+        return line ? line.split(',').map(part => part.trim()) : [];
       }
       return line.trim()
       
@@ -78,7 +78,6 @@ Thought:`;
         "classes_minus": parsed[2]
     }
 }
-
 
 
 

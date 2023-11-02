@@ -162,10 +162,8 @@ const ShadeRunnerBar = () => {
           const embedding = splitEmbeddings[split];
           const closest = (await classStore.similaritySearchVectorWithScore(embedding, k = allclasses.length));
 
-          const score_plus = closest.filter((c) => classes["classes_plus"].includes(c[0].pageContent)).reduce((a, c) => a * c[1], 1)
-          const score_minus = closest.filter((c) => classes["classes_minus"].includes(c[0].pageContent)).reduce((a, c) => a * c[1], 1)
-
-          console.log("scores", score_plus, score_minus)
+          const score_plus = classes["classes_plus"] ? closest.filter((c) => classes["classes_plus"].includes(c[0].pageContent)).reduce((a, c) => a * c[1], 1) : 0
+          const score_minus = classes["classes_minus"] ? closest.filter((c) => classes["classes_minus"].includes(c[0].pageContent)).reduce((a, c) => a * c[1], 1) : 0
 
           // apply color if is first class
           if (score_plus > score_minus) {
