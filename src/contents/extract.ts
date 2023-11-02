@@ -10,18 +10,19 @@ nlp.plugin(plg)
 
 
 
+/*
 export const config: PlasmoCSConfig = {
   //matches: ["<all_urls>"],
   matches: ["https://en.wikipedia.org/*"],
   all_frames: true
 }
+*/
 
 
 // get main content parent element of page
 const getMainContent = (clone = true) => {
   const reader = new Readability(clone ? document.cloneNode(true) : document);
   const article = reader.parse()
-  console.log(article);
   return article || document.body;
 }
 
@@ -37,6 +38,7 @@ const splitContent = (content, type, url) => {
 }
 
 
+/*
 window.addEventListener("load", async () => {
   const url = window.location.hostname + window.location.pathname
   console.log("content script loaded for", url)
@@ -83,3 +85,6 @@ window.addEventListener("load", async () => {
     }
   }
 })
+*/
+
+export { getMainContent, splitContent }
