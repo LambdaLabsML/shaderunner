@@ -124,28 +124,31 @@ const ShadeRunnerBar = () => {
         // ask for classes
         statusAdd(MSG_QUERY2CLASS.random())
         const classes = await sendToBackground({ name: "query2classes", query: highlightQuery, url: url, title: document.title })
-        statusAdd("Positive Class: " + classes["classes_plus"].join(", "))
-        statusAdd("Negative Class: " + classes["classes_minus"].join(", "))
-        statusAppend(" done", status_msg+0)
+        statusAdd( ( <span><b>Positive Class:</b> {classes["classes_plus"].join(", ")} </span> ) )
+        statusAdd( ( <span><b>Negative Class:</b> {classes["classes_minus"].join(", ")} </span> ) )
+        statusAdd( ( <span><b>Thought:</b> {classes["thought"]} </span> ) )
+        statusAppend(" done", status_msg)
+        status_msg += 4
 
         // extract main content & generate splits
         statusAdd(MSG_CONTENT.random())
-        console.log(status_msg);
         const mainEl = getMainContent(true);
         const [splits, metadata] = splitContent(mainEl.textContent, mode, url)
-        statusAppend(" done", status_msg+1)
+        statusAppend(" done", status_msg)
+        status_msg++
 
         // retrieve embedding
         statusAdd(MSG_EMBED.random())
-        console.log(status_msg);
         const splitEmbeddings = (await sendToBackground({ name: "embedding", collectionName: url, data: [splits, metadata]})).embeddings
-        statusAppend(" done", status_msg+2)
+        statusAppend(" done", status_msg)
+        status_msg++
 
         // compute embeddings of classes
         statusAdd(MSG_EMBED.random())
         const allclasses = [...classes["classes_plus"], ...classes["classes_minus"]]
         const [classStore, classEmbeddings] = await computeEmbeddingsLocal(allclasses, [])
-        statusAppend(" done", status_msg+3)
+        statusAppend(" done", status_msg)
+        status_msg++
 
         // mark sentences based on similarity
         statusAdd("Done. See below.")

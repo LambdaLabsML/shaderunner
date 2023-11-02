@@ -11,13 +11,19 @@ function parseInput(input) {
     // Process each line
     const output = lines.map(line => {
       // Check for the presence of "Negative Class:"
-      if (line.includes('Negative Class Topics:')) {
-        // Remove the "Negative Class:" part and trim the remaining string
+
+      if (line.includes('Though:')) {
+        line = line.replace('Thought', '').trim();
+        return line
+      } else if (line.includes('Positive Class Topics:')) {
+        line = line.replace('Positive Class Topics', '').trim();
+        return line.split(',').map(part => part.trim());
+      } else if (line.includes('Negative Class Topics:')) {
         line = line.replace('Negative Class Topics:', '').trim();
+        return line.split(',').map(part => part.trim());
       }
+      return line.trim()
       
-      // Split the line by commas and trim each resulting string
-      return line.split(',').map(part => part.trim());
     });
     
     return output;
@@ -31,7 +37,7 @@ const llm2classes = async (url, title, query) => {
     const api_key = await storage.get("OPENAI_API_KEY");
     const llm = new OpenAI({
         openAIApiKey: api_key,
-        temperature: 0.9,
+        temperature: 0.0,
     });
 
 
@@ -40,31 +46,35 @@ To do that we need two classes of topics that we can use to classify all sentenc
 I.e. we suceeed if any topic in positive classs is nearer than any other topic of the negative class.
 
 # Training Example
-URL: www.techgamenews.com/latest-updates
-Page Title: Latest in Tech & Gaming | Today's Technology and Gaming News
-Query: What's new in technology and gaming?
-Positive Class Topics: Artificial Intelligence, Virtual Reality, Cybersecurity, Blockchain, Console Releases, eSports, Game Development
-Negative Class Topics: Horticulture, Medieval History, Knitting, Corporate Law, Space Weather, Deep Sea Biology, Sand Sculpture
+URL: www.spacefrontiernews.com/latest-discoveries
+Title: "Latest Discoveries in Space Exploration - What's Out There?"
+Query: What's new in space exploration?
+Thought: The page is about discoveries, the user seems to be only interested about the most recent advancements.
+Positive Class Topics: Recent Satellite Launches, New Space Probes, Latest Findings from Mars, Current Astronomical Phenomena, Updates on Space Telescopes, Active Space Missions, Newly Discovered Exoplanets
+Negative Class Topics: Historical Space Missions, General Astronomy, Sci-Fi Movies and Books, Celestial Events from Previous Years, Discontinued Space Programs, General Physics, Famous Astronauts from History
 
 # Training Example
-URL: www.financetrendwatcher.com/market-insights
-Page Title: Finance & Economy Trends | Market Insights & Theories
-Query: Trends in finance and new economic theories
-Positive Class Topics: Financial Markets, Behavioral Economics, Investment Strategies, Fintech Innovations, Global Trade, Monetary Policy, Economic Indicators
-Negative Class Topics: Paleontology, Astrology, Amateur Radio, Ice Sculpting, Paranormal Investigations, Sitcom Recaps, Exotic Pets
+URL: www.globalpoliticstoday.com/october-2021-summary
+Title: Major Political Events and Changes - 2021 Roundup
+Query: What were the major political events in October 2021?
+Thought: The page is about political events in 2021, the user is looking for specific information related to October 2021, indicating a need for information that is both topically and temporally specific.
+Positive Class Topics: October 2021 Election Results, Political Decisions October 2021, Legislation Passed in October 2021, Summits and Meetings October 2021, Government Changes in October 2021, Policy Changes October 2021, International Relations in October 2021
+Negative Class Topics: Political Events October 2020, October 2019 Government Policies, Summits October 2018, Elections Results October 2022, Legislation Updates October 2017, Political Landscape October 2016, International Agreements October 2023
 
 # Incoming User Request
 URL: ${url}
 Page title: ${title}
-user: ${query}
-Positive Class Topics:`;
+Query: ${query}
+Thought:`;
 
     const llmResult = await llm.predict(PROMPT);
+    console.log(llmResult)
     const parsed = parseInput(llmResult)
 
     return {
-        "classes_plus": parsed[0],
-        "classes_minus": parsed[1]
+        "thought": parsed[0],
+        "classes_plus": parsed[1],
+        "classes_minus": parsed[2]
     }
 }
 
