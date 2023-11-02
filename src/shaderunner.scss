@@ -38,4 +38,25 @@ $primary-color: #8136e2;
             box-shadow: 0 0 10px #719ECE;
         }
     }
+
+    .thinking_logo {
+        opacity: 0.2;
+        animation: pulse-animation 1s infinite alternate;
+    }
+
+    @keyframes pulse-animation {
+        0% {
+          opacity: 0.2;
+        }
+        100% {
+          opacity: 0.75;
+        }
+      }
+
+    div.status {
+        //color: mix($primary-color, black, 20%);
+        color: black;
+        font-size: 110%;
+        padding: 0.5em;
+    }
 }
