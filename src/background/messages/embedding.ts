@@ -8,6 +8,7 @@ import { ChromaClient } from "chromadb";
 
 const modelName = 'text-embedding-ada-002'
 const storage = new Storage()
+const chromaclient = new ChromaClient({fetchOptions:{anonymized_telemetry: false}})
 
 
 
@@ -36,13 +37,12 @@ function simpleHash(inputString) {
 async function computeEmbeddingsCached(collectionName, splits, metadata) {
     const api_key = await storage.get("OPENAI_API_KEY");
     const openaiembedding = new OpenAIEmbeddings({openAIApiKey:api_key, modelName:modelName})
-    const client = new ChromaClient({"anonymized_telemetry": false})
 
     let collection;
 
     // first try to get an existing collection
     try {
-      collection = await client.getCollection({name: collectionName, embeddingFunction: openaiembedding})
+      collection = await chromaclient.getCollection({name: collectionName, embeddingFunction: openaiembedding})
     } 
     
     // if that collection hasn't been filled, we fill it now
@@ -55,12 +55,12 @@ async function computeEmbeddingsCached(collectionName, splits, metadata) {
       // chroma settings of the new collection
       const chromaSettings = {
         collectionName: collectionName,
-        url: "http://localhost:8000", // Optional, will default to this value
+        url: "http://localhost:8000",
         collectionMetadata: {
-          "hnsw:space": "cosine"//,
-          //"creation-time": Date.now(),
+          "hnsw:space": "cosine",
+          "creation-time": Date.now(),
         },
-        index: new ChromaClient({"anonymized_telemetry": false})
+        index: chromaclient
       };
     
       // Compute embeddings
@@ -69,20 +69,18 @@ async function computeEmbeddingsCached(collectionName, splits, metadata) {
         openaiembedding,
         chromaSettings
       );
-      console.log("store", vectorStore)
       collection = vectorStore.collection;
-
     }
-    console.log(collection)
 
     // now get all embeddings
-    const result = await collection.get({include: ["embeddings", "metadata"]})
+    const result = await collection.get({include: ["embeddings", "documents"]})
     console.log("result", result)
 
     const embeddings = {};
-    for (let obj of result) {
-      embeddings[obj.content] = obj
+    for (let i=0; i<result.documents.length; i++) {
+      embeddings[result.documents[i]] = result.embeddings[i]
     }
+    console.log("embeddings", embeddings)
   
     return embeddings;
   }
