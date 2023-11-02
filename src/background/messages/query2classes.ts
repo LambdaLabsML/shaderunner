@@ -49,7 +49,7 @@ I.e. we suceeed if any topic in positive classs is nearer than any other topic o
 URL: www.globalpoliticstoday.com/october-2021-summary
 Title: Major Political Events and Changes - 2021 Roundup
 Query: What were the major political events in October 2021?
-Thought: The page is about political events in 2021, the user is looking for specific information related to October 2021, indicating a need for information that is both topically and temporally specific.
+Thought: The page is about political events in 2021, the user is looking for specific information related to October 2021. I should exclude previous years and other months. To reduce false positives, I mix general topics related to politics into the negative class.
 Positive Class Topics: October 2021 Election Results, Political Decisions October 2021, Legislation Passed in October 2021, Summits and Meetings October 2021, Government Changes in October 2021, Policy Changes October 2021, International Relations in October 2021
 Negative Class Topics: Political Events October 2020, October 2019 Government Policies, Summits October 2018, Elections Results October 2022, Legislation Updates October 2017, Political Landscape October 2016, International Agreements October 2023
 
