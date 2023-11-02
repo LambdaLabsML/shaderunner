@@ -38,9 +38,20 @@ async function computeEmbeddingsCached(collectionName, splits, metadata) {
     const api_key = await storage.get("OPENAI_API_KEY");
     const openaiembedding = new OpenAIEmbeddings({openAIApiKey:api_key, modelName:modelName})
 
-    let collection;
+    // chroma settings of the new collection
+    const chromaSettings = {
+      collectionName: collectionName,
+      url: "http://localhost:8000",
+      collectionMetadata: {
+        "hnsw:space": "cosine",
+        "creation-time": Date.now(),
+      },
+      index: chromaclient
+    };
+
 
     // first try to get an existing collection
+    let collection;
     try {
       collection = await chromaclient.getCollection({name: collectionName, embeddingFunction: openaiembedding})
     } 
@@ -51,17 +62,6 @@ async function computeEmbeddingsCached(collectionName, splits, metadata) {
 
       // create documents
       const docs = splits.map((split, i) => new Document({ metadata: metadata[i], pageContent: split}))
-
-      // chroma settings of the new collection
-      const chromaSettings = {
-        collectionName: collectionName,
-        url: "http://localhost:8000",
-        collectionMetadata: {
-          "hnsw:space": "cosine",
-          "creation-time": Date.now(),
-        },
-        index: chromaclient
-      };
     
       // Compute embeddings
       let vectorStore = await Chroma.fromDocuments(
@@ -74,15 +74,42 @@ async function computeEmbeddingsCached(collectionName, splits, metadata) {
 
     // now get all embeddings
     const result = await collection.get({include: ["embeddings", "documents"]})
-    console.log("result", result)
-
     const embeddings = {};
     for (let i=0; i<result.documents.length; i++) {
       embeddings[result.documents[i]] = result.embeddings[i]
     }
-    console.log("embeddings", embeddings)
-  
-    return embeddings;
+
+    // check which sentences are not embedded, yet
+    let missingsplits = [];
+    let missingmetadata = [];
+    for(let i=0; i<splits.length; i++) {
+      const split = splits[i];
+      if (embeddings[split]) continue;
+      missingsplits.push(split);
+      missingmetadata.push(metadata[i]);
+    }
+
+    // if nothing is missing, we can return
+    if (!missingsplits.length) return embeddings;
+
+    console.log(missingsplits.length, "splits are missing. will compute & save embeddings for these now.")
+
+    // else embed missing docs
+    const missingdocs = missingsplits.map((split, i) => new Document({ metadata: missingmetadata[i], pageContent: split }))
+    await Chroma.fromDocuments(
+      missingdocs,
+      openaiembedding,
+      chromaSettings
+    );
+
+    // now get all embeddings
+    const result2 = await collection.get({include: ["embeddings", "documents"]})
+    const embeddings2 = {};
+    for (let i=0; i<result2.documents.length; i++) {
+      embeddings2[result2.documents[i]] = result2.embeddings[i]
+    }
+
+    return embeddings2;
   }
 
 
