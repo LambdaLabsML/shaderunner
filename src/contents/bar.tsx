@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Logo from 'data-url:./icon.png';
 import { findText, getMainContent, splitContent } from './extract'
 import { textNodesUnderElem, findText, markSentence  } from './utilDOM'
-import { computeEmbeddingsCached, computeEmbeddingsLocal } from './embeddings'
+import { computeEmbeddingsLocal } from './embeddings'
 import { sendToBackground } from "@plasmohq/messaging"
  
 // where to place the element
@@ -132,19 +132,46 @@ const ShadeRunnerBar = () => {
         statusAdd(MSG_CONTENT.random())
         console.log(status_msg);
         const mainEl = getMainContent(true);
-        const splitsData = splitContent(mainEl.textContent, mode, url)
+        const [splits, metadata] = splitContent(mainEl.textContent, mode, url)
         statusAppend(" done", status_msg+1)
 
         // retrieve embedding
         statusAdd(MSG_EMBED.random())
         console.log(status_msg);
-        const splitEmbeddings = (await sendToBackground({ name: "embedding", collectionName: url, data: splitsData })).embeddings
+        const splitEmbeddings = (await sendToBackground({ name: "embedding", collectionName: url, data: [splits, metadata]})).embeddings
         statusAppend(" done", status_msg+2)
 
-        // mark closest sentences
-        const textNodes = textNodesUnderElem(document.body);
-        const [texts, nodes] = findText(textNodes, highlightQuery);
-        markSentence(texts, nodes);
+        // compute embeddings of classes
+        statusAdd(MSG_EMBED.random())
+        const allclasses = [...classes["classes_plus"], ...classes["classes_minus"]]
+        const [classStore, classEmbeddings] = await computeEmbeddingsLocal(allclasses, [])
+        statusAppend(" done", status_msg+3)
+
+        // mark sentences based on similarity
+        statusAdd("Done. See below.")
+        for (const i in splits) {
+          const split = splits[i];
+
+          // using precomputed embeddings
+          const embedding = splitEmbeddings[split];
+          const closest = (await classStore.similaritySearchVectorWithScore(embedding, k = allclasses.length));
+
+          const score_plus = closest.filter((c) => classes["classes_plus"].includes(c[0].pageContent)).reduce((a, c) => a * c[1], 1)
+          const score_minus = closest.filter((c) => classes["classes_minus"].includes(c[0].pageContent)).reduce((a, c) => a * c[1], 1)
+
+          console.log("scores", score_plus, score_minus)
+
+          // apply color if is first class
+          if (score_plus > score_minus) {
+
+            // get all text nodes
+            const textNodes = textNodesUnderElem(document.body);
+
+            // mark sentence
+            const [texts, nodes] = findText(textNodes, split);
+            markSentence(texts, nodes);
+          }
+        }
 
         setIsThinking(false);
       }
