@@ -46,14 +46,6 @@ To do that we need two classes of topics that we can use to classify all sentenc
 I.e. we suceeed if any topic in positive classs is nearer than any other topic of the negative class.
 
 # Training Example
-URL: www.spacefrontiernews.com/latest-discoveries
-Title: "Latest Discoveries in Space Exploration - What's Out There?"
-Query: What's new in space exploration?
-Thought: The page is about discoveries, the user seems to be only interested about the most recent advancements.
-Positive Class Topics: Recent Satellite Launches, New Space Probes, Latest Findings from Mars, Current Astronomical Phenomena, Updates on Space Telescopes, Active Space Missions, Newly Discovered Exoplanets
-Negative Class Topics: Historical Space Missions, General Astronomy, Sci-Fi Movies and Books, Celestial Events from Previous Years, Discontinued Space Programs, General Physics, Famous Astronauts from History
-
-# Training Example
 URL: www.globalpoliticstoday.com/october-2021-summary
 Title: Major Political Events and Changes - 2021 Roundup
 Query: What were the major political events in October 2021?
