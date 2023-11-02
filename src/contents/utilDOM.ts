@@ -15,7 +15,7 @@ function splitIntoWords(str) {
 
 
 // given a list of textnodes, find the subset of textnodes that contain a string
-function findSentence(textNodes, sentence_str) {
+function findText(textNodes, sentence_str) {
   const results = [];
   const domElements = [];
   const sentence = splitIntoWords(sentence_str)
@@ -122,4 +122,4 @@ function markSentence(texts, nodes) {
 }
 
 
-export { textNodesUnderElem, splitIntoWords, findSentence, markSentence };
+export { textNodesUnderElem, splitIntoWords, findText, markSentence };
