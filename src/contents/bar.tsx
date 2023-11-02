@@ -127,9 +127,9 @@ const ShadeRunnerBar = () => {
         // ask for classes
         statusAdd(MSG_QUERY2CLASS.random())
         const classes = await sendToBackground({ name: "query2classes", query: highlightQuery, url: url, title: document.title })
-        statusAdd( ( <span className="indent"><b>Positive Class:</b> {classes["classes_plus"].join(", ")} </span> ) )
-        statusAdd( ( <span className="indent"><b>Negative Class:</b> {classes["classes_minus"].join(", ")} </span> ) )
-        statusAdd( ( <span className="indent"><b>Thought:</b> {classes["thought"]} </span> ) )
+        statusAdd( ( <div className="indent"><b>Positive Class:</b> {classes["classes_plus"].join(", ")} </div> ) )
+        statusAdd( ( <div className="indent"><b>Negative Class:</b> {classes["classes_minus"].join(", ")} </div> ) )
+        statusAdd( ( <div className="indent"><b>Thought:</b> {classes["thought"]} </div> ) )
         statusAppend(" done", status_msg)
         status_msg += 4
 
@@ -185,7 +185,7 @@ const ShadeRunnerBar = () => {
     const thinkingLogo = ( <img className="thinking_logo" width="20" src={Logo}/>)
     const statusHtml = (
       <div className="status">
-        {statusMsg.map((status, i) => ( <p key={i} className={`status_msg ${isThinking ? "processing" : "done"}`}>{status} {isThinking && i == statusMsg.length - 1 ? thinkingLogo : ""}</p>))}
+        {statusMsg.map((status, i) => ( <div key={i} className={`status_msg ${isThinking ? "processing" : "done"}`}>{status} {isThinking && i == statusMsg.length - 1 ? thinkingLogo : ""}</div>))}
       </div>
     )
 
