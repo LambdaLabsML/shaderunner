@@ -2,6 +2,13 @@ This is a [Plasmo extension](https://docs.plasmo.com/) project bootstrapped with
 
 ## Getting Started
 
+First, install & run a chromadb instance
+```bash
+git clone git@github.com:chroma-core/chroma.git
+  cd chroma
+  docker-compose up -d --build
+```
+
 First, run the development server:
 
 ```bash
