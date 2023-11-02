@@ -3,13 +3,16 @@ import type { PlasmoMountShadowHost } from "plasmo"
 import React, { useState } from 'react';
 import Logo from 'data-url:./icon.png';
 import { findText, getMainContent, splitContent } from './extract'
-import { textNodesUnderElem, findText, markSentence  } from './utilDOM'
+import { textNodesUnderElem, findText, markSentence, findMainContent  } from './utilDOM'
 import { computeEmbeddingsLocal } from './embeddings'
 import { sendToBackground } from "@plasmohq/messaging"
+
+
+
+
  
 // where to place the element
-export const getInlineAnchor: PlasmoGetInlineAnchor = async () =>
-  document.querySelector("main")
+export const getInlineAnchor: PlasmoGetInlineAnchor = async () => findMainContent()
  
 
 // place it above the anchor
@@ -18,7 +21,7 @@ export const mountShadowHost: PlasmoMountShadowHost = ({
   anchor,
   mountState
 }) => {
-  anchor.element.appendChild(shadowHost)
+  anchor.element.prepend(shadowHost)
   mountState.observer.disconnect() // OPTIONAL DEMO: stop the observer as needed
 }
 
@@ -124,9 +127,9 @@ const ShadeRunnerBar = () => {
         // ask for classes
         statusAdd(MSG_QUERY2CLASS.random())
         const classes = await sendToBackground({ name: "query2classes", query: highlightQuery, url: url, title: document.title })
-        statusAdd( ( <span><b>Positive Class:</b> {classes["classes_plus"].join(", ")} </span> ) )
-        statusAdd( ( <span><b>Negative Class:</b> {classes["classes_minus"].join(", ")} </span> ) )
-        statusAdd( ( <span><b>Thought:</b> {classes["thought"]} </span> ) )
+        statusAdd( ( <span className="indent"><b>Positive Class:</b> {classes["classes_plus"].join(", ")} </span> ) )
+        statusAdd( ( <span className="indent"><b>Negative Class:</b> {classes["classes_minus"].join(", ")} </span> ) )
+        statusAdd( ( <span className="indent"><b>Thought:</b> {classes["thought"]} </span> ) )
         statusAppend(" done", status_msg)
         status_msg += 4
 

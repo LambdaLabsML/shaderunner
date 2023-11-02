@@ -122,4 +122,47 @@ function markSentence(texts, nodes) {
 }
 
 
-export { textNodesUnderElem, splitIntoWords, findText, markSentence };
+function findMainContent() {
+
+  // A list of selectors that often contain the main content of the page
+  const selectors = [
+    'article', // HTML5 tag for article content
+    'main', // The main HTML5 tag
+    '.main-content', // Common class name for main content
+    '.app-main',
+    '.content', // Another common class name
+    '#content', // Common ID for content
+    '.post', // Blogs often use the class "post" for main content
+    'section.content', // Sometimes content is within a section tag
+    'div.content' // Div tags with a content class
+  ];
+
+  // Try to find the main content using the selectors above
+  for (const selector of selectors) {
+    const element = document.querySelector(selector);
+    if (element) {
+      return element;
+    }
+  }
+
+  // As a last resort, we can look for a large block of text within the body
+  // This is a very rough heuristic and may not always work well
+  const allParagraphs = document.querySelectorAll('body p');
+  let maxTextLength = 0;
+  let mainContentElement = null;
+
+  allParagraphs.forEach(p => {
+    const textLength = p.innerText.trim().length;
+    // Here, you might also want to check if this paragraph is not inside a footer, sidebar, etc.
+    if (textLength > maxTextLength) {
+      maxTextLength = textLength;
+      mainContentElement = p.closest('div'); // Assuming the main content is in a div
+    }
+  });
+
+  return mainContentElement;
+}
+
+
+
+export { textNodesUnderElem, splitIntoWords, findText, markSentence, findMainContent };
