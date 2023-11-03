@@ -168,12 +168,11 @@ const ShadeRunnerBar = () => {
     const [ highlightQuery, setHighlightQuery ] = useState("");
     const [ statusMsg, setStatusMsg ] = useState([]);
     const [ isThinking, setIsThinking ] = useState(false);
-    const [ isActiveOn, setIsActiveOn ] = useStorage("isActiveOn", []);
+    const [ isActiveOn, setIsActiveOn ] = useStorage("activeURLs", []);
     const [ scores, setScores ] = useState([]);
 
     // show only when active
-    if (!isActiveOn.includes(window.location.hostname)) return "";
-
+    if (!isActiveOn[window.location.hostname]) return "";
 
     const statusAdd = (msg) => setStatusMsg((old) => [...old, msg]);
     const statusClear = () => setStatusMsg([]);
