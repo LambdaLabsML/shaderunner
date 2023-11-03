@@ -24,7 +24,7 @@ jobs:
           RELEASE_NOTES="${RELEASE_NOTES%"${RELEASE_NOTES##*[![:space:]]}"}" 
 
           # Save the latest release notes to a file
-          echo "$RELEASE_NOTES" > latest_release_notes.md
+          echo "$RELEASE_NOTES" > ${{ github.workspace }}-CHANGELOG.txt
       - name: Autoadd release Tags
         uses: sbrodehl/action-autotag@v2
         id: autotag
@@ -42,4 +42,4 @@ jobs:
         with:
           tag_name: ${{ steps.autotag.outputs.tagname }}
           name: "Shaderunner ${{ steps.autotag.outputs.tagname }}"
-          body_path: latest_release_notes.md
+          body_path: ${{ github.workspace }}-CHANGELOG.txt
