@@ -9,9 +9,6 @@ import { sendToBackground } from "@plasmohq/messaging"
 import { useStorage } from "@plasmohq/storage/hook";
 //import { Histogram } from "./histogram";
 
-//const EPS = 0.05;
-const EPS = 0.025;
-
 import React from 'react';
 import { Bar } from 'react-chartjs-2';
 import 'chart.js/auto';
@@ -170,6 +167,12 @@ const ShadeRunnerBar = () => {
     const [ isThinking, setIsThinking ] = useState(false);
     const [ isActiveOn, setIsActiveOn ] = useStorage("activeURLs", []);
     const [ scores, setScores ] = useState([]);
+    const [ verbose, setVerbose ] = useStorage("verbose");
+
+    // eps values
+    const [ alwayshighlighteps, setalwayshighlighteps ] = useStorage("alwayshighlighteps");
+    const [ minimalhighlighteps, setminimalhighlighteps ] = useStorage("minimalhighlighteps");
+    const [ decisioneps, setdecisioneps ] = useStorage("decisioneps");
 
     // show only when active
     if (!isActiveOn[window.location.hostname]) return "";
@@ -240,16 +243,22 @@ const ShadeRunnerBar = () => {
           scores_plus.push(score_plus);
           scores_minus.push(score_minus);
 
+          let highlightanyway = false;
+
+          // always highlight if similarity is above given value
+          if ( alwayshighlighteps > 0 && score_plus > alwayshighlighteps )
+            highlightanyway = true;
+
           // ignore anything that is not distinguishable
           //if (score_plus < MIN_CLASS_EPS || Math.abs(score_plus - score_minus) < EPS) {
-          if (Math.abs(score_plus - score_minus) < EPS) {
-            console.log("skipping", split, score_plus, score_minus)
+          else if (decisioneps > 0 && Math.abs(score_plus - score_minus) < decisioneps || minimalhighlighteps > 0 && score_plus < minimalhighlighteps) {
+            if (verbose) console.log("skipping", split, score_plus, score_minus)
             continue
           }
 
           // apply color if is first class
-          if (score_plus > score_minus) {
-            console.log("mark", split, score_plus, score_minus)
+          if (score_plus > score_minus || highlightanyway) {
+            if (verbose) console.log("mark", split, score_plus, score_minus)
 
             // get all text nodes
             const textNodes = textNodesUnderElem(document.body);
@@ -258,7 +267,7 @@ const ShadeRunnerBar = () => {
             const [texts, nodes] = findText(textNodes, split);
             markSentence(texts, nodes);
           } else {
-            console.log("reject", split, score_plus, score_minus)
+            if (verbose) console.log("reject", split, score_plus, score_minus)
           }
         }
 
