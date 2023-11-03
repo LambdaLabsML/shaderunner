@@ -56,6 +56,9 @@ const ShadeRunnerBar = () => {
     const [ alwayshighlighteps, setalwayshighlighteps ] = useStorage("alwayshighlighteps");
     const [ minimalhighlighteps, setminimalhighlighteps ] = useStorage("minimalhighlighteps");
     const [ decisioneps, setdecisioneps ] = useStorage("decisioneps");
+    let poseps = [];
+    if (alwayshighlighteps > 0) poseps.push(alwayshighlighteps);
+    if (minimalhighlighteps > 0) poseps.push(minimalhighlighteps);
 
     // show only when active
     if (!isActiveOn[window.location.hostname]) return "";
@@ -111,8 +114,8 @@ const ShadeRunnerBar = () => {
 
         // mark sentences based on similarity
         statusAdd("Done. See below.")
+        let scores_diffs = [];
         let scores_plus = [];
-        let scores_minus = [];
         for (const i in splits) {
           const split = splits[i];
 
@@ -124,7 +127,7 @@ const ShadeRunnerBar = () => {
           const score_minus = classes["classes_minus"] ? closest.filter((c) => classes["classes_minus"].includes(c[0].pageContent)).reduce((a, c) =>  Math.max(a, c[1]), 0) : 0
 
           scores_plus.push(score_plus);
-          scores_minus.push(score_minus);
+          scores_diffs.push(score_plus - score_minus);
 
           let highlightanyway = false;
 
@@ -154,7 +157,7 @@ const ShadeRunnerBar = () => {
           }
         }
 
-        setScores([scores_plus, scores_minus])
+        setScores([scores_plus, scores_diffs])
         setIsThinking(false);
       }
     }
@@ -178,7 +181,18 @@ const ShadeRunnerBar = () => {
         rows="4"
       />
       {statusMsg.length ? statusHtml : ""}
-      {scores.length ? ( <Histogram scoresA={scores[0]} scoresB={scores[1]} /> ) : ""}
+      {scores.length ? ( 
+        <div className="histograms" style={{display: "flex", flexDirection: "row"}}>
+          <div style={{ flex: "1" }}>
+            <b style={{display: "block", width: "100%", textAlign: "center"}}>Scores of Positive Class</b>
+            <Histogram scores={scores[0]} lines={poseps} />
+          </div>
+          <div style={{ flex: "1" }}>
+            <b style={{display: "block", width: "100%", textAlign: "center"}}>Score Differences</b>
+            <Histogram scores={scores[1]} lines={decisioneps > 0 ? [decisioneps] : []} />
+          </div>
+        </div>
+      ) : ""}
     </div>
 }
 

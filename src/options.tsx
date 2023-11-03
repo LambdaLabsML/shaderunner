@@ -111,7 +111,7 @@ const Settings = () => {
         onChange={(value) => setalwayshighlighteps(value)}
       />
       <NumericInput
-        label="Minimal-Highlight Threshold (default: 0.65, when the similarity is above this value, always highlight the sentence)."
+        label="Minimal-Highlight Threshold (default: 0.65, when the similarity is below this value, always skip the sentence)."
         step={0.01}
         value={minimalhighlighteps}
         onChange={(value) => setminimalhighlighteps(value)}
