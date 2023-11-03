@@ -15,16 +15,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Extract and Save latest release notes
-        run: |
-          # Read content from CHANGELOG.md and split by '-------'
-          RELEASE_NOTES=$(awk '/-------/{i++}i==1' CHANGELOG.md)
-
-          # Trim possible whitespace
-          RELEASE_NOTES="${RELEASE_NOTES#"${RELEASE_NOTES%%[![:space:]]*}"}" 
-          RELEASE_NOTES="${RELEASE_NOTES%"${RELEASE_NOTES##*[![:space:]]}"}" 
-
-          # Save the latest release notes to a file
-          echo "$RELEASE_NOTES" > ${{ github.workspace }}-CHANGELOG.txt
+        run: echo $(awk '/-------/{i++}i==1' CHANGELOG.md) > ${{ github.workspace }}-CHANGELOG.txt
       - name: Autoadd release Tags
         uses: sbrodehl/action-autotag@v2
         id: autotag
