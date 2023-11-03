@@ -53,6 +53,7 @@ const ShadeRunnerBar = () => {
     const [ verbose, setVerbose ] = useStorage("verbose");
     const [textclassifier, settextclassifier] = useStorage('textclassifier', (v) => v === undefined ? true : v)
     const [textretrieval, settextretrieval] = useStorage('textretrieval', (v) => v === undefined ? true : v)
+    const [textretrieval_k, settextretrieval_k] = useStorage('textretrieval_k', (v) => v === undefined ? 3 : v)
 
     // eps values
     const [ alwayshighlighteps, setalwayshighlighteps ] = useStorage("alwayshighlighteps");
@@ -172,7 +173,7 @@ const ShadeRunnerBar = () => {
         if (textretrieval) {
 
           // using precomputed embeddings
-          const retrieved_splits = (await sendToBackground({ name: "embedding", method: "retrieval", collectionName: url, data: [splits, metadata], query: highlightQuery, k: 3}))
+          const retrieved_splits = (await sendToBackground({ name: "embedding", method: "retrieval", collectionName: url, data: [splits, metadata], query: highlightQuery, k: textretrieval_k}))
 
           for(const i in retrieved_splits) {
             const split = retrieved_splits[i][0].pageContent;

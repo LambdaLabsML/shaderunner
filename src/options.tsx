@@ -52,6 +52,7 @@ const Settings = () => {
   const [gptchat, setgptchat] = useStorage('gpt_chat', (v) => v === undefined ? false : v)
   const [textclassifier, settextclassifier] = useStorage('textclassifier', (v) => v === undefined ? true : v)
   const [textretrieval, settextretrieval] = useStorage('textretrieval', (v) => v === undefined ? true : v)
+  const [textretrieval_k, settextretrieval_k] = useStorage('textretrieval_k', (v) => v === undefined ? 3 : v)
   const [alwayshighlighteps, setalwayshighlighteps] = useStorage('alwayshighlighteps', (v) => v === undefined ? defaults["alwayshighlighteps"] : v)
   const [minimalhighlighteps, setminimalhighlighteps] = useStorage('minimalhighlighteps', (v) => v === undefined ? defaults["minimalhighlighteps"] : v)
   const [decisioneps, setdecisioneps] = useStorage('decisioneps', (v) => v === undefined ? defaults["decisioneps"] : v)
@@ -94,6 +95,14 @@ const Settings = () => {
           settextretrieval(value == "Both" || value == "Text Retriever")
         }}
       />
+      { textretrieval ? (
+        <NumericInput
+          label="Number of Retrievals (only for Text Retriever mode)"
+          value={textretrieval_k}
+          step={1}
+          onChange={(value) => settextretrieval_k(Math.round(value))}
+        />
+      ) : ""}
 
 
       <hr/>
@@ -116,24 +125,27 @@ const Settings = () => {
         selected={verbose ? "on" : "off"}
         onChange={(value) => setVerbose(value == "on")}
       />
-      <NumericInput
-        label="Always-Highlight Threshold (default: 0.825, when the similarity is above this value, always highlight the sentence)."
-        step={0.01}
-        value={alwayshighlighteps}
-        onChange={(value) => setalwayshighlighteps(value)}
-      />
-      <NumericInput
-        label="Minimal-Highlight Threshold (default: 0.65, when the similarity is below this value, always skip the sentence)."
-        step={0.01}
-        value={minimalhighlighteps}
-        onChange={(value) => setminimalhighlighteps(value)}
-      />
-      <NumericInput
-        label="Decision-Highlight Threshold (default 0.025, skips highlight when the similarity of positive and negative class is smaller than this value)."
-        step={0.01}
-        value={decisioneps}
-        onChange={(value) => setdecisioneps(value)}
-      />
+
+      { textclassifier ? [
+        <NumericInput
+          label="Always-Highlight Threshold (default: 0.825, when the similarity is above this value, always highlight the sentence)."
+          step={0.01}
+          value={alwayshighlighteps}
+          onChange={(value) => setalwayshighlighteps(value)}
+        />,
+        <NumericInput
+          label="Minimal-Highlight Threshold (default: 0.65, when the similarity is below this value, always skip the sentence)."
+          step={0.01}
+          value={minimalhighlighteps}
+          onChange={(value) => setminimalhighlighteps(value)}
+        />,
+        <NumericInput
+          label="Decision-Highlight Threshold (default 0.025, skips highlight when the similarity of positive and negative class is smaller than this value)."
+          step={0.01}
+          value={decisioneps}
+          onChange={(value) => setdecisioneps(value)}
+        />
+      ] : ""}
 
       {/* Add more settings inputs as needed */}
     </div>
