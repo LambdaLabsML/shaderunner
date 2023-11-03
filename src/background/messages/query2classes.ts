@@ -1,4 +1,5 @@
 import type { PlasmoMessaging } from "@plasmohq/messaging"
+import { ChatOpenAI } from "langchain/chat_models/openai";
 import { OpenAI } from "langchain/llms/openai";
 import { Storage } from "@plasmohq/storage"
 const storage = new Storage()
@@ -34,9 +35,15 @@ function parseInput(input) {
 const llm2classes = async (url, title, query) => {
 
     const api_key = await storage.get("OPENAI_API_KEY");
-    const llm = new OpenAI({
+    const gptversion = await storage.get("gpt_version");
+    const chatgpt = await storage.get("gpt_chat");
+
+    const Model = chatgpt ? ChatOpenAI : OpenAI;
+
+    const llm = new Model({
         openAIApiKey: api_key,
         temperature: 0.0,
+        model: gptversion
     });
 
 
@@ -68,6 +75,7 @@ Query: ${query}
 Thought:`;
 
     const llmResult = await llm.predict(PROMPT);
+    console.log("using", gptversion, chatgpt ? "ChatGPT" : "InstructGPT")
     console.log(llmResult)
     const parsed = parseInput(llmResult)
 
