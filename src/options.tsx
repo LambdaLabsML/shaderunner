@@ -48,7 +48,8 @@ const Settings = () => {
   }
 
   const [openaikey, setopenaikey] = useStorage('OPENAI_API_KEY', (v) => v === undefined ? "" : v)
-  const [gptversion, setgptversion] = useStorage('gpt_version', (v) => v === undefined ? "gpt-3.5-turbo" : v)
+  const [gptversion, setgptversion] = useStorage('gpt_version', (v) => v === undefined ? "gpt-4" : v)
+  const [gptchat, setgptchat] = useStorage('gpt_chat', (v) => v === undefined ? false : v)
   const [alwayshighlighteps, setalwayshighlighteps] = useStorage('alwayshighlighteps', (v) => v === undefined ? defaults["alwayshighlighteps"] : v)
   const [minimalhighlighteps, setminimalhighlighteps] = useStorage('minimalhighlighteps', (v) => v === undefined ? defaults["minimalhighlighteps"] : v)
   const [decisioneps, setdecisioneps] = useStorage('decisioneps', (v) => v === undefined ? defaults["decisioneps"] : v)
@@ -68,12 +69,21 @@ const Settings = () => {
         value={openaikey}
         onChange={(value) => setopenaikey(value)}
       />
+
+      <b style={{width:"100%", textAlign: "left"}}>(Note: GPT4 + Instruct seems to be the best combination.)</b> 
       <SwitchInput
         label="GPT-Version"
         options={['gpt-3.5-turbo', 'gpt-4']}
         selected={gptversion}
         onChange={(value) => setgptversion(value)}
       />
+      <SwitchInput
+        label="GPT-Model"
+        options={['ChatGPT', "InstructGPT"]}
+        selected={gptchat ? "ChatGPT" : "InstructGPT"}
+        onChange={(value) => setgptchat(value == "ChatGPT")}
+      />
+
       <hr/>
       <b>Expert Values</b>
       To disable a feature, insert the value -1.
