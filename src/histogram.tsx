@@ -3,7 +3,7 @@ import { Bar } from 'react-chartjs-2';
 import 'chart.js/auto';
 
 const Histogram = ({ scoresA, scoresB }) => {
-  const numBins = 10;
+  const numBins = 100;
   let binsA = new Array(numBins).fill(0);
   let binsB = new Array(numBins).fill(0);
   const binSize = 1 / numBins;
@@ -60,5 +60,5 @@ const Histogram = ({ scoresA, scoresB }) => {
 
   return <Bar data={data} options={options} />;
 };
-
+ 
 export default Histogram;

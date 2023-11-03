@@ -17,20 +17,16 @@ async function computeEmbeddingsCached(sentences, metadata, dbsettings) {
     const docs = sentences.map((sentence, i) => new Document({ metadata: metadata[i], pageContent: sentence}))
   
     // Compute embeddings
-    console.log("start1")
     const vectorStore = await Chroma.fromDocuments(
       docs,
       new OpenAIEmbeddings({openAIApiKey:api_key, modelName:modelName}),
       dbsettings
     );
-    console.log("start")
 
     const embeddings = {};
     for (let obj of vectorStore.memoryVectors) {
       embeddings[obj.content] = obj
     }
-    console.log("done")
-
   
     return [ vectorStore, embeddings ];
   }
