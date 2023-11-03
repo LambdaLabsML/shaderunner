@@ -120,21 +120,37 @@ function markSentence(texts, nodes, backgroundColor) {
 }
 
 
-function isElementVisible(element) {
-  if (element) {
-    const rect = element.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    
-    // Check if the center of the element is within the viewport
-    if (centerX < 0 || centerY < 0 || centerX > window.innerWidth || centerY > window.innerHeight) {
-      return false; // Center point is out of the viewport
-    }
 
-    const topElement = document.elementFromPoint(centerX, centerY);
-    return topElement === element || element.contains(topElement);
+function isElementVisible(element) {
+  // Check if the element or any of its parents have display:none
+  function isDisplayed(el) {
+    while (el) {
+      if (getComputedStyle(el).display === 'none') {
+        return false;
+      }
+      el = el.parentElement;
+    }
+    return true;
   }
-  return false;
+
+  // Check if the element or any of its parents have visibility:hidden or opacity:0
+  function isVisible(el) {
+    while (el) {
+      const style = getComputedStyle(el);
+      if (style.visibility === 'hidden' || style.opacity === '0') {
+        return false;
+      }
+      el = el.parentElement;
+    }
+    return true;
+  }
+
+  // Check if the element is removed from the document
+  function isInDocument(el) {
+    return document.contains(el);
+  }
+
+  return isInDocument(element) && isDisplayed(element) && isVisible(element);
 }
 
 
@@ -157,7 +173,7 @@ function findMainContent() {
   // Try to find the main content using the selectors above
   for (const selector of selectors) {
     const element = document.querySelector(selector);
-    if (isElementVisible(element)) {
+    if (element && isElementVisible(element)) {
       return element;
     }
   }
