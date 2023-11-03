@@ -15,9 +15,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Extract and Save latest release notes
-        run: echo $(awk '/-------/{i++}i==1' CHANGELOG.md) > ${{ github.workspace }}-CHANGELOG.md
+        run: awk '/-------/{i++}i==0' CHANGELOG.md > ${{ github.workspace }}/LATEST_CHANGELOG.md
       - name: Show Changelog
-        run: cat ${{ github.workspace }}-CHANGELOG.md
+        run: cat ${{ github.workspace }}/LATEST_CHANGELOG.md
       - name: Autoadd release Tags
         uses: sbrodehl/action-autotag@v2
         id: autotag
@@ -35,4 +35,4 @@ jobs:
         with:
           tag_name: ${{ steps.autotag.outputs.tagname }}
           name: "Shaderunner ${{ steps.autotag.outputs.tagname }}"
-          body_path: ${{ github.workspace }}-CHANGELOG.md
+          body_path: ${{ github.workspace }}/LATEST_CHANGELOG.md
