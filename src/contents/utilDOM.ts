@@ -122,6 +122,25 @@ function markSentence(texts, nodes) {
 }
 
 
+function isElementVisible(element) {
+  if (element) {
+    const rect = element.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
+    // Check if the center of the element is within the viewport
+    if (centerX < 0 || centerY < 0 || centerX > window.innerWidth || centerY > window.innerHeight) {
+      return false; // Center point is out of the viewport
+    }
+
+    const topElement = document.elementFromPoint(centerX, centerY);
+    return topElement === element || element.contains(topElement);
+  }
+  return false;
+}
+
+
+
 function findMainContent() {
 
   // A list of selectors that often contain the main content of the page
@@ -140,7 +159,7 @@ function findMainContent() {
   // Try to find the main content using the selectors above
   for (const selector of selectors) {
     const element = document.querySelector(selector);
-    if (element) {
+    if (isElementVisible(element)) {
       return element;
     }
   }
