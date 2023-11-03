@@ -14,25 +14,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Extract latest release notes
-        id: extract_notes
+      - name: Extract and Save latest release notes
         run: |
           # Read content from CHANGELOG.md and split by '-------'
           RELEASE_NOTES=$(awk '/-------/{i++}i==1' CHANGELOG.md)
-          # This uses awk to stop processing after the first '-------' is found
-  
+
           # Trim possible whitespace
           RELEASE_NOTES="${RELEASE_NOTES#"${RELEASE_NOTES%%[![:space:]]*}"}" 
           RELEASE_NOTES="${RELEASE_NOTES%"${RELEASE_NOTES##*[![:space:]]}"}" 
-  
-          # Escape multiline strings
-          RELEASE_NOTES="${RELEASE_NOTES//'%'/'%25'}"
-          RELEASE_NOTES="${RELEASE_NOTES//$'\n'/'%0A'}"
-          RELEASE_NOTES="${RELEASE_NOTES//$'\r'/'%0D'}"
-  
-          # Set the output variable
-          echo "::set-output name=latest_release_notes::$RELEASE_NOTES"
 
+          # Save the latest release notes to a file
+          echo "$RELEASE_NOTES" > latest_release_notes.md
       - name: Autoadd release Tags
         uses: sbrodehl/action-autotag@v2
         id: autotag
@@ -50,4 +42,4 @@ jobs:
         with:
           tag_name: ${{ steps.autotag.outputs.tagname }}
           name: "Shaderunner ${{ steps.autotag.outputs.tagname }}"
-          body: ${{ steps.extract_notes.outputs.latest_release_notes }}
+          body_path: latest_release_notes.md
