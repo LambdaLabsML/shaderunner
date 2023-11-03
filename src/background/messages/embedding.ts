@@ -34,7 +34,7 @@ function simpleHash(inputString) {
 
 
 // given a list of sentences & metadata compute embeddings, retrieve / store them
-async function computeEmbeddingsCached(collectionName, splits, metadata) {
+async function computeEmbeddingsCached(collectionName, splits, metadata, method_data) {
     const api_key = await storage.get("OPENAI_API_KEY");
     const openaiembedding = new OpenAIEmbeddings({openAIApiKey:api_key, modelName:modelName})
 
@@ -52,6 +52,7 @@ async function computeEmbeddingsCached(collectionName, splits, metadata) {
 
     // first try to get an existing collection
     let collection;
+    let vectorStore;
     try {
       collection = await chromaclient.getCollection({name: collectionName, embeddingFunction: openaiembedding})
     } 
@@ -64,12 +65,17 @@ async function computeEmbeddingsCached(collectionName, splits, metadata) {
       const docs = splits.map((split, i) => new Document({ metadata: metadata[i], pageContent: split}))
     
       // Compute embeddings
-      let vectorStore = await Chroma.fromDocuments(
+      vectorStore = await Chroma.fromDocuments(
         docs,
         openaiembedding,
         chromaSettings
       );
       collection = vectorStore.collection;
+
+      // method 1: retrieval
+      if (method_data.method == "retrieval")
+          return await vectorStore.similaritySearchWithScore(method_data.query, k = method_data.k)
+
     }
 
     // now get all embeddings
@@ -90,19 +96,25 @@ async function computeEmbeddingsCached(collectionName, splits, metadata) {
     }
 
     // if nothing is missing, we can return
-    if (!missingsplits.length) return embeddings;
+    if (!missingsplits.length && method_data.method == "get_embeddings" )
+        return embeddings;
 
-    console.log(missingsplits.length, "splits are missing. will compute & save embeddings for these now.")
+    if (method_data.method == "get_embeddings")
+      console.log(missingsplits.length, "splits are missing. will compute & save embeddings for these now.")
 
     // else embed missing docs
     const missingdocs = missingsplits.map((split, i) => new Document({ metadata: missingmetadata[i], pageContent: split }))
-    await Chroma.fromDocuments(
+    vectorStore = await Chroma.fromDocuments(
       missingdocs,
       openaiembedding,
       chromaSettings
     );
 
-    // now get all embeddings
+    // method 1: retrieval
+    if (method_data.method == "retrieval")
+        return await vectorStore.similaritySearchWithScore(method_data.query, k = method_data.k)
+
+    // method 2: get all embeddings
     const result2 = await collection.get({include: ["embeddings", "documents"]})
     const embeddings2 = {};
     for (let i=0; i<result2.documents.length; i++) {
@@ -114,34 +126,20 @@ async function computeEmbeddingsCached(collectionName, splits, metadata) {
 
 
 
-// given a list of sentences & metadata compute embeddings, retrieve / store them
-async function computeEmbeddingsLocal(sentences, metadata) {
-  const api_key = await storage.get("OPENAI_API_KEY");
-
-  // Compute embeddings
-  const vectorStore = await MemoryVectorStore.fromTexts(
-    sentences,
-    metadata,
-    new OpenAIEmbeddings({openAIApiKey:api_key, modelName:modelName})
-  );
-  const embeddings = {};
-  for (let obj of vectorStore.memoryVectors) {
-    embeddings[obj.content] = obj
-  }
-
-  return [ vectorStore, embeddings ];
-}
-
-
  
 const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
-  console.log("background", req);
+  console.log("background call:", req);
   //const message = await querySomeApi(req.body.id)
-  
- 
-  res.send({
-    "embeddings": await computeEmbeddingsCached(simpleHash(req.collectionName), ...req.data)
-  })
+
+  if (req.method == "get_embeddings") {
+    res.send({
+      "embeddings": await computeEmbeddingsCached(simpleHash(req.collectionName), ...req.data, {"method": req.method})
+    })
+  } else {
+    res.send(
+      await computeEmbeddingsCached(simpleHash(req.collectionName), ...req.data, {"method": req.method, "k": req.k, "query": req.query})
+    )
+  }
 }
- 
-export default handler
+
+export default handler;

@@ -78,12 +78,10 @@ function findText(textNodes, sentence_str) {
 
 
 // given the pair of texts and nodes, mark that text in its respective node
-function markSentence(texts, nodes) {
+function markSentence(texts, nodes, backgroundColor) {
   if (nodes.length !== texts.length) {
     throw new Error('The length of nodes and texts should be the same.');
   }
-
-  const backgroundColor = "rgba(255,0,0,0.2)";
 
   nodes.forEach((node, i) => {
     const text = texts[i];

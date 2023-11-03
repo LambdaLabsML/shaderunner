@@ -50,6 +50,8 @@ const Settings = () => {
   const [openaikey, setopenaikey] = useStorage('OPENAI_API_KEY', (v) => v === undefined ? "" : v)
   const [gptversion, setgptversion] = useStorage('gpt_version', (v) => v === undefined ? "gpt-4" : v)
   const [gptchat, setgptchat] = useStorage('gpt_chat', (v) => v === undefined ? false : v)
+  const [textclassifier, settextclassifier] = useStorage('textclassifier', (v) => v === undefined ? true : v)
+  const [textretrieval, settextretrieval] = useStorage('textretrieval', (v) => v === undefined ? true : v)
   const [alwayshighlighteps, setalwayshighlighteps] = useStorage('alwayshighlighteps', (v) => v === undefined ? defaults["alwayshighlighteps"] : v)
   const [minimalhighlighteps, setminimalhighlighteps] = useStorage('minimalhighlighteps', (v) => v === undefined ? defaults["minimalhighlighteps"] : v)
   const [decisioneps, setdecisioneps] = useStorage('decisioneps', (v) => v === undefined ? defaults["decisioneps"] : v)
@@ -83,6 +85,16 @@ const Settings = () => {
         selected={gptchat ? "ChatGPT" : "InstructGPT"}
         onChange={(value) => setgptchat(value == "ChatGPT")}
       />
+      <SwitchInput
+        label="Modes: Text Classifier (can highlight arbitrary many sentences), Text Retriever (can highlight a fixed amount of sentences)"
+        options={['Text Classifier', "Text Retriever", "Both"]}
+        selected={textclassifier && textretrieval ? "Both" : textclassifier ? "Text Classifier" : "Text Retriever"}
+        onChange={(value) => {
+          settextclassifier(value == "Both" || value == "Text Classifier")
+          settextretrieval(value == "Both" || value == "Text Retriever")
+        }}
+      />
+
 
       <hr/>
       <b>Expert Values</b>

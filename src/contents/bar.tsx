@@ -51,6 +51,8 @@ const ShadeRunnerBar = () => {
     const [ isActiveOn, setIsActiveOn ] = useStorage("activeURLs", []);
     const [ scores, setScores ] = useState([]);
     const [ verbose, setVerbose ] = useStorage("verbose");
+    const [textclassifier, settextclassifier] = useStorage('textclassifier', (v) => v === undefined ? true : v)
+    const [textretrieval, settextretrieval] = useStorage('textretrieval', (v) => v === undefined ? true : v)
 
     // eps values
     const [ alwayshighlighteps, setalwayshighlighteps ] = useStorage("alwayshighlighteps");
@@ -82,15 +84,17 @@ const ShadeRunnerBar = () => {
         const mode = "sentences"
         let status_msg = statusMsg.length;
 
-
         // ask for classes
-        statusAdd(random(MSG_QUERY2CLASS))
-        const classes = await sendToBackground({ name: "query2classes", query: highlightQuery, url: url, title: document.title })
-        statusAdd( ( <div className="indent"><b>Positive Class:</b> {classes["classes_plus"].join(", ")} </div> ) )
-        statusAdd( ( <div className="indent"><b>Negative Class:</b> {classes["classes_minus"].join(", ")} </div> ) )
-        statusAdd( ( <div className="indent"><b>Thought:</b> {classes["thought"]} </div> ) )
-        statusAppend(" done", status_msg)
-        status_msg += 4
+        let classes;
+        if (textclassifier) {
+          statusAdd(random(MSG_QUERY2CLASS))
+          classes = await sendToBackground({ name: "query2classes", query: highlightQuery, url: url, title: document.title })
+          statusAdd( ( <div className="indent"><b>Positive Class:</b> {classes["classes_plus"].join(", ")} </div> ) )
+          statusAdd( ( <div className="indent"><b>Negative Class:</b> {classes["classes_minus"].join(", ")} </div> ) )
+          statusAdd( ( <div className="indent"><b>Thought:</b> {classes["thought"]} </div> ) )
+          statusAppend(" done", status_msg)
+          status_msg += 4
+        }
 
         // extract main content & generate splits
         statusAdd(random(MSG_CONTENT))
@@ -101,27 +105,33 @@ const ShadeRunnerBar = () => {
 
         // retrieve embedding
         statusAdd(random(MSG_EMBED))
-        const splitEmbeddings = (await sendToBackground({ name: "embedding", collectionName: url, data: [splits, metadata]})).embeddings
+        const splitEmbeddings = (await sendToBackground({ name: "embedding", method: "get_embeddings", collectionName: url, data: [splits, metadata]})).embeddings
         statusAppend(" done", status_msg)
         status_msg++
 
-        // compute embeddings of classes
-        statusAdd(random(MSG_EMBED))
-        const allclasses = [...classes["classes_plus"], ...classes["classes_minus"]]
-        const [classStore, classEmbeddings] = await computeEmbeddingsLocal(allclasses, [])
-        statusAppend(" done", status_msg)
-        status_msg++
+        let allclasses, classStore, classEmbeddings;
+        if (textclassifier) {
+          // compute embeddings of classes
+          statusAdd(random(MSG_EMBED))
+          allclasses = [...classes["classes_plus"], ...classes["classes_minus"]]
+          const result = await computeEmbeddingsLocal(allclasses, []);
+          classStore = result[0];
+          classEmbeddings = result[1];
+          statusAppend(" done", status_msg)
+          status_msg++
+        }
 
         // mark sentences based on similarity
         statusAdd("Done. See below.")
         let scores_diffs = [];
         let scores_plus = [];
+        if (textclassifier)
         for (const i in splits) {
           const split = splits[i];
 
           // using precomputed embeddings
           const embedding = splitEmbeddings[split];
-          const closest = (await classStore.similaritySearchVectorWithScore(embedding, k = allclasses.length));
+          const closest = await classStore.similaritySearchVectorWithScore(embedding, k = allclasses.length);
 
           const score_plus = classes["classes_plus"] ? closest.filter((c) => classes["classes_plus"].includes(c[0].pageContent)).reduce((a, c) => Math.max(a, c[1]), 0) : 0
           const score_minus = classes["classes_minus"] ? closest.filter((c) => classes["classes_minus"].includes(c[0].pageContent)).reduce((a, c) =>  Math.max(a, c[1]), 0) : 0
@@ -151,9 +161,33 @@ const ShadeRunnerBar = () => {
 
             // mark sentence
             const [texts, nodes] = findText(textNodes, split);
-            markSentence(texts, nodes);
+            markSentence(texts, nodes, "rgba(255,0,0,0.2)");
           } else {
             if (verbose) console.log("reject", split, score_plus, score_minus)
+          }
+        }
+
+
+        // mark sentences based on retrieval
+        if (textretrieval) {
+
+          // using precomputed embeddings
+          const retrieved_splits = (await sendToBackground({ name: "embedding", method: "retrieval", collectionName: url, data: [splits, metadata], query: highlightQuery, k: 3}))
+
+          for(const i in retrieved_splits) {
+            const split = retrieved_splits[i][0].pageContent;
+            const score = retrieved_splits[i][1]
+
+            // apply color if is first class
+            if (verbose) console.log("mark retrieval", split, score)
+
+            // get all text nodes
+            const textNodes = textNodesUnderElem(document.body);
+
+            // mark sentence
+            const [texts, nodes] = findText(textNodes, split);
+            markSentence(texts, nodes, "rgba(0,255,0,0.2)");
+
           }
         }
 
@@ -181,14 +215,14 @@ const ShadeRunnerBar = () => {
         rows="4"
       />
       {statusMsg.length ? statusHtml : ""}
-      {scores.length ? ( 
+      {scores.length && scores[0].length ? ( 
         <div className="histograms" style={{display: "flex", flexDirection: "row"}}>
           <div style={{ flex: "1" }}>
             <b style={{display: "block", width: "100%", textAlign: "center"}}>Scores of Positive Class</b>
             <Histogram scores={scores[0]} lines={poseps} />
           </div>
           <div style={{ flex: "1" }}>
-            <b style={{display: "block", width: "100%", textAlign: "center"}}>Score Differences</b>
+            <b style={{display: "block", width: "100%", textAlign: "center"}}>Score Differences (score_plus - score_minus)</b>
             <Histogram scores={scores[1]} lines={decisioneps > 0 ? [decisioneps] : []} />
           </div>
         </div>
