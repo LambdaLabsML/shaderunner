@@ -1,0 +1,53 @@
+name: Auto Tag
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    name: ""
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Extract latest release notes
+        id: extract_notes
+        run: |
+          # Read content from CHANGELOG.md and split by '-------'
+          RELEASE_NOTES=$(awk '/-------/{i++}i==1' CHANGELOG.md)
+          # This uses awk to stop processing after the first '-------' is found
+  
+          # Trim possible whitespace
+          RELEASE_NOTES="${RELEASE_NOTES#"${RELEASE_NOTES%%[![:space:]]*}"}" 
+          RELEASE_NOTES="${RELEASE_NOTES%"${RELEASE_NOTES##*[![:space:]]}"}" 
+  
+          # Escape multiline strings
+          RELEASE_NOTES="${RELEASE_NOTES//'%'/'%25'}"
+          RELEASE_NOTES="${RELEASE_NOTES//$'\n'/'%0A'}"
+          RELEASE_NOTES="${RELEASE_NOTES//$'\r'/'%0D'}"
+  
+          # Set the output variable
+          echo "::set-output name=latest_release_notes::$RELEASE_NOTES"
+
+      - name: Autoadd release Tags
+        uses: sbrodehl/action-autotag@v2
+        id: autotag
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          source_file: "package.json"
+          extraction_regex: "[\\'\"]version[\\'\"]\\s*:\\s*[\\'\"]((?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)(?:-(?:(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+(?:[0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?)[\\'\"]"
+          capture_group: 1
+          tag_message: "Release"
+          tag_format: "v{version}"
+      - name: Release
+        if: steps.autotag.outputs.tagsha
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.autotag.outputs.tagname }}
+          name: "Shaderunner ${{ steps.autotag.outputs.tagname }}"
+          body: ${{ steps.extract_notes.outputs.latest_release_notes }}
