@@ -128,18 +128,21 @@ const Settings = () => {
 
       { textclassifier ? [
         <NumericInput
+          key="alwayshighlighteps"
           label="Always-Highlight Threshold (default: 0.825, when the similarity is above this value, always highlight the sentence)."
           step={0.01}
           value={alwayshighlighteps}
           onChange={(value) => setalwayshighlighteps(value)}
         />,
         <NumericInput
+          key="minimalhighlighteps"
           label="Minimal-Highlight Threshold (default: 0.65, when the similarity is below this value, always skip the sentence)."
           step={0.01}
           value={minimalhighlighteps}
           onChange={(value) => setminimalhighlighteps(value)}
         />,
         <NumericInput
+          key="decisioneps"
           label="Decision-Highlight Threshold (default 0.025, skips highlight when the similarity of positive and negative class is smaller than this value)."
           step={0.01}
           value={decisioneps}
