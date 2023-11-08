@@ -146,36 +146,8 @@ const Settings = () => {
           onChange={(value) => setdecisioneps(value)}
         />
       ] : ""}
-
-      {/* Add more settings inputs as needed */}
     </div>
   );
 };
 
 export default Settings;
-
-/*
-function IndexPopup() {
-  const [openaikey, setOpenaiKey] = useStorage('OPENAI_API_KEY', (v) => v === undefined ? "": v)
-  const [minimalEps, setMinimalEps] = useStorage('minimal_eps', (v) => v === undefined ? false: v)
-
-  return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        padding: 16,
-        width: "300px",
-        height: "300px",
-      }}>
-      <h1>ShadeRunner</h1>
-      OPENAI_API_KEY: <input onChange={(e) => setOpenaiKey(e.target.value)} value={openaikey} />
-      <br/>
-      <br/>
-    </div>
-  )
-}
-
-export default IndexPopup
-
-*/
