@@ -13,7 +13,7 @@ const Histogram = ({ scores, lines }) => {
   const maxScore = Math.max(...scores);
 
   // Define the number of bins for the histogram
-  const numBins = 100;
+  const numBins = Math.ceil(scores.length / 10);
   // Calculate the range of each bin
   const range = maxScore - minScore;
   const binSize = range / numBins;
