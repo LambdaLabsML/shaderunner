@@ -93,3 +93,50 @@ $primary-color: #8136e2;
         margin-bottom: 2em;
     }
 }
+
+.ClassModifier {
+    display: flex;
+    flex-direction: column;
+
+    .editable-text {
+        width: 100%;
+    }
+}
+
+.editable-text span {
+    cursor: pointer;
+    border-bottom: 0px dashed $primary-color; /* Style to indicate it's editable */
+    padding: 2px 5px;
+    display: block;
+    min-width: 50px; /* Ensures a minimum width for shorter text */
+    font-size: 16px; /* Adjust as needed */
+  }
+  
+  .editable-text input {
+    box-shadow: none;
+    appearance: none; /* Remove default browser styling */
+    -moz-appearance: none; /* Firefox specific styling */
+    -webkit-appearance: none; /* Chrome, Safari specific styling */
+
+    font-size: 16px; /* Match font size with span */
+    border: none;
+    border-radius: 4px; /* Rounded corners for modern look */
+    padding: 5px 5px; /* Padding to match span's visual */
+    width: 100%; /* Fill the available width */
+    box-sizing: border-box; /* Include padding and border in the width */
+    outline: none; /* Remove focus outline for aesthetics */
+    background: lighten($primary-color, 10%);
+    color: white;
+
+    &:focus {
+        outline: none !important;
+        box-shadow: none;
+    }
+  }
+
+  
+  /* Transition for a smooth appearance change */
+  .editable-text span, .editable-text input {
+    transition: all 0.2s ease-in-out;
+  }
+  

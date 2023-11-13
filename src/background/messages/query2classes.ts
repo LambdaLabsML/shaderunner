@@ -81,8 +81,8 @@ Thought:`;
 
     return {
         "thought": parsed[0],
-        "classes_plus": parsed[1],
-        "classes_minus": parsed[2]
+        "classes_pos": parsed[1],
+        "classes_neg": parsed[2]
     }
 }
 

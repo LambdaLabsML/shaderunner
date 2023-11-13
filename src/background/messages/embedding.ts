@@ -31,6 +31,18 @@ function simpleHash(inputString) {
 }
 
 
+// check if embedding exists
+async function embeddingExists(collectionName) {
+    try {
+      const api_key = await storage.get("OPENAI_API_KEY");
+      const openaiembedding = new OpenAIEmbeddings({openAIApiKey:api_key, modelName:modelName})
+      await chromaclient.getCollection({name: collectionName, embeddingFunction: openaiembedding})
+      return true;
+    } 
+    catch (error) {
+      return false;
+    }
+}
 
 
 // given a list of sentences & metadata compute embeddings, retrieve / store them
@@ -131,7 +143,9 @@ const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
   console.log("background call:", req);
   //const message = await querySomeApi(req.body.id)
 
-  if (req.method == "get_embeddings") {
+  if (req.method == "exits_embeddings") {
+    res.send(await embeddingExists(simpleHash(req.collectionName)))
+  } else if (req.method == "get_embeddings") {
     res.send({
       "embeddings": await computeEmbeddingsCached(simpleHash(req.collectionName), ...req.data, {"method": req.method})
     })
