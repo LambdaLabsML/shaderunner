@@ -77,8 +77,8 @@ function findText(textNodes, sentence_str) {
 }
 
 
-// given the pair of texts and nodes, mark that text in its respective node
-function markSentence(texts, nodes, backgroundColor) {
+
+function highlightText(texts, nodes, backgroundColor, markingClass = 'marked-text') {
   if (nodes.length !== texts.length) {
     throw new Error('The length of nodes and texts should be the same.');
   }
@@ -102,7 +102,8 @@ function markSentence(texts, nodes, backgroundColor) {
         
         const span = document.createElement('span');
         span.textContent = text;
-        span.style.backgroundColor = backgroundColor; // Set the background color
+        span.style.backgroundColor = backgroundColor;
+        span.classList.add(markingClass); // Add a specific class for easy identification
         node.parentNode.insertBefore(span, node);
         
         if (afterText) {
@@ -118,6 +119,15 @@ function markSentence(texts, nodes, backgroundColor) {
     }
   });
 }
+
+
+function resetHighlights(markingClass = 'marked-text') {
+  const markedElements = document.querySelectorAll(`.${markingClass}`);
+  markedElements.forEach(element => {
+    element.replaceWith(document.createTextNode(element.textContent));
+  });
+}
+
 
 
 
@@ -198,4 +208,4 @@ function findMainContent() {
 
 
 
-export { textNodesUnderElem, splitIntoWords, findText, markSentence, findMainContent };
+export { textNodesUnderElem, splitIntoWords, findText, highlightText, resetHighlights, findMainContent };

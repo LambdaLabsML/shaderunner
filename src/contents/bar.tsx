@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Logo from 'data-url:./icon.png';
 import { findText, getMainContent, splitContent } from './extract'
 import { useSessionStorage as _useSessionStorage } from '../util'
-import { textNodesUnderElem, findText, markSentence, findMainContent  } from './utilDOM'
+import { textNodesUnderElem, findText, highlightText, resetHighlights, findMainContent  } from './utilDOM'
 import { computeEmbeddingsLocal } from './embeddings'
 import { sendToBackground } from "@plasmohq/messaging"
 import { useStorage } from "@plasmohq/storage/hook";
@@ -164,7 +164,7 @@ const ShadeRunnerBar = () => {
     useEffect(() => {
       if(!classifierData.thought && !highlightQuery) return;
 
-      unHighlightAll()
+      resetHighlights()
 
       if (textclassifier)
         highlightUsingClasses()
@@ -269,7 +269,7 @@ const ShadeRunnerBar = () => {
 
           // mark sentence
           const [texts, nodes] = findText(textNodes, split);
-          markSentence(texts, nodes, "rgba(255,0,0,0.2)");
+          highlightText(texts, nodes, "rgba(255,0,0,0.2)");
         } else {
           if (verbose) console.log("reject", split, score_plus, score_minus)
         }
@@ -300,14 +300,8 @@ const ShadeRunnerBar = () => {
 
         // mark sentence
         const [texts, nodes] = findText(textNodes, split);
-        markSentence(texts, nodes, "rgba(0,255,0,0.2)");
+        highlightText(texts, nodes, "rgba(0,255,0,0.2)");
       }
-    }
-
-    // reset markings
-    const unHighlightAll = async () => {
-      const textNodes = textNodesUnderElem(document.body);
-      console.log(textNodes)
     }
 
 
