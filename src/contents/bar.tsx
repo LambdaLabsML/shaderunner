@@ -77,6 +77,8 @@ const ShadeRunnerBar = () => {
     const [ highlightQuery, setHighlightQuery ] = useStorage("highlightQuery", "performance improvements");
     const [ pageEmbeddings, setPageEmbeddings] = useState({});
     const [ classifierData, setClassifierData] = useStorage("classifierData", {});
+    const [ retrievalQuery, setRetrievalQuery] = useStorage("retrievalQuery", null);
+    const [ scores, setScores] = useStorage("scores", []);
     const [ statusMsg, setStatusMsg] = useState([]);
     const [ isThinking, setIsThinking] = useState(false);
     const [ verbose, setVerbose ] = useStorage("verbose", false);
@@ -169,8 +171,8 @@ const ShadeRunnerBar = () => {
       if (textclassifier)
         highlightUsingClasses()
       if (textretrieval)
-        highlightUsingRetrieval(highlightQuery)
-    }, [classifierData, highlightQuery])
+        highlightUsingRetrieval(retrievalQuery)
+    }, [classifierData, retrievalQuery])
 
 
     // --------- //
@@ -274,7 +276,8 @@ const ShadeRunnerBar = () => {
           if (verbose) console.log("reject", split, score_plus, score_minus)
         }
       }
-        //setScores([scores_plus, scores_diffs])
+
+      setScores([scores_plus, scores_diffs])
     }
 
 
@@ -343,18 +346,20 @@ const ShadeRunnerBar = () => {
           <ClassModifierList title="Negative Terms" classList={classifierData.classes_neg} onSubmit={onClassChange}/>
         </CollapsibleBox>
       ) : ""}
-      {/*scores.length && scores[0].length ? ( 
-        <div className="histograms" style={{display: "flex", flexDirection: "row"}}>
-          <div style={{ flex: "1" }}>
-            <b style={{display: "block", width: "100%", textAlign: "center"}}>Scores of Positive Class</b>
-            <Histogram scores={scores[0]} lines={poseps} />
+      {scores.length && scores[0].length ? ( 
+        <CollapsibleBox title="Histograms">
+          <div className="histograms" style={{display: "flex", flexDirection: "row"}}>
+            <div style={{ flex: "1" }}>
+              <b style={{display: "block", width: "100%", textAlign: "center"}}>Scores of Positive Class</b>
+              <Histogram scores={scores[0]} lines={poseps} />
+            </div>
+            <div style={{ flex: "1" }}>
+              <b style={{display: "block", width: "100%", textAlign: "center"}}>Score Differences (score_plus - score_minus)</b>
+              <Histogram scores={scores[1]} lines={decisioneps > 0 ? [decisioneps] : []} />
+            </div>
           </div>
-          <div style={{ flex: "1" }}>
-            <b style={{display: "block", width: "100%", textAlign: "center"}}>Score Differences (score_plus - score_minus)</b>
-            <Histogram scores={scores[1]} lines={decisioneps > 0 ? [decisioneps] : []} />
-          </div>
-        </div>
-      ) : ""*/}
+        </CollapsibleBox>
+      ) : ""}
     </div>
 }
 
