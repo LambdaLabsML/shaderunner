@@ -170,11 +170,18 @@ const ShadeRunnerBar = () => {
 
       resetHighlights()
 
-      if (textclassifier)
-        highlightUsingClasses()
-      if (textretrieval)
-        highlightUsingRetrieval(retrievalQuery)
-    }, [classifierData, retrievalQuery])
+      const applyHighlight = async () => {
+        try {
+          if (textclassifier)
+            await highlightUsingClasses()
+          if (textretrieval)
+            await highlightUsingRetrieval(retrievalQuery)
+        } catch (error) {
+          console.error('Error in applyHighlight:', error);
+        }
+      }
+      applyHighlight()
+    }, [classifierData, retrievalQuery, isActive, textclassifier, textretrieval])
 
 
     // --------- //
