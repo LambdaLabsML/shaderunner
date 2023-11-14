@@ -14,67 +14,75 @@ function splitIntoWords(str) {
 }
 
 
-// given a list of textnodes, find the subset of textnodes that contain a string
-function findText(textNodes, sentence_str) {
-  const results = [];
-  const domElements = [];
-  const sentence = splitIntoWords(sentence_str)
 
-  // find textNode-interval that contains the sentence
-  let pos_sentence = 0;
-  let nodes = []; // the text nodes containing the sentence
-  let texts = []; // the actual strings contained in each text node
+function longestMatchingSubstring(str1, str2) {
+
+  // Heuristic check
+  if (str1.startsWith(str2)) return str2;
+  if (str2.startsWith(str1)) return str1;
+
+  // Find the length of the longest matching substring
+  let maxLength = 0;
+  for (let i = 0; i < Math.min(str1.length, str2.length); i++) {
+      if (str1[i] === str2[i]) {
+          maxLength++;
+      } else {
+          break; // Stop if characters don't match
+      }
+  }
+
+  // Extract the matching substring
+  return str1.substring(0, maxLength);
+}
+
+
+// given a list of textnodes, find the subset of textnodes that contain a string
+function findText(textNodes, sentence) {
+  let pos_sentence = 0; // Current position in the sentence
+  let nodes = []; // The text nodes containing the sentence parts
+  let texts = []; // The actual strings contained in each text node
+
   textNodeLoop:
   for (let i = 0; i < textNodes.length && pos_sentence < sentence.length; i++) {
-    const node = textNodes[i];
-    const textContent = splitIntoWords(node.textContent);
+    // Reset for each new starting node
+    let temp_nodes = [];
+    let temp_texts = [];
+    let temp_pos_sentence = pos_sentence;
 
-    // get index of first word
-    const word = sentence[pos_sentence];
-    const wordIndex = textContent.indexOf(word);
+    for (let j = i; j < textNodes.length && temp_pos_sentence < sentence.length; j++) {
+      const node = textNodes[j];
+      const textContent = node.textContent.trim();
+      if (textContent.length == 0) continue;
+      const sentence_substr = sentence.substr(temp_pos_sentence)
+      const sentence_substr_trimmed = sentence_substr.trim()
 
-    // if starting word not found in same node, we haven't found the actual sentence
-    // i.e. restart search with next node
-    if (wordIndex < 0) {
-      pos_sentence = 0;
-      nodes = [];
-      texts = [];
-      continue textNodeLoop;
-    }
+      // Get longest string match from the current position of the sentence
+      const longestMatch = longestMatchingSubstring(textContent, sentence_substr.trim());
 
-    // we found already one word from the sentence
-    texts.push(word)
-    nodes.push(node)
-    pos_sentence += 1;
-
-    // otherwise check equalness of all succeeding words
-    for (let j = 1; pos_sentence < sentence.length && wordIndex + j < textContent.length; j++) {
-      const word_sentence = sentence[pos_sentence]
-      const word_node = textContent[wordIndex + j]
-
-      // if the next word of the node differs from the sentence, we haven't found the actual sentence
-      // i.e. restart search with next node
-      // (also, if we would skip because of a whitespace, just skip it)
-      if (word_sentence != word_node && !(word_sentence == "-" && word_node == "—")) {
-        if (word_node.trim().length > 0) {
-          pos_sentence = 0;
-          nodes = [];
-          texts = [];
-          continue textNodeLoop;
-        }
-        continue;
+      // If no match or partial match without continuation, restart search with next node
+      if (longestMatch.length === 0) {//} || (longestMatch.length < textContent.length && !sentence.startsWith(longestMatch, temp_pos_sentence))) {
+        continue textNodeLoop;
       }
 
-      // we found a word from the sentence
-      //nodes.push(node)
-      texts[texts.length-1] += word_node
-      pos_sentence += 1;
+      // Update temporary lists
+      const len_whitespace = sentence_substr.length - sentence_substr_trimmed.length;
+      temp_texts.push(longestMatch);
+      temp_nodes.push(node);
+      temp_pos_sentence += longestMatch.length + len_whitespace;
 
+      // If the whole sentence is found, update the final lists
+      if (temp_pos_sentence === sentence.length) {
+        texts = temp_texts;
+        nodes = temp_nodes;
+        break textNodeLoop;
+      }
     }
   }
 
   return [texts, nodes];
 }
+
+
 
 
 
