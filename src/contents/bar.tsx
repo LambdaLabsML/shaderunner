@@ -3,7 +3,7 @@ import type { PlasmoMountShadowHost } from "plasmo"
 import React, { useState, useEffect } from 'react';
 import Logo from 'data-url:./icon.png';
 import { findText, getMainContent, splitContent } from './extract'
-import { useSessionStorage as _useSessionStorage } from '../util'
+import useSessionStorage, { useSessionStorage as _useSessionStorage } from '../util'
 import { textNodesUnderElem, findText, highlightText, resetHighlights, findMainContent  } from './utilDOM'
 import { computeEmbeddingsLocal } from './embeddings'
 import { sendToBackground } from "@plasmohq/messaging"
@@ -74,11 +74,11 @@ const ClassModifierList = ({title, classList, onSubmit}) => {
 // the actual shaderunner bar
 const ShadeRunnerBar = () => {
     const [ isActiveOn, setIsActiveOn ] = useStorage("activeURLs", []);
-    const [ highlightQuery, setHighlightQuery ] = useStorage("highlightQuery", "performance improvements");
+    const [ highlightQuery, setHighlightQuery ] = useSessionStorage("highlightQuery", "");
     const [ pageEmbeddings, setPageEmbeddings] = useState({});
-    const [ classifierData, setClassifierData] = useStorage("classifierData", {});
-    const [ retrievalQuery, setRetrievalQuery] = useStorage("retrievalQuery", null);
-    const [ scores, setScores] = useStorage("scores", []);
+    const [ classifierData, setClassifierData] = useSessionStorage("classifierData", {});
+    const [ retrievalQuery, setRetrievalQuery] = useSessionStorage("retrievalQuery", null);
+    const [ scores, setScores] = useSessionStorage("scores", []);
     const [ statusMsg, setStatusMsg] = useState([]);
     const [ isThinking, setIsThinking] = useState(false);
     const [ verbose, setVerbose ] = useStorage("verbose", false);
@@ -232,6 +232,7 @@ const ShadeRunnerBar = () => {
 
       // ensure we have embedded the page contents
       const pageEmbeddings = await getPageEmbeddings(mode)
+      console.log(pageEmbeddings)
       const splits = pageEmbeddings[mode].splits;
       const splitEmbeddings = pageEmbeddings[mode].embeddings;
 
