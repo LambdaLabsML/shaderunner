@@ -96,6 +96,7 @@ const ShadeRunnerBar = () => {
 
 
     const url = window.location.hostname + window.location.pathname;
+    const isActive = isActiveOn[window.location.hostname] ? true : false;
 
 
     // ------ //
@@ -164,7 +165,7 @@ const ShadeRunnerBar = () => {
 
     // on every classifier change, recompute highlights
     useEffect(() => {
-      if(!classifierData.thought && !highlightQuery) return;
+      if(!isActive || !classifierData.thought && !highlightQuery) return;
 
       resetHighlights()
 
@@ -313,7 +314,7 @@ const ShadeRunnerBar = () => {
     // ------ //
 
     // show only when active
-    if (!isActiveOn[window.location.hostname]) return "";
+    if (!isActive) return "";
 
 
 
