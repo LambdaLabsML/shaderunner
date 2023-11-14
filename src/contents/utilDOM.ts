@@ -145,7 +145,7 @@ function findTextFast(textNodes, sentence_str) {
 
 
 
-function highlightText(texts, nodes, backgroundColor, markingClass = 'marked-text') {
+function highlightText(texts, nodes, backgroundColor, title=null, markingClass = 'marked-text') {
   if (nodes.length !== texts.length) {
     throw new Error('The length of nodes and texts should be the same.');
   }
@@ -171,6 +171,8 @@ function highlightText(texts, nodes, backgroundColor, markingClass = 'marked-tex
         span.textContent = text;
         span.style.backgroundColor = backgroundColor;
         span.classList.add(markingClass); // Add a specific class for easy identification
+        if (title)
+          span.title = title
         node.parentNode.insertBefore(span, node);
         
         if (afterText) {

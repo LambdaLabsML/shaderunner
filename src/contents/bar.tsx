@@ -287,7 +287,7 @@ const ShadeRunnerBar = () => {
               if (verbose) console.log("ERROR: text not found", split)
             }
           }
-          highlightText(texts, nodes, "rgba(255,0,0,0.2)");
+          highlightText(texts, nodes, "rgba(255,0,0,0.2)", closest[0][0].pageContent + " " + closest[0][1]);
         } else {
           if (verbose) console.log("reject", split, score_plus, score_minus)
         }
