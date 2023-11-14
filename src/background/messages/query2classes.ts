@@ -47,17 +47,19 @@ const llm2classes = async (url, title, query) => {
     });
 
 
-    const PROMPT = `We are partitioning a large number of sentences on a webpage into two groups: those that are interesting for the user and those that aren't.
-To do that we need two classes of topics that we can use to classify all sentences using distance based measures.
-I.e. we suceeed if any topic in positive classs is nearer than any other topic of the negative class.
-
+    const PROMPT = `Classify sentences on a webpage into 'interesting' and 'uninteresting' categories.
+Use two classes of topics for classification, based on distance measures.
+A sentence is 'interesting' if it is closer to any topic in the 'positive' class than to any in the 'negative' class.
+Ensure sufficient distance between the two classes.
+Define specific topics for the 'positive' class and broader ones for the 'negative' class, if the query permits.
+ 
 # Training Example
-URL: www.globalpoliticstoday.com/october-2021-summary
-Title: Major Political Events and Changes - 2021 Roundup
-Query: What were the major political events in October 2021?
-Thought: The page is about political events in 2021, the user is looking for specific information related to October 2021. I should exclude previous years and other months. To reduce false positives, I mix general topics related to politics into the negative class.
-Positive Class Topics: October 2021 Election Results, Political Decisions October 2021, Legislation Passed in October 2021, Summits and Meetings October 2021, Government Changes in October 2021, Policy Changes October 2021, International Relations in October 2021
-Negative Class Topics: Political Events October 2020, October 2019 Government Policies, Summits October 2018, Elections Results October 2022, Legislation Updates October 2017, Political Landscape October 2016, International Agreements October 2023
+URL: www.llmperformance.com/2023-trends
+Title: LLM Performance Metrics and Improvements in 2023
+Query: performance improvements
+Thought: This page likely discusses both performance metrics and improvements for LLMs. Since the user is interested specifically in improvements, I will focus on sentences highlighting enhancements, optimizations, or advancements in LLM performance. Topics that simply measure performance or are not directly related to improvements fall into the negative class. The terms 'LLM' and '2023' are omitted as they are implied in the context of the page.
+Positive Class Topics: Speed Optimization, Efficiency Enhancements, Scalability Upgrades, Cost-Effectiveness Strategies, Response Time Reduction, Advanced Inference Techniques
+Negative Class Topics: LLM, Usage, Metrics, Companies, General
 
 # Training Example
 URL: en.wikipedia.org/wiki/Scientific_method
@@ -65,8 +67,7 @@ Title: Scientific method - Wikipedia
 Query: Software Installation Instructions
 Thought: Wikipedia article is about research techniques, but the user asked for installation instructions. I should give no positive classes here.
 Positive Class Topics: 
-Negative Class Topics: anything
-
+Negative Class Topics: Scientific Method Principles, Research Techniques, Experiment Design, Data Analysis Methods, Hypothesis Testing, Scientific Inquiry Process, Theory Formulation and Verification, History of Scientific Method, Scientific Research Methodologies
 
 # Incoming User Request
 URL: ${url}
