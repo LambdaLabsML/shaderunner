@@ -258,7 +258,7 @@ const ShadeRunnerBar = () => {
 
         // ignore anything that is not distinguishable
         //if (score_plus < MIN_CLASS_EPS || Math.abs(score_plus - score_minus) < EPS) {
-        else if (decisioneps > 0 && Math.abs(score_plus - score_minus) < decisioneps || minimalhighlighteps > 0 && score_plus < minimalhighlighteps) {
+        else if (!highlightanyway && (decisioneps > 0 && Math.abs(score_plus - score_minus) < decisioneps || minimalhighlighteps > 0 && score_plus < minimalhighlighteps)) {
           if (verbose) console.log("skipping", split, score_plus, score_minus)
           continue
         }
