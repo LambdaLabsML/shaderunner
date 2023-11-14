@@ -132,12 +132,13 @@ const ShadeRunnerBar = () => {
         }
 
         // ensure split embeddings exist
-        const newEmbeddings = await getPageEmbeddings("sentences", () => {
+        const mode = "sentences";
+        const newEmbeddings = await getPageEmbeddings(mode, () => {
           statusAdd("embedding", random(MSG_EMBED))
         }, () => {
           statusAmend(status => [status[0], status[1] + " done"])
         })
-        setPageEmbeddings(old => ({...old, ...newEmbeddings}));
+        setPageEmbeddings(old => ({...old, [mode]: newEmbeddings}));
 
         statusAdd("status","done")
         setIsThinking(false)
