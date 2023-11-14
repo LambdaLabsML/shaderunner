@@ -50,23 +50,20 @@ const llm2classes = async (url, title, query) => {
     //'General' sentences align with broader topics not specific to the query but related to the overall content.
     //'Outlier' sentences are those that align with miscellaneous or tangential topics, reflecting content not directly related to the main theme or query.
 
-    const PROMPT = `Classify sentences on a webpage into 'interesting' and 'outlier' categories.
-Use two classes of topics for classification, based on distance measures.
-A sentence is 'interesting' if it is closer to any topic in the 'interesting' class than to any in the 'outlier' class.
-A sentence is 'outlier' if it aligns closely with broad topics but not specifically with 'interesting' topics.
-Define specific topics for the 'interesting' class and broader ones for the 'outlier' class, if the query permits.
-Ensure a clear distinction between the classes for effective classification.
+    const PROMPT = `Classify sentences from a webpage as either 'interesting' or 'outlier'.
+For this, use two categories: 'interesting' for sentences closely related to specific topics relevant to the user query, and 'outlier' for sentences that are only mildly related or unrelated.
+Sentences are deemed 'interesting' if they are nearer to a topic in the 'interesting' category than to those in the 'outlier' category.
+Conversely, classify a sentence as 'outlier' if it is broadly related to general topics but not closely aligned with the 'interesting' topics.
 Classes are always inclusive rather than exclusive.
-Keep in mind to also define outlier classes for sentences that are not of any topic.
-Consider the query's context in classifying sentences and topics.
-The result is used in a nearest neighbor approach for classification, where sentence-topic distance is key.
+The classification relies on a nearest neighbor approach, considering the sentence-topic distance.
+The context of the query should guide the classification, ensuring sentences are appropriately grouped.
  
 # Training Example
 URL: www.llmperformance.com/2023-trends
 Title: LLM Performance Metrics and Improvements in 2023
 Query: performance improvements
-Thought: Focusing on the specific interest in performance improvements, classify sentences related to enhancements and optimizations as 'interesting'. Sentences about performance metrics or broader LLM aspects are 'outliers'. Irrelevant topics or overly broad statements are also 'outliers'.
-Interesting Class Topics: Performance Enhancement, Optimization Strategies, Efficiency Increases
+Thought: Classify sentences as 'interesting' if they are specifically about enhancing or optimizing LLM performance. Classify as 'outliers' sentences that discuss broader topics or are irrelevant to performance improvements.
+Interesting Class Topics: Performance Enhancement, Optimization Strategies, Efficiency Increase
 Outlier Class Topics: LLM Applications, Technical Specifications, User Testimonials, Industry Trends, Regulatory Considerations, Market Analysis, Cost-Effectiveness, Website Navigation, Advertisements, General News, External Links, Website Updates, Miscellaneous Announcements
 
 # Training Example
