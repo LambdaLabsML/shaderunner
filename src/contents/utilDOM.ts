@@ -276,5 +276,29 @@ function findMainContent() {
 }
 
 
+let colors = {}
+const consistentColor = (s, strong=false) => {
+    if (s in colors)
+        return colors[s];
 
-export { textNodesUnderElem, splitIntoWords, findTextSlow, findTextFast, highlightText, resetHighlights, findMainContent };
+    // Calculate the hash of the string
+    let hash = 0;
+    for (let i = 0; i < s.length; i++) {
+        hash = s.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    
+    // Generate HSL color values
+    const hue = ((hash % 360) + 360) % 360; // Ensure hue is within [0, 360)
+    const saturation = strong ? 100 : 80; // You can adjust this value as needed
+    const lightness = strong ? 60 : 80; // You can adjust this value as needed
+    const alpha = strong ? 1.0 : 0.7; // You can adjust this value as needed
+    
+    // Return the HSL color value
+    let color = `hsla(${hue}, ${saturation}%, ${lightness}%, ${alpha})`;
+    colors[s] = color;
+    console.log(s, color)
+    return color;
+}   
+
+
+export { textNodesUnderElem, splitIntoWords, findTextSlow, findTextFast, highlightText, resetHighlights, findMainContent, consistentColor };

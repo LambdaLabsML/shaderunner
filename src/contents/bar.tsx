@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Logo from 'data-url:./icon.png';
 import { getMainContent, splitContent } from './extract'
 import useSessionStorage, { useSessionStorage as _useSessionStorage } from '../util'
-import { textNodesUnderElem, findTextSlow, findTextFast, highlightText, resetHighlights, findMainContent  } from './utilDOM'
+import { textNodesUnderElem, findTextSlow, findTextFast, highlightText, resetHighlights, findMainContent, consistentColor } from './utilDOM'
 import { computeEmbeddingsLocal } from './embeddings'
 import { sendToBackground } from "@plasmohq/messaging"
 import { useStorage } from "@plasmohq/storage/hook";
@@ -287,7 +287,7 @@ const ShadeRunnerBar = () => {
               if (verbose) console.log("ERROR: text not found", split)
             }
           }
-          highlightText(texts, nodes, "rgba(255,0,0,0.2)", closest[0][0].pageContent + " " + closest[0][1]);
+          highlightText(texts, nodes, consistentColor(closest[0][0].pageContent), closest[0][0].pageContent + " " + closest[0][1]);
         } else {
           if (verbose) console.log("reject", split, score_plus, score_minus)
         }
@@ -321,7 +321,7 @@ const ShadeRunnerBar = () => {
 
         // mark sentence
         const [texts, nodes] = findTextSlow(textNodes, split);
-        highlightText(texts, nodes, "rgba(0,255,0,0.2)");
+        highlightText(texts, nodes, consistentColor(highlightQuery+" (retrieval)", true));
       }
     }
 
@@ -378,6 +378,11 @@ const ShadeRunnerBar = () => {
           </div>
         </CollapsibleBox>
       ) : ""}
+      <h3>Colors</h3>
+      {classifierData.thought ? classifierData.classes_pos.map(c => (
+        <span style={{backgroundColor: consistentColor(c)}}>{c}</span>
+      )) : ""}
+      <span style={{backgroundColor: consistentColor(highlightQuery+" (retrieval)", true)}}>{highlightQuery+" (retrieval)"}</span>
     </div>
 }
 
