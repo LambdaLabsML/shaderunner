@@ -11,16 +11,16 @@ function parseInput(input) {
     
     // Process each line
     const output = lines.map(line => {
-      // Check for the presence of "Negative Class:"
+      // Check for the presence of "Outlier Class:"
 
       if (line.includes('Though:')) {
         line = line.replace('Thought:', '').trim();
         return line
-      } else if (line.includes('Positive Class Topics:')) {
-        line = line.replace('Positive Class Topics:', '').trim();
+      } else if (line.includes('Interesting Class Topics:')) {
+        line = line.replace('Interesting Class Topics:', '').trim();
         return line ? line.split(',').map(part => part.trim()) : [];
-      } else if (line.includes('Negative Class Topics:')) {
-        line = line.replace('Negative Class Topics:', '').trim();
+      } else if (line.includes('Outlier Class Topics:')) {
+        line = line.replace('Outlier Class Topics:', '').trim();
         return line ? line.split(',').map(part => part.trim()) : [];
       }
       return line.trim()
@@ -46,28 +46,36 @@ const llm2classes = async (url, title, query) => {
         model: gptversion
     });
 
+    //'Interesting' sentences are closer to specific topics within the query's context.
+    //'General' sentences align with broader topics not specific to the query but related to the overall content.
+    //'Outlier' sentences are those that align with miscellaneous or tangential topics, reflecting content not directly related to the main theme or query.
 
-    const PROMPT = `Classify sentences on a webpage into 'interesting' and 'uninteresting' categories.
+    const PROMPT = `Classify sentences on a webpage into 'interesting' and 'outlier' categories.
 Use two classes of topics for classification, based on distance measures.
-A sentence is 'interesting' if it is closer to any topic in the 'positive' class than to any in the 'negative' class.
-Ensure sufficient distance between the two classes.
-Define specific topics for the 'positive' class and broader ones for the 'negative' class, if the query permits.
+A sentence is 'interesting' if it is closer to any topic in the 'interesting' class than to any in the 'outlier' class.
+A sentence is 'outlier' if it aligns closely with broad topics but not specifically with 'interesting' topics.
+Define specific topics for the 'interesting' class and broader ones for the 'outlier' class, if the query permits.
+Ensure a clear distinction between the classes for effective classification.
+Classes are always inclusive rather than exclusive.
+Keep in mind to also define outlier classes for sentences that are not of any topic.
+Consider the query's context in classifying sentences and topics.
+The result is used in a nearest neighbor approach for classification, where sentence-topic distance is key.
  
 # Training Example
 URL: www.llmperformance.com/2023-trends
 Title: LLM Performance Metrics and Improvements in 2023
 Query: performance improvements
-Thought: This page likely discusses both performance metrics and improvements for LLMs. Since the user is interested specifically in improvements, I will focus on sentences highlighting enhancements, optimizations, or advancements in LLM performance. Topics that simply measure performance or are not directly related to improvements fall into the negative class. The terms 'LLM' and '2023' are omitted as they are implied in the context of the page.
-Positive Class Topics: Speed Optimization, Efficiency Enhancements, Scalability Upgrades, Cost-Effectiveness Strategies, Response Time Reduction, Advanced Inference Techniques
-Negative Class Topics: LLM, Usage, Metrics, Companies, General
+Thought: Focusing on the specific interest in performance improvements, classify sentences related to enhancements and optimizations as 'interesting'. Sentences about performance metrics or broader LLM aspects are 'outliers'. Irrelevant topics or overly broad statements are also 'outliers'.
+Interesting Class Topics: Performance Enhancement, Optimization Strategies, Efficiency Increases
+Outlier Class Topics: LLM Applications, Technical Specifications, User Testimonials, Industry Trends, Regulatory Considerations, Market Analysis, Cost-Effectiveness, Website Navigation, Advertisements, General News, External Links, Website Updates, Miscellaneous Announcements
 
 # Training Example
 URL: en.wikipedia.org/wiki/Scientific_method
 Title: Scientific method - Wikipedia
 Query: Software Installation Instructions
-Thought: Wikipedia article is about research techniques, but the user asked for installation instructions. I should give no positive classes here.
-Positive Class Topics: 
-Negative Class Topics: Scientific Method Principles, Research Techniques, Experiment Design, Data Analysis Methods, Hypothesis Testing, Scientific Inquiry Process, Theory Formulation and Verification, History of Scientific Method, Scientific Research Methodologies
+Thought: Since the query is unrelated to the article's content, focus on separating the main content from miscellaneous or tangential information.
+Interesting Class Topics: Scientific Software, Installation Instructions
+Outlier Class Topics: Scientific Method Principles, Research Techniques, Experiment Design, Data Analysis, Hypothesis Testing, Scientific Inquiry, Theory Formulation, Scientific Method History, Research Methodologies, Wikipedia Navigation, External References, User Comments, Site Policies, Editing History, General Wikipedia Announcements
 
 # Incoming User Request
 URL: ${url}
