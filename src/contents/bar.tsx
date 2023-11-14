@@ -299,6 +299,8 @@ const ShadeRunnerBar = () => {
 
     // mark sentences based on retrieval
     const highlightUsingRetrieval = async (query, mode = "sentences") => {
+      if (!query) return;
+
       // ensure we have embedded the page contents
       const pageEmbeddings = await getPageEmbeddings(mode)
       const splits = pageEmbeddings[mode].splits;
