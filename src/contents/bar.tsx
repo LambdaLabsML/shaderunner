@@ -173,9 +173,9 @@ const ShadeRunnerBar = () => {
       const applyHighlight = async () => {
         try {
           if (textclassifier)
-            await highlightUsingClasses()
+            highlightUsingClasses()
           if (textretrieval)
-            await highlightUsingRetrieval(retrievalQuery)
+            highlightUsingRetrieval(highlightQuery)
         } catch (error) {
           console.error('Error in applyHighlight:', error);
         }
