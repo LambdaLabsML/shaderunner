@@ -356,7 +356,7 @@ const ShadeRunnerBar = () => {
         rows="4"
       />
       {statusMsg && statusMsg.length ? statusHtml : ""}
-      {classifierData.thought ? (
+      {classifierData.thought && classifierData.classes_pos && classifierData.classes_neg ? (
         <CollapsibleBox title="Highlight Classes">
           <h3>Thought:</h3>
           {classifierData.thought}
@@ -379,7 +379,7 @@ const ShadeRunnerBar = () => {
         </CollapsibleBox>
       ) : ""}
       <h3>Colors</h3>
-      {classifierData.thought ? classifierData.classes_pos.map(c => (
+      {classifierData.classes_pos ? classifierData.classes_pos.map(c => (
         <span style={{backgroundColor: consistentColor(c)}}>{c}</span>
       )) : ""}
       <span style={{backgroundColor: consistentColor(highlightQuery+" (retrieval)", true)}}>{highlightQuery+" (retrieval)"}</span>
