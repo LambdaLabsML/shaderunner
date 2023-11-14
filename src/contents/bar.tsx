@@ -223,7 +223,7 @@ const ShadeRunnerBar = () => {
         return;
 
       // ensure we have embedded the page contents
-      const pageEmbeddings = await getPageEmbeddings()
+      const pageEmbeddings = await getPageEmbeddings(mode)
       const splits = pageEmbeddings[mode].splits;
       const splitEmbeddings = pageEmbeddings[mode].embeddings;
 
@@ -272,6 +272,10 @@ const ShadeRunnerBar = () => {
 
           // mark sentence
           const [texts, nodes] = findText(textNodes, split);
+          if (texts.length == 0) {
+            if (verbose) console.log("ERROR: text not found", split)
+            const [texts2, nodes2] = findText(textNodes, split);
+          }
           highlightText(texts, nodes, "rgba(255,0,0,0.2)");
         } else {
           if (verbose) console.log("reject", split, score_plus, score_minus)
@@ -285,7 +289,7 @@ const ShadeRunnerBar = () => {
     // mark sentences based on retrieval
     const highlightUsingRetrieval = async (query, mode = "sentences") => {
       // ensure we have embedded the page contents
-      const pageEmbeddings = await getPageEmbeddings()
+      const pageEmbeddings = await getPageEmbeddings(mode)
       const splits = pageEmbeddings[mode].splits;
       const metadata = pageEmbeddings[mode].metadata;
 
