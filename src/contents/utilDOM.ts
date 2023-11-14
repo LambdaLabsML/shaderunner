@@ -37,7 +37,7 @@ function longestMatchingSubstring(str1, str2) {
 
 
 // given a list of textnodes, find the subset of textnodes that contain a string
-function findText(textNodes, sentence) {
+function findTextSlow(textNodes, sentence) {
   let pos_sentence = 0; // Current position in the sentence
   let nodes = []; // The text nodes containing the sentence parts
   let texts = []; // The actual strings contained in each text node
@@ -83,6 +83,65 @@ function findText(textNodes, sentence) {
 }
 
 
+// given a list of textnodes, find the subset of textnodes that contain a string
+function findTextFast(textNodes, sentence_str) {
+  const sentence = splitIntoWords(sentence_str)
+
+  // find textNode-interval that contains the sentence
+  let pos_sentence = 0;
+  let nodes = []; // the text nodes containing the sentence
+  let texts = []; // the actual strings contained in each text node
+  textNodeLoop:
+  for (let i = 0; i < textNodes.length && pos_sentence < sentence.length; i++) {
+    const node = textNodes[i];
+    const textContent = splitIntoWords(node.textContent);
+
+    // get index of first word
+    const word = sentence[pos_sentence];
+    const wordIndex = textContent.indexOf(word);
+
+    // if starting word not found in same node, we haven't found the actual sentence
+    // i.e. restart search with next node
+    if (wordIndex < 0) {
+      pos_sentence = 0;
+      nodes = [];
+      texts = [];
+      continue textNodeLoop;
+    }
+
+    // we found already one word from the sentence
+    texts.push(word)
+    nodes.push(node)
+    pos_sentence += 1;
+
+    // otherwise check equalness of all succeeding words
+    for (let j = 1; pos_sentence < sentence.length && wordIndex + j < textContent.length; j++) {
+      const word_sentence = sentence[pos_sentence]
+      const word_node = textContent[wordIndex + j]
+
+      // if the next word of the node differs from the sentence, we haven't found the actual sentence
+      // i.e. restart search with next node
+      // (also, if we would skip because of a whitespace, just skip it)
+      if (word_sentence != word_node && !(word_sentence == "-" && word_node == "—")) {
+        if (word_node.trim().length > 0) {
+          pos_sentence = 0;
+          nodes = [];
+          texts = [];
+          continue textNodeLoop;
+        }
+        continue;
+      }
+
+      // we found a word from the sentence
+      //nodes.push(node)
+      texts[texts.length-1] += word_node
+      pos_sentence += 1;
+
+    }
+  }
+
+  return [texts, nodes];
+}
 
 
 
@@ -216,4 +275,4 @@ function findMainContent() {
 
 
 
-export { textNodesUnderElem, splitIntoWords, findText, highlightText, resetHighlights, findMainContent };
+export { textNodesUnderElem, splitIntoWords, findTextSlow, findTextFast, highlightText, resetHighlights, findMainContent };

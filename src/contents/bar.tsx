@@ -2,9 +2,9 @@ import type { PlasmoGetInlineAnchor } from "plasmo"
 import type { PlasmoMountShadowHost } from "plasmo"
 import React, { useState, useEffect } from 'react';
 import Logo from 'data-url:./icon.png';
-import { findText, getMainContent, splitContent } from './extract'
+import { getMainContent, splitContent } from './extract'
 import useSessionStorage, { useSessionStorage as _useSessionStorage } from '../util'
-import { textNodesUnderElem, findText, highlightText, resetHighlights, findMainContent  } from './utilDOM'
+import { textNodesUnderElem, findTextSlow, findTextFast, highlightText, resetHighlights, findMainContent  } from './utilDOM'
 import { computeEmbeddingsLocal } from './embeddings'
 import { sendToBackground } from "@plasmohq/messaging"
 import { useStorage } from "@plasmohq/storage/hook";
@@ -181,7 +181,7 @@ const ShadeRunnerBar = () => {
         }
       }
       applyHighlight()
-    }, [classifierData, retrievalQuery, isActive, textclassifier, textretrieval])
+    }, [classifierData, isActive, textclassifier, textretrieval])
 
 
     // --------- //
@@ -280,10 +280,12 @@ const ShadeRunnerBar = () => {
           const textNodes = textNodesUnderElem(document.body);
 
           // mark sentence
-          const [texts, nodes] = findText(textNodes, split);
+          let [texts, nodes] = findTextFast(textNodes, split);
           if (texts.length == 0) {
-            if (verbose) console.log("ERROR: text not found", split)
-            const [texts2, nodes2] = findText(textNodes, split);
+            [texts, nodes] = findTextSlow(textNodes, split);
+            if (texts.length == 0) {
+              if (verbose) console.log("ERROR: text not found", split)
+            }
           }
           highlightText(texts, nodes, "rgba(255,0,0,0.2)");
         } else {
@@ -316,7 +318,7 @@ const ShadeRunnerBar = () => {
         const textNodes = textNodesUnderElem(document.body);
 
         // mark sentence
-        const [texts, nodes] = findText(textNodes, split);
+        const [texts, nodes] = findTextSlow(textNodes, split);
         highlightText(texts, nodes, "rgba(0,255,0,0.2)");
       }
     }
