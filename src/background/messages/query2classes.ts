@@ -102,18 +102,17 @@ URL: www.llmperformance.com/2020s-trends
 Title: LLM Performance Metrics and Improvements in the 2020s
 Query: performance improvements 2023
 Scope: narrow
-Thought: Classify sentences as 'interesting' if they are about enhancing or optimizing LLM performance. Classify as 'outliers' sentences that discuss broader topics or are irrelevant to performance improvements. I assume the user is interested in a broad classification of all performance improvement types that I know. As this is time-sensitive I should narrow down uninteresting years into the outlier list.
+Thought: Classify sentences as 'interesting' if they are about enhancing or optimizing LLM performance. Classify as 'outliers' sentences that discuss broader topics or are irrelevant to performance improvements. As this is time-sensitive I should narrow down uninteresting years into the outlier list.
 Interesting Class Topics: Performance Enhancement, Optimization Strategies, Efficiency Increase
 Outlier Class Topics: year 2020, year 2021, year 2024, Applications, Use Cases, Design Challenges, Technical Specifications, User Testimonials, Industry Trends, Regulatory Considerations, Market Analysis, Cost-Effectiveness, Website Navigation, Advertisements, General News, External Links, Website Updates, Miscellaneous Announcements
 
 # Training Exampple
 URL: www.myhealth.com/nutrition-tips
 Title: Essential Nutrition Tips for a Healthy Lifestyle
-Query: Nutritional benefits of vegetables
-Scope: broad
-Thought: The user is interested in understanding the nutritional benefits of vegetables. Therefore, sentences that directly discuss this topic are 'interesting'. The scope is broad, thus, while the focus is on vegetables, related nutritional topics can also be considered 'interesting' to some extent.
-Topics that are tangentially related to nutrition but not directly about the nutritional benefits of vegetables, or general health tips without specific mention of nutrition, would be classified as 'outliers'.
-Interesting Class Topics: Comparative Nutrient Values in a Vegetable, Vitamins and Minerals in Vegetables, Health Benefits of Vegetables, Health Advantages and well-being and overall health, Advice on incorporating vegetables into diets
+Query: Nutritional benefit types in vegetables
+Scope: middle
+Thought: The user is interested in understanding the nutritional benefits of vegetables. Therefore, sentences that directly discuss this topic are 'interesting'. The scope is broad, thus, related nutritional topics can also be considered 'interesting' to some extent. Since this is a broad scope I will list all nutricion benefit types that could match the request. Topics that are tangentially related to nutrition but not directly about the nutritional benefits of vegetables, or general health tips without specific mention of nutrition, would be classified as 'outliers'.
+Interesting Class Topics: Vitamins (A, C, K, and B-complex), Minerals (iron, calcium, potassium, magnesium), Dietary fiber, Antioxidants, Low calories, Low fat, Phytonutrients (flavonoids, carotenoids), Water content, Folate, Protein (in some vegetables like legumes)
 Outlier Class Topics: General Health Tips, Meat Nutrition, Fish Nutrition, Advertisements, Testimonials, External Links
 
 # Training Example
@@ -124,15 +123,6 @@ Scope: narrow
 Thought: Since the page is about the Rabin-Karp algorithm and the user asks for it's core idea, I need to think around the corner to highlight the specific sentences. In this case I should reference hashing and string matching. At the same time I add close specific topics to the negative class to compensate for false positives.
 Interesting Class Topics: Core Idea and Trick (Rolling Hash Mechanism), String Matching Efficiency, Specifics of Algorithm Implementation, Performance Analysis or Complexity (O-notation)
 Outlier Class Topics: Hashing, String Matching, Algorithm History, Algorithm Theory, String Matching Algorithms, Usage, Related Algorithms, Code Expression, Programming in C++, Site Navigation, External Links
-
-# Training Example
-URL: www.arthistoryinsights.com/renaissance-masters
-Title: The Masters of Renaissance Art: Innovations and Influences
-Query: Influence of Renaissance artists
-Scope: middle
-Thought: Focus on sentences that discuss the specific influence of Renaissance artists on art movements, techniques, and their contemporaries. The topic is moderately broad, encompassing both individual contributions and wider cultural impacts. Avoid straying into general art history or detailed biographies that don't link back to influence.
-Interesting Class Topics: Influence of Specific Renaissance Artists on Art Techniques, Impact on Subsequent Art Movements, Contributions to Cultural and Artistic Trends, Collaborations and Inspirations Among Renaissance Artists, Analysis of Key Works in Relation to their Historical Influence
-Outlier Class Topics: Detailed Biographies Without Emphasis on Influence, General Overviews of Renaissance Art, Non-Artistic Cultural Aspects of the Renaissance (e.g., politics, science), Analysis of Modern Art Movements Unrelated to Renaissance Influence, Specific Art Techniques Not Tied to Artist Influences, Advertisements, External Links
 
 # Incoming User Request (always use training example template)
 URL: ${url}
