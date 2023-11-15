@@ -122,6 +122,17 @@ const ShadeRunnerBar = () => {
     const onEnterPress = async (ev) => {
       if (ev.keyCode == 13 && ev.shiftKey == false) {
         ev.preventDefault(); 
+
+        // just reset if no query given
+        if(!highlightQuery) {
+          resetHighlights()
+          setClassifierData({})
+          setRetrievalQuery(null)
+          setScores([])
+          setIsThinking(false)
+          return;
+        }
+
         setStatusMsg([])
         setIsThinking(true)
         //await query2embedding(highlightQuery);
@@ -172,7 +183,7 @@ const ShadeRunnerBar = () => {
 
     // on every classifier change, recompute highlights
     useEffect(() => {
-      if(!isActive || !classifierData.thought && !highlightQuery) return;
+      if(!highlightQuery || !isActive || !classifierData.thought && !highlightQuery) return;
 
       resetHighlights()
 
@@ -375,7 +386,7 @@ const ShadeRunnerBar = () => {
           <ClassModifierList title="Negative Terms" classList={classifierData.classes_neg} onSubmit={onClassChange}/>
         </CollapsibleBox>
       ) : ""}
-      {!isThinking && scores.length && scores[0].length ? ( 
+      {!isThinking && scores.length > 0 && scores[0].length > 0 ? ( 
         <CollapsibleBox title="Histograms">
           <div className="histograms" style={{display: "flex", flexDirection: "row"}}>
             <div style={{ flex: "1" }}>
