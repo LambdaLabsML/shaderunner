@@ -5,6 +5,36 @@ import { Storage } from "@plasmohq/storage"
 const storage = new Storage()
 
 
+function splitStringIgnoringParentheses(input) {
+  let results = [];
+  let currentSegment = '';
+  let insideParentheses = false;
+
+  for (let char of input) {
+      if (char === '(') {
+          insideParentheses = true;
+      } else if (char === ')') {
+          insideParentheses = false;
+      }
+
+      if (char === ',' && !insideParentheses) {
+          results.push(currentSegment.trim());
+          currentSegment = '';
+      } else {
+          currentSegment += char;
+      }
+  }
+
+  // Add the last segment if it's not empty
+  if (currentSegment) {
+      results.push(currentSegment.trim());
+  }
+
+  return results;
+}
+
+
+
 function parseInput(input) {
     // Split the input into lines
     const lines = input.split('\n');
@@ -21,10 +51,10 @@ function parseInput(input) {
         return line;
       } else if (line.includes('Interesting Class Topics:')) {
         line = line.replace('Interesting Class Topics:', '').trim();
-        return line ? line.split(',').map(part => part.trim()) : [];
+        return line ? splitStringIgnoringParentheses(line).map(part => part.trim()) : [];
       } else if (line.includes('Outlier Class Topics:')) {
         line = line.replace('Outlier Class Topics:', '').trim();
-        return line ? line.split(',').map(part => part.trim()) : [];
+        return line ? splitStringIgnoringParentheses(line).map(part => part.trim()) : [];
       }
       return line.trim()
       
