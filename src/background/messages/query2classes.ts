@@ -40,14 +40,16 @@ const llm2classes = async (url, title, query) => {
     const api_key = await storage.get("OPENAI_API_KEY");
     const gptversion = await storage.get("gpt_version");
     const chatgpt = await storage.get("gpt_chat");
+    const gpttemperature = await storage.get("gpt_temperature");
 
     const Model = chatgpt ? ChatOpenAI : OpenAI;
 
     const llm = new Model({
         openAIApiKey: api_key,
-        temperature: 0.0,
+        temperature: gpttemperature,
         model: gptversion
     });
+    console.log("using llm:", gptversion, "with temperature", gpttemperature)
 
     //'Interesting' sentences are closer to specific topics within the query's context.
     //'General' sentences align with broader topics not specific to the query but related to the overall content.

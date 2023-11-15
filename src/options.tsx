@@ -50,6 +50,7 @@ const Settings = () => {
   const [openaikey, setopenaikey] = useStorage('OPENAI_API_KEY', (v) => v === undefined ? "" : v)
   const [gptversion, setgptversion] = useStorage('gpt_version', (v) => v === undefined ? "gpt-4" : v)
   const [gptchat, setgptchat] = useStorage('gpt_chat', (v) => v === undefined ? false : v)
+  const [gpttemperature, setgpttemperature] = useStorage('gpt_temperature', (v) => v === undefined ? 0.0 : v)
   const [textclassifier, settextclassifier] = useStorage('textclassifier', (v) => v === undefined ? true : v)
   const [textretrieval, settextretrieval] = useStorage('textretrieval', (v) => v === undefined ? true : v)
   const [textretrieval_k, settextretrieval_k] = useStorage('textretrieval_k', (v) => v === undefined ? 3 : v)
@@ -76,7 +77,7 @@ const Settings = () => {
       <b style={{width:"100%", textAlign: "left"}}>(Note: GPT4 + Instruct seems to be the best combination.)</b> 
       <SwitchInput
         label="GPT-Version"
-        options={['gpt-3.5-turbo', 'gpt-4']}
+        options={['gpt-3.5-turbo', 'gpt-4', 'gpt-4-1106-preview']}
         selected={gptversion}
         onChange={(value) => setgptversion(value)}
       />
@@ -86,6 +87,12 @@ const Settings = () => {
         selected={gptchat ? "ChatGPT" : "InstructGPT"}
         onChange={(value) => setgptchat(value == "ChatGPT")}
       />
+      <NumericInput
+          label="LLM Temperature"
+          value={gpttemperature}
+          step={0.1}
+          onChange={(value) => setgpttemperature(Math.min(1.0, Math.max(value, 0.0)))}
+        />
       <SwitchInput
         label="Modes: Text Classifier (can highlight arbitrary many sentences), Text Retriever (can highlight a fixed amount of sentences)"
         options={['Text Classifier', "Text Retriever", "Both"]}
