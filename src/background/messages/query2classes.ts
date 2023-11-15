@@ -57,7 +57,7 @@ const llm2classes = async (url, title, query) => {
 For this, use two categories: 'interesting' for sentences closely related to specific topics relevant to the user query, and 'outlier' for sentences that are only mildly related or unrelated.
 Sentences are deemed 'interesting' if they are nearer to a topic in the 'interesting' category than to those in the 'outlier' category.
 Conversely, classify a sentence as 'outlier' if it is broadly related to general topics but not closely aligned with the 'interesting' topics.
-Classes are always inclusive rather than exclusive.
+Classes are always positive and never in their negated form (e.g omit the words "Other" and "Non-" for all class topics).
 The classification relies on a nearest neighbor approach, considering the sentence-topic distance.
 The context of the query should guide the classification, ensuring sentences are appropriately grouped.
 The number of negative topics may be higher than the number of positive topics.
