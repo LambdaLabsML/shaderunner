@@ -90,7 +90,7 @@ const Legend = () => {
       document.addEventListener('mouseup', handleMouseUp);
   };
 
-    if (!Array.isArray(classifierData.classes_pos) || classifierData.classes_pos.length == 0)
+    if (!isActive || !Array.isArray(classifierData.classes_pos) || classifierData.classes_pos.length == 0)
       return "";
 
     return <div className="ShadeRunner-Legend" style={{top: pos.y, left: pos.x}}>
