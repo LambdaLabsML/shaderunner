@@ -132,7 +132,7 @@ const ShadeRunnerBar = () => {
         // query llm to give classes
         if (textclassifier) {
           await getQueryClasses(highlightQuery, () => {
-            statusAdd("llm", random(MSG_QUERY2CLASS))
+            statusAdd(<b>Creating Classes</b>, random(MSG_QUERY2CLASS))
           }, () => {
             statusAmend(status => [status[0], status[1] + " done"])
           })
@@ -147,7 +147,6 @@ const ShadeRunnerBar = () => {
         })
         setPageEmbeddings(old => ({...old, [mode]: newEmbeddings}));
 
-        statusAdd("status","done")
         setIsThinking(false)
       }
     }
@@ -178,14 +177,20 @@ const ShadeRunnerBar = () => {
       resetHighlights()
 
       const applyHighlight = async () => {
+        setIsThinking(true)
         try {
-          if (textclassifier)
-            highlightUsingClasses()
-          if (textretrieval)
-            highlightUsingRetrieval(highlightQuery)
+          if (textclassifier) {
+            statusAdd(<b>Applying Class Highlights</b>, random(MSG_CONTENT))
+            await highlightUsingClasses()
+          }
+          if (textretrieval) {
+            statusAdd(<b>Applying Retrieval Highlights</b>, random(MSG_CONTENT))
+            await highlightUsingRetrieval(highlightQuery)
+          }
         } catch (error) {
           console.error('Error in applyHighlight:', error);
         }
+        setIsThinking(false)
       }
       applyHighlight()
     }, [classifierData, isActive, textclassifier, textretrieval])
@@ -239,18 +244,15 @@ const ShadeRunnerBar = () => {
 
       // ensure we have embedded the page contents
       const pageEmbeddings = await getPageEmbeddings(mode)
-      console.log(pageEmbeddings)
       const splits = pageEmbeddings[mode].splits;
       const splitEmbeddings = pageEmbeddings[mode].embeddings;
 
       // compute embeddings of classes
-      //statusAdd(random(MSG_EMBED))
       const allclasses = [...classes_pos, ...classes_neg]
       const result = await computeEmbeddingsLocal(allclasses, []);
       const classStore = result[0];
 
       // mark sentences based on similarity
-      //statusAdd("Done. See below.")
       let scores_diffs = [];
       let scores_plus = [];
       for (const i in splits) {
@@ -345,8 +347,8 @@ const ShadeRunnerBar = () => {
     const thinkingLogo = ( <img className="thinking_logo" width="20" src={Logo}/>)
     const statusHtml = (
       <div className="status">
-        {/*[statusMsg[statusMsg.length-1]].map((status, i) => ( <div key={i} className={`status_msg ${isThinking ? "processing" : "done"}`}>{status}</div>))*/}
-        {!statusMsg ? "" : statusMsg.map((status, i) => ( <div key={i} className={`status_msg ${isThinking ? "processing" : "done"}`}>{status[0]}: {status[1]}</div>))}
+        {statusMsg && Array.isArray(statusMsg) && statusMsg.length > 0 ? [statusMsg[statusMsg.length-1]].map((status, i) => ( <div key={i} className="status_msg">{status[0]}: {status[1]}</div>)) : ""}
+        {/*!statusMsg ? "" : statusMsg.map((status, i) => ( <div key={i} className={`status_msg ${isThinking ? "processing" : "done"}`}>{status[0]}: {status[1]}</div>))*/}
       </div>
       
     )
@@ -362,8 +364,8 @@ const ShadeRunnerBar = () => {
         onKeyDown={onEnterPress}
         rows="4"
       />
-      {statusMsg && statusMsg.length ? statusHtml : ""}
-      {classifierData.thought && Array.isArray(classifierData.classes_pos) && Array.isArray(classifierData.classes_neg) ? (
+      {isThinking && statusMsg && statusMsg.length ? statusHtml : ""}
+      {!isThinking && classifierData.thought && Array.isArray(classifierData.classes_pos) && Array.isArray(classifierData.classes_neg) ? (
         <CollapsibleBox title="Highlight Classes">
           <h3>Scope:</h3>
           {classifierData.scope}
@@ -373,7 +375,7 @@ const ShadeRunnerBar = () => {
           <ClassModifierList title="Negative Terms" classList={classifierData.classes_neg} onSubmit={onClassChange}/>
         </CollapsibleBox>
       ) : ""}
-      {scores.length && scores[0].length ? ( 
+      {!isThinking && scores.length && scores[0].length ? ( 
         <CollapsibleBox title="Histograms">
           <div className="histograms" style={{display: "flex", flexDirection: "row"}}>
             <div style={{ flex: "1" }}>
@@ -387,11 +389,6 @@ const ShadeRunnerBar = () => {
           </div>
         </CollapsibleBox>
       ) : ""}
-      <h3>Colors</h3>
-      {Array.isArray(classifierData.classes_pos) ? classifierData.classes_pos.map(c => (
-        <span style={{backgroundColor: consistentColor(c)}}>{c}</span>
-      )) : ""}
-      {retrievalQuery ? <span style={{backgroundColor: consistentColor(retrievalQuery+" (retrieval)", true)}}>{retrievalQuery+" (retrieval)"}</span> : ""}
     </div>
 }
 
