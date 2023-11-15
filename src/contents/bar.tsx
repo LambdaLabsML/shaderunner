@@ -126,6 +126,9 @@ const ShadeRunnerBar = () => {
         setIsThinking(true)
         //await query2embedding(highlightQuery);
 
+        // set retrieval query
+        setRetrievalQuery(textretrieval ? highlightQuery : null);
+
         // query llm to give classes
         if (textclassifier) {
           await getQueryClasses(highlightQuery, () => {
@@ -388,7 +391,7 @@ const ShadeRunnerBar = () => {
       {Array.isArray(classifierData.classes_pos) ? classifierData.classes_pos.map(c => (
         <span style={{backgroundColor: consistentColor(c)}}>{c}</span>
       )) : ""}
-      <span style={{backgroundColor: consistentColor(highlightQuery+" (retrieval)", true)}}>{highlightQuery+" (retrieval)"}</span>
+      {retrievalQuery ? <span style={{backgroundColor: consistentColor(retrievalQuery+" (retrieval)", true)}}>{retrievalQuery+" (retrieval)"}</span> : ""}
     </div>
 }
 
