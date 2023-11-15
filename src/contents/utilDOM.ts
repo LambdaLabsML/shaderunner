@@ -238,12 +238,12 @@ function findMainContent() {
 
   // A list of selectors that often contain the main content of the page
   const selectors = [
-    'article', // HTML5 tag for article content
     'main', // The main HTML5 tag
-    '.main-content', // Common class name for main content
-    '.app-main',
-    '.content', // Another common class name
     '#content', // Common ID for content
+    '.main-content', // Common class name for main content
+    '.content', // Another common class name
+    '.app-main',
+    'article', // HTML5 tag for article content
     '.post', // Blogs often use the class "post" for main content
     'section.content', // Sometimes content is within a section tag
     'div.content' // Div tags with a content class
