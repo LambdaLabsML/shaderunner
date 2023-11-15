@@ -3,7 +3,7 @@ import type { PlasmoMountShadowHost } from "plasmo"
 import React, { useState, useEffect } from 'react';
 import Logo from 'data-url:./icon.png';
 import { getMainContent, splitContent } from './extract'
-import useSessionStorage, { useSessionStorage as _useSessionStorage } from '../util'
+import { useSessionStorage as _useSessionStorage } from '../util'
 import { textNodesUnderElem, findTextSlow, findTextFast, highlightText, resetHighlights, findMainContent, consistentColor } from './utilDOM'
 import { computeEmbeddingsLocal } from './embeddings'
 import { sendToBackground } from "@plasmohq/messaging"
@@ -11,6 +11,10 @@ import { useStorage } from "@plasmohq/storage/hook";
 import { MSG_CONTENT, MSG_EMBED, MSG_QUERY2CLASS } from "./messages";
 import Histogram from "../histogram";
 import EditableText from "./EditableText";
+
+// in development mode we want to use persistent storage for debugging
+const useSessionStorage = process.env.NODE_ENV == "development" && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;
+console.log(process.env.NODE_ENV, process.env.PLASMO_PUBLIC_STORAGE)
 
 
 // where to place the element
