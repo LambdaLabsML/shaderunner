@@ -48,6 +48,7 @@ const Settings = () => {
   }
 
   const [openaikey, setopenaikey] = useStorage('OPENAI_API_KEY', (v) => v === undefined ? "" : v)
+  const [openchatapibase, setopenchatapibase] = useStorage('OPENCHAT_API_BASE', (v) => v === undefined ? "" : v)
   const [gptversion, setgptversion] = useStorage('gpt_version', (v) => v === undefined ? "gpt-4" : v)
   const [gptchat, setgptchat] = useStorage('gpt_chat', (v) => v === undefined ? false : v)
   const [gpttemperature, setgpttemperature] = useStorage('gpt_temperature', (v) => v === undefined ? 0.0 : v)
@@ -68,24 +69,37 @@ const Settings = () => {
 
   return (
     <div className="settings-container">
-      <StringInput
-        label="OPENAI_API_KEY"
-        value={openaikey}
-        onChange={(value) => setopenaikey(value)}
-      />
-
-      <b style={{width:"100%", textAlign: "left"}}>(Note: GPT4 + Instruct seems to be the best combination.)</b> 
+      { gptversion.startsWith("gpt-") ?
+        ( <StringInput
+          label="OPENAI_API_KEY"
+          value={openaikey}
+          onChange={(value) => setopenaikey(value)}
+        /> ) : ( <StringInput
+          label="OPENCHAT_API_BASE"
+          value={openchatapibase}
+          onChange={(value) => setopenchatapibase(value)}
+        /> )
+      }
+      <b style={{width:"100%", textAlign: "left"}}>(Note: GPT4 + Instruct seems to be the best combination. Openchat works only in Chat-Mode)</b> 
       <SwitchInput
         label="GPT-Version"
-        options={['gpt-3.5-turbo', 'gpt-4', 'gpt-4-1106-preview']}
+        options={['gpt-3.5-turbo', 'gpt-4', 'gpt-4-1106-preview', 'openchat_3.5']}
         selected={gptversion}
-        onChange={(value) => setgptversion(value)}
+        onChange={(value) => {
+          if (gptchat != "ChatGPT" && value.startsWith("openchat"))
+            setgptchat("ChatGPT")
+          setgptversion(value)
+        }}
       />
       <SwitchInput
         label="GPT-Model"
         options={['ChatGPT', "InstructGPT"]}
         selected={gptchat ? "ChatGPT" : "InstructGPT"}
-        onChange={(value) => setgptchat(value == "ChatGPT")}
+        onChange={(value) => {
+          if (value != "ChatGPT" && gptversion.startsWith("openchat"))
+            setgptversion("gpt-4")
+          setgptchat(value == "ChatGPT")
+        }}
       />
       <NumericInput
           label="LLM Temperature"

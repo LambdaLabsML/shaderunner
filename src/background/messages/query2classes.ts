@@ -38,18 +38,20 @@ function parseInput(input) {
 const llm2classes = async (url, title, query) => {
 
     const api_key = await storage.get("OPENAI_API_KEY");
+    const openchat_api_base = await storage.get("OPENCHAT_API_BASE");
     const gptversion = await storage.get("gpt_version");
     const chatgpt = await storage.get("gpt_chat");
     const gpttemperature = await storage.get("gpt_temperature");
 
     const Model = chatgpt ? ChatOpenAI : OpenAI;
 
+    console.log("using llm:", gptversion, "with temperature", gpttemperature, "as", chatgpt ? "chat model" : "instruct model")
     const llm = new Model({
-        openAIApiKey: api_key,
         temperature: gpttemperature,
-        model: gptversion
-    });
-    console.log("using llm:", gptversion, "with temperature", gpttemperature)
+        modelName: gptversion,
+        //verbose: true,
+        ...(gptversion.startsWith("gpt-") ? {openAIApiKey: api_key} :  {openAIApiKey: "EMPTY"}),
+    }, gptversion.startsWith("gpt-") ? null : {baseURL: openchat_api_base, modelName: gptversion});
 
     //'Interesting' sentences are closer to specific topics within the query's context.
     //'General' sentences align with broader topics not specific to the query but related to the overall content.
