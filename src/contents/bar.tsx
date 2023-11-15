@@ -78,7 +78,7 @@ const ShadeRunnerBar = () => {
     const [ pageEmbeddings, setPageEmbeddings] = useState({});
     const [ classifierData, setClassifierData] = useSessionStorage("classifierData", {});
     const [ retrievalQuery, setRetrievalQuery] = useSessionStorage("retrievalQuery", null);
-    const [ scores, setScores] = useSessionStorage("scores", []);
+    const [ scores, setScores] = useState([]);
     const [ statusMsg, setStatusMsg] = useState([]);
     const [ isThinking, setIsThinking] = useState(false);
     const [ verbose, setVerbose ] = useStorage("verbose", false);
