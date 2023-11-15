@@ -1,6 +1,11 @@
 //$primary-color: fade-out(#8136e2, 0.6);
 $primary-color: #8136e2;
 
+
+#plasmo-inline {
+    visibility: visible;
+}
+
 .ShadeRunner-Bar {
     border-radius: 20px;
     border: 3px solid $primary-color;
