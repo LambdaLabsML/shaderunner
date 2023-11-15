@@ -223,7 +223,7 @@ const ShadeRunnerBar = () => {
     const getQueryClasses = async (query, onLLM = () => {}, onLLMDone = () => {}) => {
       onLLM()
       const result = await sendToBackground({ name: "query2classes", query: query, url: url, title: document.title })
-      setClassifierData(old => ({...old, classes_pos: result.classes_pos, classes_neg: result.classes_neg, thought: result.thought}))
+      setClassifierData(old => ({...old, classes_pos: result.classes_pos, classes_neg: result.classes_neg, thought: result.thought, scope: result.scope}))
       onLLMDone()
     }
 
@@ -360,8 +360,10 @@ const ShadeRunnerBar = () => {
         rows="4"
       />
       {statusMsg && statusMsg.length ? statusHtml : ""}
-      {classifierData.thought && classifierData.classes_pos && classifierData.classes_neg ? (
+      {classifierData.thought && Array.isArray(classifierData.classes_pos) && Array.isArray(classifierData.classes_neg) ? (
         <CollapsibleBox title="Highlight Classes">
+          <h3>Scope:</h3>
+          {classifierData.scope}
           <h3>Thought:</h3>
           {classifierData.thought}
           <ClassModifierList title="Positive Terms" classList={classifierData.classes_pos} onSubmit={onClassChange}/>
@@ -383,7 +385,7 @@ const ShadeRunnerBar = () => {
         </CollapsibleBox>
       ) : ""}
       <h3>Colors</h3>
-      {classifierData.classes_pos ? classifierData.classes_pos.map(c => (
+      {Array.isArray(classifierData.classes_pos) ? classifierData.classes_pos.map(c => (
         <span style={{backgroundColor: consistentColor(c)}}>{c}</span>
       )) : ""}
       <span style={{backgroundColor: consistentColor(highlightQuery+" (retrieval)", true)}}>{highlightQuery+" (retrieval)"}</span>
