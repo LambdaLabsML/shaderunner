@@ -13,7 +13,7 @@ function parseInput(input) {
     const output = lines.map(line => {
       // Check for the presence of "Outlier Class:"
 
-      if (line.includes('Though:')) {
+      if (line.includes('Thought:')) {
         line = line.replace('Thought:', '').trim();
         return line
       } else if (line.includes('Interesting Class Topics:')) {
