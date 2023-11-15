@@ -41,9 +41,9 @@ const StringInput = ({ label, value, onChange }) => (
 const Settings = () => {
 
   const defaults = {
-    alwayshighlighteps: 0.825,
-    minimalhighlighteps: 0.65,
-    decisioneps: 0.025,
+    alwayshighlighteps: -1,
+    minimalhighlighteps: -1,
+    decisioneps: -1,
     verbose: false,
   }
 
