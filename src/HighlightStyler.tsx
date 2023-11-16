@@ -1,18 +1,18 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { useStorage } from "@plasmohq/storage/hook";
-import { useSessionStorage as _useSessionStorage, useActiveState } from '../util'
-import { consistentColor, defaultHighlightClass } from "./utilDOM";
+import { useSessionStorage as _useSessionStorage, useActiveState } from './util'
+import { consistentColor } from "./contents/utilDOM";
 
 
 // in development mode we want to use persistent storage for debugging
 const useSessionStorage = process.env.NODE_ENV == "development" && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;
 
 
-const HighlightStyler = () => {
+const HighlightStyler = ({highlightSetting}) => {
     const [url, isActive] = useActiveState(window.location)
     const [ classifierData ] = useSessionStorage("classifierData:"+url, {});
-    const [ highlightSetting ] = useSessionStorage("highlightSetting:"+url, {});
     const [ styleEl, setStyleEl ] = useState(null);
+    console.log("highlightStyler", highlightSetting)
 
     useEffect(() => {
         if (!isActive || !Array.isArray(classifierData.classes_pos) || !styleEl) return;
@@ -58,6 +58,8 @@ const HighlightStyler = () => {
         setStyleEl(style)
         window.document.head.appendChild(style);
     }, [isActive]);
+
+    return "";
 };
 
 export default HighlightStyler;

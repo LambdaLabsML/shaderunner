@@ -3,6 +3,7 @@ import React, { useCallback, useState } from 'react';
 import { useSessionStorage as _useSessionStorage, isActiveOn, useActiveState } from '../util'
 import { useStorage } from "@plasmohq/storage/hook";
 import { consistentColor } from './utilDOM'
+import HighlightStyler from "../HighlightStyler";
 import throttle from 'lodash.throttle';
 import debounce from 'lodash.debounce';
 
@@ -68,21 +69,8 @@ const Legend = () => {
   const [url, isActive] = useActiveState(window.location)
   const [retrievalQuery] = useSessionStorage("retrievalQuery:"+url, null);
   const [classifierData] = useSessionStorage("classifierData:"+url, {});
-  const [highlightSetting, setHighlightSettings] = useSessionStorage("highlightSetting:"+url, {});
+  const [highlightSetting, setHighlightSettings] = useState({});
   const [pos, setPos] = useState({ x: 20, y: 20 });
-  const throttledSetHighlightSettings = useCallback(throttle(
-    (newSettings) => setHighlightSettings(newSettings),
-    100
-  ), []);
-  const debouncedRemoveHighlightSettings = useCallback(debounce(
-    (topic) => {
-      setHighlightSettings(old => {
-        const { ["_active"]: removed, "_default": removed2, ...newObject } = old;
-        return newObject;
-      });
-    },
-    200
-  ), []);
 
 
   const handleMouseDown = (event) => {
@@ -117,18 +105,21 @@ const Legend = () => {
   }
 
   const mouseOverHighlight = (topic) => {
-    throttledSetHighlightSettings(old => ({ ...old, ["_active"]: topic, "_default": "dim-highlight"}))
-    debouncedRemoveHighlightSettings.cancel()
+    setHighlightSettings(old => ({ ...old, ["_active"]: topic, "_default": "dim-highlight"}))
   }
 
   const mouseOverHighlightFinish = (topic) => {
-    debouncedRemoveHighlightSettings(topic);
+    setHighlightSettings(old => {
+      const { ["_active"]: removed, "_default": removed2, ...newObject } = old;
+      return newObject;
+    });
   }
 
   if (!isActive || !Array.isArray(classifierData.classes_pos) || classifierData.classes_pos.length == 0)
     return "";
 
   return <div className="ShadeRunner-Legend" style={{ top: pos.y, left: pos.x }}>
+    <HighlightStyler highlightSetting={highlightSetting}/>
     <div className="header" onMouseDown={handleMouseDown}>ShadeRunner</div>
     <span>(Click topic to hide/show highlights)</span>
     {Array.isArray(classifierData.classes_pos) ? classifierData.classes_pos.map(c => (
