@@ -258,6 +258,7 @@ const ShadeRunnerBar = () => {
       const allclasses = [...classes_pos, ...classes_neg]
       const result = await computeEmbeddingsLocal(allclasses, []);
       const classStore = result[0];
+      const class2Id = Object.fromEntries(allclasses.map((c, i) => [c, i]))
 
       // mark sentences based on similarity
       let scores_diffs = [];
@@ -303,7 +304,7 @@ const ShadeRunnerBar = () => {
               if (verbose) console.log("ERROR: text not found", split)
             }
           }
-          highlightText(texts, nodes, consistentColor(closest[0][0].pageContent));
+          highlightText(texts, nodes, class2Id[closest[0][0].pageContent], closest[0][0].pageContent + " " + closest[0][1]);
         } else {
           if (verbose) console.log("reject", split, score_plus, score_minus)
         }
@@ -337,7 +338,7 @@ const ShadeRunnerBar = () => {
 
         // mark sentence
         const [texts, nodes] = findTextSlow(textNodes, split);
-        highlightText(texts, nodes, consistentColor(query+" (retrieval)"), 1.0);
+        highlightText(texts, nodes, "retrieval", 1.0);
       }
     }
 

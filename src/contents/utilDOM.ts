@@ -146,7 +146,7 @@ function findTextFast(textNodes, sentence_str) {
 
 const defaultHighlightClass = 'shaderunner-highlight'
 
-function highlightText(texts, nodes, backgroundColor, title=null, markingClass = defaultHighlightClass) {
+function highlightText(texts, nodes, highlightClass, title=null, markingClass = defaultHighlightClass) {
   if (nodes.length !== texts.length) {
     throw new Error('The length of nodes and texts should be the same.');
   }
@@ -170,8 +170,8 @@ function highlightText(texts, nodes, backgroundColor, title=null, markingClass =
         
         const span = document.createElement('span');
         span.textContent = text;
-        span.style.backgroundColor = backgroundColor;
         span.classList.add(markingClass); // Add a specific class for easy identification
+        span.classList.add(`highlightclass-${highlightClass}`); // Add a specific class for easy identification
         if (title)
           span.title = title
         node.parentNode.insertBefore(span, node);
@@ -304,4 +304,4 @@ const consistentColor = (s, alpha) => {
 }
 
 
-export { textNodesUnderElem, splitIntoWords, findTextSlow, findTextFast, highlightText, resetHighlights, findMainContent, consistentColor };
+export { textNodesUnderElem, splitIntoWords, findTextSlow, findTextFast, highlightText, resetHighlights, findMainContent, consistentColor, defaultHighlightClass };
