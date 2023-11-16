@@ -8,6 +8,33 @@ function textNodesUnderElem(el){
 }
 
 
+// find all text nodes that are not highlighted
+function textNodesNotUnderHighlight(el) {
+  var n, a = [], walk = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null, false);
+
+  while (n = walk.nextNode()) {
+    let parent = n.parentNode;
+    let isUnderHighlight = false;
+
+    // Traverse up the DOM tree to check if any parent is a span.highlight
+    while (parent !== el) {
+      if (parent.matches && parent.matches(`span.${defaultHighlightClass}, header, nav, h1, h2, h3, h4, h5, h6`)) {
+        isUnderHighlight = true;
+        break;
+      }
+      parent = parent.parentNode;
+    }
+
+    // If not under a span.highlight, add to the array
+    if (!isUnderHighlight) {
+      a.push(n);
+    }
+  }
+
+  return a;
+}
+
+
 // split into words, whitespace & separate symbols
 function splitIntoWords(str) {
   return str.match(/\w+|\s|\S/g) || [];
@@ -191,6 +218,17 @@ function highlightText(texts, nodes, highlightClass, title=null, markingClass = 
 }
 
 
+function surroundTextNode(node, highlightClass) {
+    const textContent = node.textContent;
+    const span = document.createElement('span');
+    span.textContent = textContent;
+    span.classList.add(defaultHighlightClass); // Add a specific class for easy identification
+    span.classList.add(`highlightclass-${highlightClass}`); // Add a specific class for easy identification
+    node.parentNode.insertBefore(span, node);
+    node.parentNode.removeChild(node);
+}
+
+
 function resetHighlights(markingClass = defaultHighlightClass) {
   const markedElements = document.querySelectorAll(`span.${markingClass}`);
   markedElements.forEach(element => {
@@ -304,4 +342,4 @@ const consistentColor = (s, alpha, saturation) => {
 }
 
 
-export { textNodesUnderElem, splitIntoWords, findTextSlow, findTextFast, highlightText, resetHighlights, findMainContent, consistentColor, defaultHighlightClass };
+export { textNodesUnderElem, splitIntoWords, findTextSlow, findTextFast, highlightText, resetHighlights, findMainContent, consistentColor, defaultHighlightClass, textNodesNotUnderHighlight, surroundTextNode };

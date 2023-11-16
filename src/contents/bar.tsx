@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Logo from 'data-url:./icon.png';
 import { getMainContent, splitContent } from './extract'
 import { useSessionStorage as _useSessionStorage, useActiveState } from '../util'
-import { textNodesUnderElem, findTextSlow, findTextFast, highlightText, resetHighlights, findMainContent, consistentColor } from './utilDOM'
+import { textNodesUnderElem, findTextSlow, findTextFast, highlightText, resetHighlights, findMainContent, textNodesNotUnderHighlight, surroundTextNode } from './utilDOM'
 import { computeEmbeddingsLocal } from './embeddings'
 import { sendToBackground } from "@plasmohq/messaging"
 import { useStorage } from "@plasmohq/storage/hook";
@@ -308,7 +308,12 @@ const ShadeRunnerBar = () => {
         } else {
           if (verbose) console.log("reject", split, score_plus, score_minus)
         }
+
       }
+
+      // finally, let's highlight all textnodes that are not highlighted
+      const textNodes = textNodesNotUnderHighlight(document.body);
+      textNodes.forEach(node => surroundTextNode(node, "normaltext"))
 
       setScores([scores_plus, scores_diffs])
     }

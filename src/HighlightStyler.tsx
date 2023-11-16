@@ -53,6 +53,16 @@ const HighlightStyler = ({highlightSetting, mode}) => {
             return ``
         }).join("\n")
         styleEl.textContent = colorStyle
+        if (mode == "focus")
+            styleEl.textContent = styleEl.textContent + `
+                h1 span.highlightclass-normaltext, h2 span.highlightclass-normaltext, h3 span.highlightclass-normaltext, h4 span.highlightclass-normaltext, h5 span.highlightclass-normaltext, h6 span.highlightclass-normaltext {
+                    display: inline;
+                }
+
+                span.highlightclass-normaltext {
+                    display: none;
+                }
+            `
     }, [isActive, classifierData.classes_pos, styleEl, highlightSetting, mode])
 
     useEffect(() => {
