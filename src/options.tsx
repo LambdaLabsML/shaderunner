@@ -1,41 +1,9 @@
 import React, { useState } from 'react';
 import { useStorage } from "@plasmohq/storage/hook";
 import './options.scss';
-
-
-// NumericInput.js
-const NumericInput = ({ label, value, step, onChange }) => (
-  <div className="setting-item">
-    <label>{label}</label>
-    <input type="number" step={step} value={value} onChange={(e) => onChange(e.target.value)} />
-  </div>
-);
-
-// SwitchInput.js
-const SwitchInput = ({ label, options, selected, onChange }) => (
-  <div className="setting-item">
-    <label>{label}</label>
-    <div className="switch-options">
-      {options.map((option) => (
-        <button
-          key={option}
-          className={`switch-option ${selected === option ? 'active' : ''}`}
-          onClick={() => onChange(option)}
-        >
-          {option}
-        </button>
-      ))}
-    </div>
-  </div>
-);
-
-// StringInput.js
-const StringInput = ({ label, value, onChange }) => (
-  <div className="setting-item">
-    <label>{label}</label>
-    <input type="text" value={value} onChange={(e) => onChange(e.target.value)} />
-  </div>
-);
+import NumericInput from '~components/NumericInput';
+import SwitchInput from '~components/SwitchInput';
+import StringInput from '~components/StringInput';
 
 
 const Settings = () => {
