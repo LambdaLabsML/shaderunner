@@ -114,6 +114,7 @@ const ShadeRunnerBar = () => {
 
     const resetState = () => {
       resetHighlights()
+      setSavedHighlightQuery("")
       setClassifierData({})
       setRetrievalQuery(null)
       setScores([])
@@ -130,6 +131,7 @@ const ShadeRunnerBar = () => {
         resetState();
 
         const highlightQuery = ev.target.value;
+        if (!highlightQuery) return resetState();
         setSavedHighlightQuery(highlightQuery)
         setIsThinking(true)
         //await query2embedding(highlightQuery);
