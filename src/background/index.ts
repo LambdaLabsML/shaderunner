@@ -14,7 +14,7 @@ const toggleActive = async (url) => {
     await storage.set("activeURLs", activeURLs)
 
     return activeURLs[url]
-  };
+};
 
 
 // toggle active status when clicking plugin icon
@@ -36,3 +36,14 @@ chrome.tabs.onActivated.addListener(activeInfo => {
         });
     });
 })
+
+// on startup, update the plugin icon
+chrome.tabs.query({active: true, currentWindow: true}, async (tabs) => {
+    if (tabs.length == 0) return;
+    const tab = tabs[0];
+    const url = new URL(tab.url).hostname;
+    const activeURLs = (await storage.get("activeURLs")) || {}
+    chrome.action.setBadgeText({
+        text: activeURLs[url] ? "ON" : "OFF"
+    });
+});
