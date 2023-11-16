@@ -85,10 +85,10 @@ const ShadeRunnerBar = () => {
     const [ scores, setScores] = useState([]);
     const [ statusMsg, setStatusMsg] = useState([]);
     const [ isThinking, setIsThinking] = useState(false);
-    const [ verbose, setVerbose ] = useStorage("verbose", false);
-    const [textclassifier, settextclassifier] = useStorage('textclassifier', (v) => v === undefined ? true : v)
-    const [textretrieval, settextretrieval] = useStorage('textretrieval', (v) => v === undefined ? true : v)
-    const [textretrieval_k, settextretrieval_k] = useStorage('textretrieval_k', (v) => v === undefined ? 3 : v)
+    const [ verbose ] = useStorage("verbose", false);
+    const [ textclassifier ] = useStorage('textclassifier')
+    const [ textretrieval ] = useStorage('textretrieval')
+    const [ textretrieval_k ] = useStorage('textretrieval_k')
 
     // eps values
     const [ alwayshighlighteps, setalwayshighlighteps ] = useStorage("alwayshighlighteps");
@@ -112,6 +112,14 @@ const ShadeRunnerBar = () => {
         return newStatus;
     })
 
+    const resetState = () => {
+      resetHighlights()
+      setClassifierData({})
+      setRetrievalQuery(null)
+      setScores([])
+      setStatusMsg([])
+      setIsThinking(false)
+    }
 
     // ------ //
     // events //
@@ -119,18 +127,8 @@ const ShadeRunnerBar = () => {
     const onEnterPress = async (ev) => {
       if (ev.keyCode == 13 && ev.shiftKey == false) {
         ev.preventDefault(); 
+        resetState();
 
-        // just reset if no query given
-        if(!highlightQuery) {
-          resetHighlights()
-          setClassifierData({})
-          setRetrievalQuery(null)
-          setScores([])
-          setIsThinking(false)
-          return;
-        }
-
-        setStatusMsg([])
         setIsThinking(true)
         //await query2embedding(highlightQuery);
 
@@ -180,8 +178,7 @@ const ShadeRunnerBar = () => {
 
     // on every classifier change, recompute highlights
     useEffect(() => {
-      if(!highlightQuery || !isActive || !classifierData.thought && !highlightQuery) return;
-
+      if(!highlightQuery || !isActive || !classifierData.thought) return;
       resetHighlights()
 
       const applyHighlight = async () => {
@@ -193,7 +190,7 @@ const ShadeRunnerBar = () => {
           }
           if (textretrieval) {
             statusAdd(<b>Applying Retrieval Highlights</b>, random(MSG_CONTENT))
-            await highlightUsingRetrieval(highlightQuery)
+            await highlightUsingRetrieval(retrievalQuery)
           }
         } catch (error) {
           console.error('Error in applyHighlight:', error);
@@ -201,7 +198,7 @@ const ShadeRunnerBar = () => {
         setIsThinking(false)
       }
       applyHighlight()
-    }, [classifierData, isActive, textclassifier, textretrieval])
+    }, [classifierData, isActive, textclassifier, textretrieval, retrievalQuery])
 
 
     // --------- //
