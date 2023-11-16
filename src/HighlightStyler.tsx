@@ -8,11 +8,10 @@ import { consistentColor } from "./contents/utilDOM";
 const useSessionStorage = process.env.NODE_ENV == "development" && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;
 
 
-const HighlightStyler = ({highlightSetting}) => {
+const HighlightStyler = ({highlightSetting, mode}) => {
     const [url, isActive] = useActiveState(window.location)
     const [ classifierData ] = useSessionStorage("classifierData:"+url, {});
     const [ styleEl, setStyleEl ] = useState(null);
-    console.log("highlightStyler", highlightSetting)
 
     useEffect(() => {
         if (!isActive || !Array.isArray(classifierData.classes_pos) || !styleEl) return;
@@ -20,6 +19,13 @@ const HighlightStyler = ({highlightSetting}) => {
         const defaultSetting = highlightSetting["_default"] || "highlight";
         const colorStyle = classifierData.classes_pos.map((c, i) => {
             const classSetting = c in highlightSetting ? highlightSetting[c] : highlightSetting["_active"] == c ? "strong-highlight" : defaultSetting;
+
+            if (mode == "focus" && classSetting == "no-highlight")
+                return `
+                    span.highlightclass-${i} {
+                        display: none;
+                    }
+                `
 
             // if no settings available or mode is highlight, just show it normally
             if (classSetting == "strong-highlight")
@@ -47,7 +53,7 @@ const HighlightStyler = ({highlightSetting}) => {
             return ``
         }).join("\n")
         styleEl.textContent = colorStyle
-    }, [isActive, classifierData.classes_pos, styleEl, highlightSetting])
+    }, [isActive, classifierData.classes_pos, styleEl, highlightSetting, mode])
 
     useEffect(() => {
         if (!isActive || styleEl) return;
