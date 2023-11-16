@@ -144,8 +144,9 @@ function findTextFast(textNodes, sentence_str) {
 }
 
 
+const defaultHighlightClass = 'shaderunner-highlight'
 
-function highlightText(texts, nodes, backgroundColor, title=null, markingClass = 'marked-text') {
+function highlightText(texts, nodes, backgroundColor, title=null, markingClass = defaultHighlightClass) {
   if (nodes.length !== texts.length) {
     throw new Error('The length of nodes and texts should be the same.');
   }
@@ -190,8 +191,8 @@ function highlightText(texts, nodes, backgroundColor, title=null, markingClass =
 }
 
 
-function resetHighlights(markingClass = 'marked-text') {
-  const markedElements = document.querySelectorAll(`.${markingClass}`);
+function resetHighlights(markingClass = defaultHighlightClass) {
+  const markedElements = document.querySelectorAll(`span.${markingClass}`);
   markedElements.forEach(element => {
     element.replaceWith(document.createTextNode(element.textContent));
   });
