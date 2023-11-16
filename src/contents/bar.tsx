@@ -77,11 +77,11 @@ const ClassModifierList = ({title, classList, onSubmit}) => {
 
 // the actual shaderunner bar
 const ShadeRunnerBar = () => {
-    const isActive = useActiveState(window.location);
-    const [ highlightQuery, setHighlightQuery ] = useSessionStorage("highlightQuery", "");
+    const [url, isActive] = useActiveState(window.location)
+    const [ highlightQuery, setHighlightQuery ] = useSessionStorage("highlightQuery:"+url, "");
     const [ pageEmbeddings, setPageEmbeddings] = useState({});
-    const [ classifierData, setClassifierData] = useSessionStorage("classifierData", {});
-    const [ retrievalQuery, setRetrievalQuery] = useSessionStorage("retrievalQuery", null);
+    const [ classifierData, setClassifierData] = useSessionStorage("classifierData:"+url, {});
+    const [ retrievalQuery, setRetrievalQuery] = useSessionStorage("retrievalQuery:"+url, null);
     const [ scores, setScores] = useState([]);
     const [ statusMsg, setStatusMsg] = useState([]);
     const [ isThinking, setIsThinking] = useState(false);
@@ -98,8 +98,6 @@ const ShadeRunnerBar = () => {
     if (alwayshighlighteps > 0) poseps.push(alwayshighlighteps);
     if (minimalhighlighteps > 0) poseps.push(minimalhighlighteps);
 
-
-    const url = window.location.hostname + window.location.pathname;
 
 
     // ------ //

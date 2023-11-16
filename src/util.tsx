@@ -32,7 +32,8 @@ const getActiveStatu = async (_url) => {
 const useActiveState = (_url) => {
   const [activeURLs] = useStorage("activeURLs", {})
   const url = new URL(_url).hostname; // Normalize URL
-  return url in activeURLs;
+  const fullurl = window.location.hostname + window.location.pathname;
+  return [fullurl, url in activeURLs];
 }
 
 

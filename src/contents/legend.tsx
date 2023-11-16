@@ -63,10 +63,10 @@ export const getStyle: PlasmoGetStyle = () => {
 
 // the actual shaderunner bar
 const Legend = () => {
-  const isActive = useActiveState(window.location)
-  const [retrievalQuery] = useSessionStorage("retrievalQuery", null);
-  const [classifierData] = useSessionStorage("classifierData", {});
-  const [toggledHighlights, setToggledHighlights] = useSessionStorage("toggledHighlights", {});
+  const [url, isActive] = useActiveState(window.location)
+  const [retrievalQuery] = useSessionStorage("retrievalQuery:"+url, null);
+  const [classifierData] = useSessionStorage("classifierData:"+url, {});
+  const [toggledHighlights, setToggledHighlights] = useSessionStorage("toggledHighlights:"+url, {});
   const [pos, setPos] = useState({ x: 20, y: 20 });
 
 
@@ -113,5 +113,6 @@ const Legend = () => {
     {retrievalQuery ? <span style={{ backgroundColor: consistentColor(retrievalQuery + " (retrieval)", false, toggledHighlights["_retrieval"]) }}>{retrievalQuery + " (retrieval)"}</span> : ""}
   </div>
 }
+
 
 export default Legend;
