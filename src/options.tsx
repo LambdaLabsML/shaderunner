@@ -4,25 +4,19 @@ import './options.scss';
 import NumericInput from '~components/NumericInput';
 import SwitchInput from '~components/SwitchInput';
 import StringInput from '~components/StringInput';
-
+import defaults from '~defaults';
 
 const Settings = () => {
 
-  const defaults = {
-    alwayshighlighteps: -1,
-    minimalhighlighteps: -1,
-    decisioneps: -1,
-    verbose: false,
-  }
 
   const [openaikey, setopenaikey] = useStorage('OPENAI_API_KEY', (v) => v === undefined ? "" : v)
   const [openchatapibase, setopenchatapibase] = useStorage('OPENCHAT_API_BASE', (v) => v === undefined ? "" : v)
-  const [gptversion, setgptversion] = useStorage('gpt_version', (v) => v === undefined ? "gpt-4" : v)
-  const [gptchat, setgptchat] = useStorage('gpt_chat', (v) => v === undefined ? false : v)
-  const [gpttemperature, setgpttemperature] = useStorage('gpt_temperature', (v) => v === undefined ? 0.0 : v)
-  const [textclassifier, settextclassifier] = useStorage('textclassifier', (v) => v === undefined ? true : v)
-  const [textretrieval, settextretrieval] = useStorage('textretrieval', (v) => v === undefined ? true : v)
-  const [textretrieval_k, settextretrieval_k] = useStorage('textretrieval_k', (v) => v === undefined ? 3 : v)
+  const [gptversion, setgptversion] = useStorage('gpt_version', (v) => v === undefined ? defaults["gpt_version"]: v)
+  const [gptchat, setgptchat] = useStorage('gpt_chat', (v) => v === undefined ? defaults["gpt_chat"] : v)
+  const [gpttemperature, setgpttemperature] = useStorage('gpt_temperature', (v) => v === undefined ? defaults["gpt_temperature"] : v)
+  const [textclassifier, settextclassifier] = useStorage('textclassifier', (v) => v === undefined ? defaults["textclassifier"] : v)
+  const [textretrieval, settextretrieval] = useStorage('textretrieval', (v) => v === undefined ? defaults["textretrieval"] : v)
+  const [textretrieval_k, settextretrieval_k] = useStorage('textretrieval_k', (v) => v === undefined ? defaults["textretrieval_k"] : v)
   const [alwayshighlighteps, setalwayshighlighteps] = useStorage('alwayshighlighteps', (v) => v === undefined ? defaults["alwayshighlighteps"] : v)
   const [minimalhighlighteps, setminimalhighlighteps] = useStorage('minimalhighlighteps', (v) => v === undefined ? defaults["minimalhighlighteps"] : v)
   const [decisioneps, setdecisioneps] = useStorage('decisioneps', (v) => v === undefined ? defaults["decisioneps"] : v)
