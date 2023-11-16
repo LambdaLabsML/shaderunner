@@ -126,12 +126,13 @@ const ShadeRunnerBar = () => {
     // events //
     // ------ //
     const onEnterPress = async (ev) => {
+      const highlightQuery = ev.target.value;
+      if (!highlightQuery) resetState();
+
       if (ev.keyCode == 13 && ev.shiftKey == false) {
         ev.preventDefault(); 
         resetState();
 
-        const highlightQuery = ev.target.value;
-        if (!highlightQuery) return resetState();
         setSavedHighlightQuery(highlightQuery)
         setIsThinking(true)
         //await query2embedding(highlightQuery);
