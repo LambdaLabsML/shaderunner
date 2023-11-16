@@ -152,6 +152,9 @@ const Legend = () => {
         onChange={(value) => setMode(value)}
       />
     <span>(Click topic to hide/show highlights)</span>
+    <span>
+       <span onClick={() => setHighlightSettings({})}>all</span> / <span onClick={() => {setHighlightSettings(Object.fromEntries(classifierData.classes_pos.map(c => [c, "no-highlight"])))}}>none</span>
+    </span>
     {Array.isArray(classifierData.classes_pos) ? classifierData.classes_pos.map(c => (
       <span key={c} style={{ backgroundColor: consistentColor(c, highlightSetting[c] ? 0.125 : null) }} onClick={() => toggleHighlight(c)} onMouseOver={() => mouseOverHighlight(c)} onMouseLeave={() => mouseOverHighlightFinish(c)}>
         <span onClick={() => onFocusHighlight(c)}>focus</span>
