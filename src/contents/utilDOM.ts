@@ -278,9 +278,10 @@ function findMainContent() {
 
 
 let colors = {}
-const consistentColor = (s, alpha) => {
+const consistentColor = (s, alpha, saturation) => {
     alpha = alpha || 0.7;
-    const S = JSON.stringify([s,alpha])
+    saturation = saturation || 80; 
+    const S = JSON.stringify([s,alpha,saturation])
     if (S in colors)
         return colors[S];
 
@@ -294,7 +295,6 @@ const consistentColor = (s, alpha) => {
     const hue = Math.abs(hash % 360); 
 
     // Varying saturation and lightness
-    const saturation = 80;
     const lightness = 80;
 
     // Return the HSL color value

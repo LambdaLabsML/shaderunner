@@ -11,19 +11,43 @@ const useSessionStorage = process.env.NODE_ENV == "development" && process.env.P
 const HighlightStyler = () => {
     const [url, isActive] = useActiveState(window.location)
     const [ classifierData ] = useSessionStorage("classifierData:"+url, {});
-    const [ toggledHighlights ] = useSessionStorage("toggledHighlights:"+url, {});
+    const [ highlightSetting ] = useSessionStorage("highlightSetting:"+url, {});
     const [ styleEl, setStyleEl ] = useState(null);
 
     useEffect(() => {
         if (!isActive || !Array.isArray(classifierData.classes_pos) || !styleEl) return;
 
-        const colorStyle = classifierData.classes_pos.map((c, i) => `
-span.highlightclass-${i} {
-    background: ${!(c in toggledHighlights) ? consistentColor(c) : "inherit"};
-}
-`).join("\n")
+        const defaultSetting = highlightSetting["_default"] || "highlight";
+        const colorStyle = classifierData.classes_pos.map((c, i) => {
+            const classSetting = c in highlightSetting ? highlightSetting[c] : highlightSetting["_active"] == c ? "strong-highlight" : defaultSetting;
+
+            // if no settings available or mode is highlight, just show it normally
+            if (classSetting == "strong-highlight")
+                return `
+                    span.highlightclass-${i} {
+                        background: ${consistentColor(c)};
+                    }
+                `
+
+            // if no settings available or mode is highlight, just show it normally
+            if (classSetting == "highlight")
+                return `
+                    span.highlightclass-${i} {
+                        background: ${consistentColor(c)};
+                    }
+                `
+
+            if (classSetting == "dim-highlight")
+                return `
+                    span.highlightclass-${i} {
+                        background: ${consistentColor(c, 0.4, 20)};
+                    }
+                `
+
+            return ``
+        }).join("\n")
         styleEl.textContent = colorStyle
-    }, [isActive, classifierData.classes_pos, styleEl, toggledHighlights])
+    }, [isActive, classifierData.classes_pos, styleEl, highlightSetting])
 
     useEffect(() => {
         if (!isActive || styleEl) return;

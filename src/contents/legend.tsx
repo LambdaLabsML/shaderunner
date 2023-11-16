@@ -1,8 +1,10 @@
 import type { PlasmoGetOverlayAnchor, PlasmoGetInlineAnchor } from "plasmo"
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useSessionStorage as _useSessionStorage, isActiveOn, useActiveState } from '../util'
 import { useStorage } from "@plasmohq/storage/hook";
 import { consistentColor } from './utilDOM'
+import throttle from 'lodash.throttle';
+import debounce from 'lodash.debounce';
 
 // in development mode we want to use persistent storage for debugging
 const useSessionStorage = process.env.NODE_ENV == "development" && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;
@@ -66,8 +68,21 @@ const Legend = () => {
   const [url, isActive] = useActiveState(window.location)
   const [retrievalQuery] = useSessionStorage("retrievalQuery:"+url, null);
   const [classifierData] = useSessionStorage("classifierData:"+url, {});
-  const [toggledHighlights, setToggledHighlights] = useSessionStorage("toggledHighlights:"+url, {});
+  const [highlightSetting, setHighlightSettings] = useSessionStorage("highlightSetting:"+url, {});
   const [pos, setPos] = useState({ x: 20, y: 20 });
+  const throttledSetHighlightSettings = useCallback(throttle(
+    (newSettings) => setHighlightSettings(newSettings),
+    100
+  ), []);
+  const debouncedRemoveHighlightSettings = useCallback(debounce(
+    (topic) => {
+      setHighlightSettings(old => {
+        const { ["_active"]: removed, "_default": removed2, ...newObject } = old;
+        return newObject;
+      });
+    },
+    200
+  ), []);
 
 
   const handleMouseDown = (event) => {
@@ -91,14 +106,23 @@ const Legend = () => {
   };
 
   const toggleHighlight = (topic) => {
-    setToggledHighlights(old => {
+    setHighlightSettings(old => {
       if (old.hasOwnProperty(topic)) {
         const { [topic]: removed, ...newObject } = old;
         return newObject;
       } else {
-        return { ...old, [topic]: true };
+        return { ...old, [topic]: "no-highlight" };
       }
     })
+  }
+
+  const mouseOverHighlight = (topic) => {
+    throttledSetHighlightSettings(old => ({ ...old, ["_active"]: topic, "_default": "dim-highlight"}))
+    debouncedRemoveHighlightSettings.cancel()
+  }
+
+  const mouseOverHighlightFinish = (topic) => {
+    debouncedRemoveHighlightSettings(topic);
   }
 
   if (!isActive || !Array.isArray(classifierData.classes_pos) || classifierData.classes_pos.length == 0)
@@ -108,9 +132,9 @@ const Legend = () => {
     <div className="header" onMouseDown={handleMouseDown}>ShadeRunner</div>
     <span>(Click topic to hide/show highlights)</span>
     {Array.isArray(classifierData.classes_pos) ? classifierData.classes_pos.map(c => (
-      <span key={c} style={{ backgroundColor: consistentColor(c, toggledHighlights[c] ? 0.125 : null) }} onClick={() => toggleHighlight(c)}>{c}</span>
+      <span key={c} style={{ backgroundColor: consistentColor(c, highlightSetting[c] ? 0.125 : null) }} onClick={() => toggleHighlight(c)} onMouseOver={() => mouseOverHighlight(c)} onMouseLeave={() => mouseOverHighlightFinish(c)}>{c}</span>
     )) : ""}
-    {retrievalQuery ? <span style={{ backgroundColor: consistentColor(retrievalQuery + " (retrieval)", toggledHighlights["_retrieval"] ? 0.125 : 1.0) }}>{retrievalQuery + " (retrieval)"}</span> : ""}
+    {retrievalQuery ? <span style={{ backgroundColor: consistentColor(retrievalQuery + " (retrieval)", highlightSetting["_retrieval"] ? 0.125 : 1.0) }}>{retrievalQuery + " (retrieval)"}</span> : ""}
   </div>
 }
 
