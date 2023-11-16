@@ -180,7 +180,7 @@ const ShadeRunnerBar = () => {
 
     // on every classifier change, recompute highlights
     useEffect(() => {
-      if(!savedHighlightQuery || !isActive || !classifierData.thought) return;
+      if(!savedHighlightQuery || !isActive || !classifierData.thought) return resetHighlights();
       resetHighlights()
 
       const applyHighlight = async () => {
