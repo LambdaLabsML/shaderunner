@@ -277,9 +277,10 @@ function findMainContent() {
 
 
 let colors = {}
-const consistentColor = (s, strong=false) => {
-    if (s in colors)
-        return colors[s];
+const consistentColor = (s, strong=false, alpha=null) => {
+    const S = JSON.stringify([s,strong,alpha])
+    if (S in colors)
+        return colors[S];
 
     // Calculate the hash of the string
     let hash = 0;
@@ -291,12 +292,11 @@ const consistentColor = (s, strong=false) => {
     const hue = ((hash % 360) + 360) % 360; // Ensure hue is within [0, 360)
     const saturation = strong ? 100 : 80; // You can adjust this value as needed
     const lightness = strong ? 60 : 80; // You can adjust this value as needed
-    const alpha = strong ? 1.0 : 0.7; // You can adjust this value as needed
+    const _alpha = strong ? 1.0 : 0.7; // You can adjust this value as needed
     
     // Return the HSL color value
-    let color = `hsla(${hue}, ${saturation}%, ${lightness}%, ${alpha})`;
-    colors[s] = color;
-    console.log(s, color)
+    let color = `hsla(${hue}, ${saturation}%, ${lightness}%, ${alpha || _alpha})`;
+    colors[S] = color;
     return color;
 }   
 
