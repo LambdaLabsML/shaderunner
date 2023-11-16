@@ -108,9 +108,9 @@ const Legend = () => {
     <div className="header" onMouseDown={handleMouseDown}>ShadeRunner</div>
     <span>(Click topic to hide/show highlights)</span>
     {Array.isArray(classifierData.classes_pos) ? classifierData.classes_pos.map(c => (
-      <span key={c} style={{ backgroundColor: consistentColor(c, false, toggledHighlights[c] ? 0.125 : 1.0) }} onClick={() => toggleHighlight(c)}>{c}</span>
+      <span key={c} style={{ backgroundColor: consistentColor(c, toggledHighlights[c] ? 0.125 : null) }} onClick={() => toggleHighlight(c)}>{c}</span>
     )) : ""}
-    {retrievalQuery ? <span style={{ backgroundColor: consistentColor(retrievalQuery + " (retrieval)", false, toggledHighlights["_retrieval"]) }}>{retrievalQuery + " (retrieval)"}</span> : ""}
+    {retrievalQuery ? <span style={{ backgroundColor: consistentColor(retrievalQuery + " (retrieval)", toggledHighlights["_retrieval"] ? 0.125 : 1.0) }}>{retrievalQuery + " (retrieval)"}</span> : ""}
   </div>
 }
 

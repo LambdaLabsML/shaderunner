@@ -303,7 +303,7 @@ const ShadeRunnerBar = () => {
               if (verbose) console.log("ERROR: text not found", split)
             }
           }
-          highlightText(texts, nodes, consistentColor(closest[0][0].pageContent), closest[0][0].pageContent + " " + closest[0][1]);
+          highlightText(texts, nodes, consistentColor(closest[0][0].pageContent));
         } else {
           if (verbose) console.log("reject", split, score_plus, score_minus)
         }
@@ -337,7 +337,7 @@ const ShadeRunnerBar = () => {
 
         // mark sentence
         const [texts, nodes] = findTextSlow(textNodes, split);
-        highlightText(texts, nodes, consistentColor(query+" (retrieval)", true));
+        highlightText(texts, nodes, consistentColor(query+" (retrieval)"), 1.0);
       }
     }
 

@@ -277,28 +277,30 @@ function findMainContent() {
 
 
 let colors = {}
-const consistentColor = (s, strong=false, alpha=null) => {
-    const S = JSON.stringify([s,strong,alpha])
+const consistentColor = (s, alpha) => {
+    alpha = alpha || 0.7;
+    const S = JSON.stringify([s,alpha])
     if (S in colors)
         return colors[S];
 
-    // Calculate the hash of the string
+    // Use a more complex hash function
     let hash = 0;
     for (let i = 0; i < s.length; i++) {
-        hash = s.charCodeAt(i) + ((hash << 5) - hash);
+        hash = s.charCodeAt(i) + (hash << 6) + (hash << 16) - hash;
     }
-    
-    // Generate HSL color values
-    const hue = ((hash % 360) + 360) % 360; // Ensure hue is within [0, 360)
-    const saturation = strong ? 100 : 80; // You can adjust this value as needed
-    const lightness = strong ? 60 : 80; // You can adjust this value as needed
-    const _alpha = strong ? 1.0 : 0.7; // You can adjust this value as needed
-    
+
+    // Improved hue calculation
+    const hue = Math.abs(hash % 360); 
+
+    // Varying saturation and lightness
+    const saturation = 80;
+    const lightness = 80;
+
     // Return the HSL color value
-    let color = `hsla(${hue}, ${saturation}%, ${lightness}%, ${alpha || _alpha})`;
+    let color = `hsla(${hue}, ${saturation}%, ${lightness}%, ${alpha})`;
     colors[S] = color;
     return color;
-}   
+}
 
 
 export { textNodesUnderElem, splitIntoWords, findTextSlow, findTextFast, highlightText, resetHighlights, findMainContent, consistentColor };
