@@ -1,6 +1,6 @@
 import type { PlasmoGetOverlayAnchor, PlasmoGetInlineAnchor } from "plasmo"
 import React, { useState } from 'react';
-import { useSessionStorage as _useSessionStorage } from '../util'
+import { useSessionStorage as _useSessionStorage, isActiveOn, useActiveState } from '../util'
 import { useStorage } from "@plasmohq/storage/hook";
 import { consistentColor } from './utilDOM'
 
@@ -51,6 +51,7 @@ export const getStyle: PlasmoGetStyle = () => {
   padding: 0.25em 0.2em;
   font-size: 85%;
   border-radius: 0.4em;
+  cursor: pointer;
 }
   
 `
@@ -62,44 +63,55 @@ export const getStyle: PlasmoGetStyle = () => {
 
 // the actual shaderunner bar
 const Legend = () => {
-    const [ isActiveOn, setIsActiveOn ] = useStorage("activeURLs", []);
-    const [ retrievalQuery ] = useSessionStorage("retrievalQuery", null);
-    const [ classifierData ] = useSessionStorage("classifierData", {});
-    const [ pos, setPos ] = useState({x: 20, y: 20});
+  const isActive = useActiveState(window.location)
+  const [retrievalQuery] = useSessionStorage("retrievalQuery", null);
+  const [classifierData] = useSessionStorage("classifierData", {});
+  const [toggledHighlights, setToggledHighlights] = useSessionStorage("toggledHighlights", {});
+  const [pos, setPos] = useState({ x: 20, y: 20 });
 
-    const url = window.location.hostname + window.location.pathname;
-    const isActive = isActiveOn[window.location.hostname] ? true : false;
 
-    const handleMouseDown = (event) => {
-      const rect = event.target.getBoundingClientRect();
+  const handleMouseDown = (event) => {
+    const rect = event.target.getBoundingClientRect();
 
-      // Compute the initial offset inside the element where the mouse was clicked
-      const offsetX = event.clientX - rect.left;
-      const offsetY = event.clientY - rect.top;
+    // Compute the initial offset inside the element where the mouse was clicked
+    const offsetX = event.clientX - rect.left;
+    const offsetY = event.clientY - rect.top;
 
-      const handleMouseMove = (moveEvent) => {
-        setPos({ x: moveEvent.clientX - offsetX, y: moveEvent.clientY - offsetY });
-      };
+    const handleMouseMove = (moveEvent) => {
+      setPos({ x: moveEvent.clientX - offsetX, y: moveEvent.clientY - offsetY });
+    };
 
-      const handleMouseUp = () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-      };
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
 
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
   };
 
-    if (!isActive || !Array.isArray(classifierData.classes_pos) || classifierData.classes_pos.length == 0)
-      return "";
+  const toggleHighlight = (topic) => {
+    setToggledHighlights(old => {
+      if (old.hasOwnProperty(topic)) {
+        const { [topic]: removed, ...newObject } = old;
+        return newObject;
+      } else {
+        return { ...old, [topic]: true };
+      }
+    })
+  }
 
-    return <div className="ShadeRunner-Legend" style={{top: pos.y, left: pos.x}}>
-      <div className="header" onMouseDown={handleMouseDown}>ShadeRunner</div>
-      {Array.isArray(classifierData.classes_pos) ? classifierData.classes_pos.map(c => (
-        <span style={{backgroundColor: consistentColor(c)}}>{c}</span>
-      )) : ""}
-      {retrievalQuery ? <span style={{backgroundColor: consistentColor(retrievalQuery+" (retrieval)", true)}}>{retrievalQuery+" (retrieval)"}</span> : ""}
-    </div>
+  if (!isActive || !Array.isArray(classifierData.classes_pos) || classifierData.classes_pos.length == 0)
+    return "";
+
+  return <div className="ShadeRunner-Legend" style={{ top: pos.y, left: pos.x }}>
+    <div className="header" onMouseDown={handleMouseDown}>ShadeRunner</div>
+    <span>(Click topic to hide/show highlights)</span>
+    {Array.isArray(classifierData.classes_pos) ? classifierData.classes_pos.map(c => (
+      <span key={c} style={{ backgroundColor: consistentColor(c, false, toggledHighlights[c] ? 0.125 : 1.0) }} onClick={() => toggleHighlight(c)}>{c}</span>
+    )) : ""}
+    {retrievalQuery ? <span style={{ backgroundColor: consistentColor(retrievalQuery + " (retrieval)", false, toggledHighlights["_retrieval"]) }}>{retrievalQuery + " (retrieval)"}</span> : ""}
+  </div>
 }
 
 export default Legend;

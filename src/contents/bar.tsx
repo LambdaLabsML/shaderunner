@@ -3,7 +3,7 @@ import type { PlasmoMountShadowHost } from "plasmo"
 import React, { useState, useEffect } from 'react';
 import Logo from 'data-url:./icon.png';
 import { getMainContent, splitContent } from './extract'
-import { useSessionStorage as _useSessionStorage } from '../util'
+import { useSessionStorage as _useSessionStorage, useActiveState } from '../util'
 import { textNodesUnderElem, findTextSlow, findTextFast, highlightText, resetHighlights, findMainContent, consistentColor } from './utilDOM'
 import { computeEmbeddingsLocal } from './embeddings'
 import { sendToBackground } from "@plasmohq/messaging"
@@ -77,7 +77,7 @@ const ClassModifierList = ({title, classList, onSubmit}) => {
 
 // the actual shaderunner bar
 const ShadeRunnerBar = () => {
-    const [ isActiveOn, setIsActiveOn ] = useStorage("activeURLs", []);
+    const isActive = useActiveState(window.location);
     const [ highlightQuery, setHighlightQuery ] = useSessionStorage("highlightQuery", "");
     const [ pageEmbeddings, setPageEmbeddings] = useState({});
     const [ classifierData, setClassifierData] = useSessionStorage("classifierData", {});
@@ -100,7 +100,6 @@ const ShadeRunnerBar = () => {
 
 
     const url = window.location.hostname + window.location.pathname;
-    const isActive = isActiveOn[window.location.hostname] ? true : false;
 
 
     // ------ //
