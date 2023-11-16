@@ -78,7 +78,7 @@ const ClassModifierList = ({title, classList, onSubmit}) => {
 // the actual shaderunner bar
 const ShadeRunnerBar = () => {
     const [url, isActive] = useActiveState(window.location)
-    const [ highlightQuery, setHighlightQuery ] = useSessionStorage("highlightQuery:"+url, "");
+    const [ savedHighlightQuery, setSavedHighlightQuery ] = useSessionStorage("savedHighlightQuery:"+url, "");
     const [ pageEmbeddings, setPageEmbeddings] = useState({});
     const [ classifierData, setClassifierData] = useSessionStorage("classifierData:"+url, {});
     const [ retrievalQuery, setRetrievalQuery] = useSessionStorage("retrievalQuery:"+url, null);
@@ -129,6 +129,8 @@ const ShadeRunnerBar = () => {
         ev.preventDefault(); 
         resetState();
 
+        const highlightQuery = ev.target.value;
+        setSavedHighlightQuery(highlightQuery)
         setIsThinking(true)
         //await query2embedding(highlightQuery);
 
@@ -178,7 +180,7 @@ const ShadeRunnerBar = () => {
 
     // on every classifier change, recompute highlights
     useEffect(() => {
-      if(!highlightQuery || !isActive || !classifierData.thought) return;
+      if(!savedHighlightQuery || !isActive || !classifierData.thought) return;
       resetHighlights()
 
       const applyHighlight = async () => {
@@ -335,7 +337,7 @@ const ShadeRunnerBar = () => {
 
         // mark sentence
         const [texts, nodes] = findTextSlow(textNodes, split);
-        highlightText(texts, nodes, consistentColor(highlightQuery+" (retrieval)", true));
+        highlightText(texts, nodes, consistentColor(query+" (retrieval)", true));
       }
     }
 
@@ -364,8 +366,7 @@ const ShadeRunnerBar = () => {
       <textarea
         className="text-box"
         placeholder="What do you want to find here?"
-        value={highlightQuery}
-        onChange={(ev) => setHighlightQuery(ev.target.value)}
+        defaultValue={savedHighlightQuery}
         onKeyDown={onEnterPress}
         rows="4"
       />
