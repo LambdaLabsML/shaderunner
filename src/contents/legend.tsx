@@ -147,7 +147,7 @@ const Legend = () => {
     <div className="header" onMouseDown={handleMouseDown}>ShadeRunner</div>
     <SwitchInput
         label=""
-        options={['highlight', "focus", "sort-by-relevance"]}
+        options={['highlight', "focus"]}
         selected={mode}
         onChange={(value) => setMode(value)}
       />
