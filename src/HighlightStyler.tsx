@@ -70,7 +70,7 @@ const HighlightStyler = ({highlightSetting, mode}) => {
 
 
         const style = document.createElement('style');
-        style.title = 'shadowcss';
+        style.title = 'shaderunner-css';
         setStyleEl(style)
         window.document.head.appendChild(style);
     }, [isActive]);
