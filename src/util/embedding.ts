@@ -1,34 +1,18 @@
-import type { PlasmoMessaging } from "@plasmohq/messaging"
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { Storage } from "@plasmohq/storage"
 import { Document } from "langchain/document";
 import { Chroma } from "langchain/vectorstores/chroma";
 import { ChromaClient } from "chromadb";
-
-const modelName = 'text-embedding-ada-002'
 const storage = new Storage()
-const chromaclient = new ChromaClient({fetchOptions:{anonymized_telemetry: false}})
+const modelName = 'text-embedding-ada-002'
+const chromaclient = new ChromaClient() as any
+// TODO: turn off anonymized_telemetry here
 
 
 
-function simpleHash(inputString) {
-  //const length = 63
-  const length = 32
-  let hash = 0;
-  for (let i = 0; i < inputString.length; i++) {
-    const charCode = inputString.charCodeAt(i);
-    hash += charCode;
-  }
 
-  // Repeat the hash value to achieve the desired length
-  let result = '';
-  while (result.length < length) {
-    result += hash.toString();
-  }
 
-  return result.substring(0, length);
-}
 
 
 // check if embedding exists
@@ -86,7 +70,7 @@ async function computeEmbeddingsCached(collectionName, splits, metadata, method_
 
       // method 1: retrieval
       if (method_data.method == "retrieval")
-          return await vectorStore.similaritySearchWithScore(method_data.query, k = method_data.k)
+          return await vectorStore.similaritySearchWithScore(method_data.query, method_data.k)
 
     }
 
@@ -124,7 +108,7 @@ async function computeEmbeddingsCached(collectionName, splits, metadata, method_
 
     // method 1: retrieval
     if (method_data.method == "retrieval")
-        return await vectorStore.similaritySearchWithScore(method_data.query, k = method_data.k)
+        return await vectorStore.similaritySearchWithScore(method_data.query, method_data.k)
 
     // method 2: get all embeddings
     const result2 = await collection.get({include: ["embeddings", "documents"]})
@@ -138,22 +122,25 @@ async function computeEmbeddingsCached(collectionName, splits, metadata, method_
 
 
 
- 
-const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
-  console.log("background call:", req);
-  //const message = await querySomeApi(req.body.id)
 
-  if (req.method == "exits_embeddings") {
-    res.send(await embeddingExists(simpleHash(req.collectionName)))
-  } else if (req.method == "get_embeddings") {
-    res.send({
-      "embeddings": await computeEmbeddingsCached(simpleHash(req.collectionName), ...req.data, {"method": req.method})
-    })
-  } else {
-    res.send(
-      await computeEmbeddingsCached(simpleHash(req.collectionName), ...req.data, {"method": req.method, "k": req.k, "query": req.query})
-    )
+
+// given a list of sentences & metadata compute embeddings, retrieve / store them
+async function computeEmbeddingsLocal(sentences, metadata) {
+  const api_key = await storage.get("OPENAI_API_KEY");
+
+  // Compute embeddings
+  const vectorStore = await MemoryVectorStore.fromTexts(
+    sentences,
+    metadata,
+    new OpenAIEmbeddings({openAIApiKey:api_key, modelName:modelName})
+  );
+  const embeddings = {};
+  for (let obj of vectorStore.memoryVectors) {
+    embeddings[obj.content] = obj
   }
+
+  return [ vectorStore, embeddings ];
 }
 
-export default handler;
+
+export { computeEmbeddingsLocal, embeddingExists, computeEmbeddingsCached };

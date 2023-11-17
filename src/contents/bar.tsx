@@ -1,15 +1,15 @@
 import type { PlasmoGetInlineAnchor } from "plasmo"
 import type { PlasmoMountShadowHost } from "plasmo"
 import React, { useState, useEffect } from 'react';
-import Logo from 'data-url:./icon.png';
-import { getMainContent, splitContent } from './extract'
+import Logo from 'data-url:../assets/icon.png';
+import { getMainContent, splitContent } from '~util/extractContent'
 import { useSessionStorage as _useSessionStorage, useActiveState } from '../util'
-import { textNodesUnderElem, findTextSlow, findTextFast, highlightText, resetHighlights, findMainContent, textNodesNotUnderHighlight, surroundTextNode } from './utilDOM'
-import { computeEmbeddingsLocal } from './embeddings'
+import { textNodesUnderElem, findTextSlow, findTextFast, highlightText, resetHighlights, findMainContent, textNodesNotUnderHighlight, surroundTextNode } from '../util/DOM'
+import { computeEmbeddingsLocal } from '~util/embedding'
 import { sendToBackground } from "@plasmohq/messaging"
 import { useStorage } from "@plasmohq/storage/hook";
-import { MSG_CONTENT, MSG_EMBED, MSG_QUERY2CLASS } from "./messages";
-import Histogram from "../histogram";
+import { MSG_CONTENT, MSG_EMBED, MSG_QUERY2CLASS } from "../util/messages";
+import Histogram from "~components/Histogram";
 import EditableText from "~components/EditableText";
 
 // in development mode we want to use persistent storage for debugging
@@ -33,7 +33,7 @@ export const mountShadowHost: PlasmoMountShadowHost = ({
 
 
 // load style
-import styleText from "data-text:./shaderunner.scss"
+import styleText from "data-text:../style.scss"
 import type { PlasmoGetStyle } from "plasmo"
 export const getStyle: PlasmoGetStyle = () => {
   const style = document.createElement("style")
@@ -217,7 +217,7 @@ const ShadeRunnerBar = () => {
         if (pageEmbeddings[mode]) return pageEmbeddings[mode];
 
         // if not in cache, check if database has embeddings
-        const exists = (await sendToBackground({ name: "embedding", method: "exits_embeddings", collectionName: url}))
+        const exists = await sendToBackground({ name: "embedding_exists", body: {collectionName: url}})
         if (!exists)
           onEmbed()
 
@@ -227,7 +227,7 @@ const ShadeRunnerBar = () => {
         const [splits, metadata] = splitContent(mainEl.textContent, mode, url)
 
         // retrieve embedding
-        const splitEmbeddings = (await sendToBackground({ name: "embedding", method: "get_embeddings", collectionName: url, data: [splits, metadata]})).embeddings
+        const splitEmbeddings = await sendToBackground({ name: "embedding_compute", body: {collectionName: url, splits: splits, metadata: metadata}})
         const _pageEmbeddings = {[mode]: {splits: splits, metadata: metadata, embeddings: splitEmbeddings}}
 
         if (!exists)
@@ -240,7 +240,7 @@ const ShadeRunnerBar = () => {
     // ask llm for classes
     const getQueryClasses = async (query, onLLM = () => {}, onLLMDone = () => {}) => {
       onLLM()
-      const result = await sendToBackground({ name: "query2classes", query: query, url: url, title: document.title })
+      const result = await sendToBackground({ name: "llm_classify", query: query, url: url, title: document.title })
       setClassifierData(old => ({...old, classes_pos: result.classes_pos, classes_neg: result.classes_neg, thought: result.thought, scope: result.scope}))
       onLLMDone()
     }
@@ -332,7 +332,7 @@ const ShadeRunnerBar = () => {
       const metadata = pageEmbeddings[mode].metadata;
 
       // using precomputed embeddings
-      const retrieved_splits = (await sendToBackground({ name: "embedding", method: "retrieval", collectionName: url, data: [splits, metadata], query: query, k: textretrieval_k }))
+      const retrieved_splits = (await sendToBackground({ name: "retrieval", body: {collectionName: url, data: [splits, metadata], query: query, k: textretrieval_k }}))
 
       for (const i in retrieved_splits) {
         const split = retrieved_splits[i][0].pageContent;

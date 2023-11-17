@@ -2,8 +2,8 @@ import type { PlasmoGetOverlayAnchor, PlasmoGetInlineAnchor } from "plasmo"
 import React, { useCallback, useState } from 'react';
 import { useSessionStorage as _useSessionStorage, isActiveOn, useActiveState } from '../util'
 import { useStorage } from "@plasmohq/storage/hook";
-import { consistentColor } from './utilDOM'
-import HighlightStyler from "../HighlightStyler";
+import { consistentColor } from '../util/DOM'
+import HighlightStyler from "../components/HighlightStyler";
 import throttle from 'lodash.throttle';
 import debounce from 'lodash.debounce';
 

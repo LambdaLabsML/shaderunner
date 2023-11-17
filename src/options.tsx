@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { useStorage } from "@plasmohq/storage/hook";
-import './options.scss';
+import './style.scss';
 import NumericInput from '~components/NumericInput';
 import SwitchInput from '~components/SwitchInput';
 import StringInput from '~components/StringInput';
 import defaults from '~defaults';
 
 const Settings = () => {
-
 
   const [openaikey, setopenaikey] = useStorage('OPENAI_API_KEY', (v) => v === undefined ? "" : v)
   const [openchatapibase, setopenchatapibase] = useStorage('OPENCHAT_API_BASE', (v) => v === undefined ? "" : v)
