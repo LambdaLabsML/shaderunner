@@ -4,11 +4,11 @@ import { Storage } from "@plasmohq/storage"
 import { Document } from "langchain/document";
 import { Chroma } from "langchain/vectorstores/chroma";
 import { ChromaClient } from "chromadb";
+import type { Metadata } from "./extractContent";
 const storage = new Storage()
 const modelName = 'text-embedding-ada-002'
 const chromaclient = new ChromaClient() as any
 // TODO: turn off anonymized_telemetry here
-
 
 
 
@@ -125,7 +125,7 @@ async function computeEmbeddingsCached(collectionName, splits, metadata, method_
 
 
 // given a list of sentences & metadata compute embeddings, retrieve / store them
-async function computeEmbeddingsLocal(sentences, metadata) {
+async function computeEmbeddingsLocal(sentences: string[], metadata: Metadata[]) {
   const api_key = await storage.get("OPENAI_API_KEY");
 
   // Compute embeddings

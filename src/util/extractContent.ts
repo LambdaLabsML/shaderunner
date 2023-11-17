@@ -20,7 +20,7 @@ const getMainContent = (clone = true) => {
 
 
 // split content into paragraphs, sentences or words
-const splitContent = (content: string, type: string, url: string | boolean) => {
+const splitContent = (content: string, type: string, url: string | boolean) : [string[], Metadata[]] => {
   const doc = nlp(content)
 
   const splits = (type == "sentences") ? doc.sentences().out('array') : (type == "paragraphs") ? (doc as any).paragraphs().map((p) => p.text()).views : (type == "terms") ? doc.terms().out('array') : new Error(`Cannot split into ${type}. (Not known)`);

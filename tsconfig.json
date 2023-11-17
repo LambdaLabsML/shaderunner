@@ -16,7 +16,7 @@
       ]
     },
     "baseUrl": ".",
-    "target": "ES2023",
-    "module": "nodenext",
+    "target": "es2022",
+    "module": "es2020",
   }
 }

@@ -6,9 +6,10 @@ import { getMainContent, splitContent } from '~util/extractContent'
 import { useSessionStorage as _useSessionStorage, useActiveState } from '../util'
 import { textNodesUnderElem, findTextSlow, findTextFast, highlightText, resetHighlights, findMainContent, textNodesNotUnderHighlight, surroundTextNode } from '../util/DOM'
 import { computeEmbeddingsLocal } from '~util/embedding'
-import { sendToBackground } from "@plasmohq/messaging"
+import { sendToBackground, type MessagesMetadata } from "@plasmohq/messaging"
 import { useStorage } from "@plasmohq/storage/hook";
 import { MSG_CONTENT, MSG_EMBED, MSG_QUERY2CLASS } from "../util/messages";
+import type { VectorStore } from "langchain/dist/vectorstores/base";
 import Histogram from "~components/Histogram";
 import EditableText from "~components/EditableText";
 
@@ -19,6 +20,8 @@ console.log(process.env.NODE_ENV, process.env.PLASMO_PUBLIC_STORAGE)
 
 // where to place the element
 export const getInlineAnchor: PlasmoGetInlineAnchor = async () => findMainContent()
+
+type JSX = React.JSX.Element
  
 
 // place it above the anchor
@@ -103,7 +106,7 @@ const ShadeRunnerBar = () => {
     // ------ //
     // helper //
     // ------ //
-    const statusAdd = (type: string, msg: string) => setStatusMsg((old) => [...old, [type, msg]]);
+    const statusAdd = (type: string | JSX, msg: string | JSX) => setStatusMsg((old) => [...old, [type, msg]]);
     const statusClear = () => setStatusMsg(old => []);
     const statusAmend = (fn: ((msg: ([string, string])) => [string,string]), i?: number) => setStatusMsg(old => {
         if(!i) i = old.length - 1;
@@ -227,7 +230,7 @@ const ShadeRunnerBar = () => {
         const [splits, metadata] = splitContent(mainEl.textContent, mode, url)
 
         // retrieve embedding
-        const splitEmbeddings = await sendToBackground({ name: "embedding_compute", body: {collectionName: url, splits: splits, metadata: metadata}})
+        const splitEmbeddings = await sendToBackground({ name: "embedding_compute" as keyof MessagesMetadata, body: {collectionName: url, splits: splits, metadata: metadata}})
         const _pageEmbeddings = {[mode]: {splits: splits, metadata: metadata, embeddings: splitEmbeddings}}
 
         if (!exists)
@@ -240,7 +243,7 @@ const ShadeRunnerBar = () => {
     // ask llm for classes
     const getQueryClasses = async (query, onLLM = () => {}, onLLMDone = () => {}) => {
       onLLM()
-      const result = await sendToBackground({ name: "llm_classify", query: query, url: url, title: document.title })
+      const result = await sendToBackground({ name: "llm_classify", body: {query: query, url: url, title: document.title }})
       setClassifierData(old => ({...old, classes_pos: result.classes_pos, classes_neg: result.classes_neg, thought: result.thought, scope: result.scope}))
       onLLMDone()
     }
@@ -260,7 +263,7 @@ const ShadeRunnerBar = () => {
       // compute embeddings of classes
       const allclasses = [...classes_pos, ...classes_neg]
       const result = await computeEmbeddingsLocal(allclasses, []);
-      const classStore = result[0];
+      const classStore = result[0] as VectorStore;
       const class2Id = Object.fromEntries(allclasses.map((c, i) => [c, i]))
 
       // mark sentences based on similarity
@@ -271,7 +274,7 @@ const ShadeRunnerBar = () => {
 
         // using precomputed embeddings
         const embedding = splitEmbeddings[split];
-        const closest = await classStore.similaritySearchVectorWithScore(embedding, k = allclasses.length);
+        const closest = await classStore.similaritySearchVectorWithScore(embedding, allclasses.length);
 
         const score_plus = classes_pos ? closest.filter((c) => classes_pos.includes(c[0].pageContent)).reduce((a, c) => Math.max(a, c[1]), 0) : 0
         const score_minus = classes_neg ? closest.filter((c) => classes_neg.includes(c[0].pageContent)).reduce((a, c) => Math.max(a, c[1]), 0) : 0
@@ -377,7 +380,7 @@ const ShadeRunnerBar = () => {
         placeholder="What do you want to find here?"
         defaultValue={savedHighlightQuery}
         onKeyDown={onEnterPress}
-        rows="4"
+        rows={4}
       />
       {isThinking && statusMsg && statusMsg.length ? statusHtml : ""}
       {!isThinking && classifierData.thought && Array.isArray(classifierData.classes_pos) && Array.isArray(classifierData.classes_neg) ? (

@@ -1,5 +1,5 @@
 
-function simpleHash(inputString) {
+function simpleHash(inputString: string) {
   //const length = 63
   const length = 32
   let hash = 0;
