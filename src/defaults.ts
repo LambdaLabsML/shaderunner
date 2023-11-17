@@ -4,7 +4,7 @@ const defaults = {
     gpt_chat: false,
     gpt_temperature: 0.0,
     textclassifier: true,
-    textretrieval: true,
+    textretrieval: false,
     textretrieval_k: 3,
     alwayshighlighteps: -1,
     minimalhighlighteps: -1,
