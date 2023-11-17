@@ -6,7 +6,7 @@ import type { Metadata } from "../../util/extractContent"
 
 type RequestBody = {
     collectionName: string,
-    splits: Document[],
+    splits: string[],
     metadata: Metadata[],
     method: string
 };
@@ -14,7 +14,7 @@ type RequestBody = {
  
 const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
     const body = req.body as RequestBody;
-    res.send(await computeEmbeddingsCached(simpleHash(body.collectionName), body.splits, body.metadata, {"method": body.method}))
+    res.send(await computeEmbeddingsCached(simpleHash(body.collectionName), body.splits, body.metadata, {"method": "get_embeddings"}))
 }
 
 export default handler;

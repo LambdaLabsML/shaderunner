@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 
 function simpleHash(inputString: string) {
   //const length = 63
@@ -17,4 +19,36 @@ function simpleHash(inputString: string) {
   return result.substring(0, length);
 }
 
-export { simpleHash };
+
+// let arrays have a random sample method
+const random = function (A) {
+  return A[Math.floor((Math.random()*A.length))];
+}
+
+
+// react hook to save in session Storage
+export default function useSessionStorage(key, initialValue) {
+  const [item, setInnerValue] = useState(() => {
+    try {
+      return window.sessionStorage.getItem(key)
+        ? JSON.parse(window.sessionStorage.getItem(key))
+        : initialValue;
+    } catch (error) {
+      return initialValue;
+    }
+  });
+
+  const setValue = value => {
+    try {
+      setInnerValue(value);
+      window.sessionStorage.setItem(key, JSON.stringify(value));
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  return [item, setValue];
+}
+
+
+export { useSessionStorage, simpleHash, random };

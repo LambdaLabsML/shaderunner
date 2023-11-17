@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react"
 import { useStorage } from "@plasmohq/storage/hook";
-import { useSessionStorage as _useSessionStorage, useActiveState } from '../util'
-import { consistentColor } from "../util/DOM";
-
+import { consistentColor } from "~util/DOM";
+import { useSessionStorage as _useSessionStorage } from '~util/misc'
+import { useActiveState } from '~util/activeStatus'
 
 // in development mode we want to use persistent storage for debugging
 const useSessionStorage = process.env.NODE_ENV == "development" && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;

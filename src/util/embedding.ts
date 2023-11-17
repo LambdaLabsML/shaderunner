@@ -16,7 +16,7 @@ const chromaclient = new ChromaClient() as any
 
 
 // check if embedding exists
-async function embeddingExists(collectionName) {
+async function embeddingExists(collectionName: string) {
     try {
       const api_key = await storage.get("OPENAI_API_KEY");
       const openaiembedding = new OpenAIEmbeddings({openAIApiKey:api_key, modelName:modelName})
@@ -30,7 +30,7 @@ async function embeddingExists(collectionName) {
 
 
 // given a list of sentences & metadata compute embeddings, retrieve / store them
-async function computeEmbeddingsCached(collectionName, splits, metadata, method_data) {
+async function computeEmbeddingsCached(collectionName: string, splits: string[], metadata: Metadata[], method_data: { method: string; k?: number; query?: string; }) {
     const api_key = await storage.get("OPENAI_API_KEY");
     const openaiembedding = new OpenAIEmbeddings({openAIApiKey:api_key, modelName:modelName})
 
