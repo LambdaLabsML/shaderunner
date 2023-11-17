@@ -1,5 +1,5 @@
 import defaults from "~defaults";
-import { toggleActive, getActiveStatu } from "~util";
+import { toggleActive, getActiveStatus, setActiveStatus } from "~util";
 import { Storage } from "@plasmohq/storage"
 const storage = new Storage()
 
@@ -23,7 +23,8 @@ chrome.action.onClicked.addListener(async (tab) => {
 // on tab change, update the plugin icon
 chrome.tabs.onActivated.addListener(activeInfo => {
     chrome.tabs.get(activeInfo.tabId, async function(tab) {
-        await setIconBadge(await getActiveStatu(tab.url))
+        const isActive = await getActiveStatus(tab.url)
+        await setIconBadge(isActive)
     });
 })
 
@@ -31,7 +32,7 @@ chrome.tabs.onActivated.addListener(activeInfo => {
 // on startup, update the plugin icon
 chrome.tabs.query({active: true, currentWindow: true}, async (tabs) => {
     if (tabs.length == 0) return;
-    await setIconBadge(await getActiveStatu(tabs[0].url))
+    await setIconBadge(await getActiveStatus(tabs[0].url))
 });
 
 

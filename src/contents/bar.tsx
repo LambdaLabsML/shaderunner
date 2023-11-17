@@ -10,8 +10,8 @@ import { sendToBackground, type MessagesMetadata } from "@plasmohq/messaging"
 import { useStorage } from "@plasmohq/storage/hook";
 import { MSG_CONTENT, MSG_EMBED, MSG_QUERY2CLASS } from "../util/messages";
 import type { VectorStore } from "langchain/dist/vectorstores/base";
-import Histogram from "~components/Histogram";
-import EditableText from "~components/EditableText";
+import Histogram from "~components/basic/Histogram";
+import EditableText from "~components/basic/EditableText";
 
 // in development mode we want to use persistent storage for debugging
 const useSessionStorage = process.env.NODE_ENV == "development" && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;

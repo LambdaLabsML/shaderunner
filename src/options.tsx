@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useStorage } from "@plasmohq/storage/hook";
 import './style.scss';
-import NumericInput from '~components/NumericInput';
-import SwitchInput from '~components/SwitchInput';
-import StringInput from '~components/StringInput';
+import NumericInput from '~components/basic/NumericInput';
+import SwitchInput from '~components/basic/SwitchInput';
+import StringInput from '~components/basic/StringInput';
 import defaults from '~defaults';
 
 const Settings = () => {

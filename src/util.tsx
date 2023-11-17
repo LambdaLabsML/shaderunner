@@ -21,10 +21,17 @@ const toggleActive = async (_url) => {
 
 
 // check active status for a url
-const getActiveStatu = async (_url) => {
+const getActiveStatus = async (_url) => {
     const activeURLs = await storage.get("activeURLs") || {};
     const url = new URL(_url).hostname; // Normalize URL
     return url in activeURLs;
+}
+
+// check active status for a url
+const setActiveStatus = async (_url: string, isActive: boolean) => {
+    const url = new URL(_url).hostname; // Normalize URL
+    const activeURLs = await storage.get("activeURLs") as {};
+    await storage.set("activeURLs", { ...activeURLs, [url]: true });
 }
 
 
@@ -62,4 +69,4 @@ export default function useSessionStorage(key, initialValue) {
 }
 
 
-export { useSessionStorage, toggleActive, getActiveStatu, useActiveState };
+export { useSessionStorage, toggleActive, getActiveStatus, setActiveStatus, useActiveState };

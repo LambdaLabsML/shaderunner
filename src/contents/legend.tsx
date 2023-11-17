@@ -1,11 +1,9 @@
-import type { PlasmoGetOverlayAnchor, PlasmoGetInlineAnchor } from "plasmo"
-import React, { useCallback, useState } from 'react';
-import { useSessionStorage as _useSessionStorage, isActiveOn, useActiveState } from '../util'
+import type { PlasmoGetInlineAnchor } from "plasmo"
+import React, { useState } from 'react';
+import { useSessionStorage as _useSessionStorage, useActiveState } from '../util'
 import { useStorage } from "@plasmohq/storage/hook";
 import { consistentColor } from '../util/DOM'
 import HighlightStyler from "../components/HighlightStyler";
-import throttle from 'lodash.throttle';
-import debounce from 'lodash.debounce';
 
 // in development mode we want to use persistent storage for debugging
 const useSessionStorage = process.env.NODE_ENV == "development" && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;
@@ -16,7 +14,7 @@ export const getInlineAnchor: PlasmoGetInlineAnchor = async () => document.query
 
 // load style
 import type { PlasmoGetStyle } from "plasmo"
-import SwitchInput from "~components/SwitchInput";
+import SwitchInput from "~components/basic/SwitchInput";
 export const getStyle: PlasmoGetStyle = () => {
   const style = document.createElement("style")
   style.textContent = `
@@ -113,7 +111,7 @@ const Legend = () => {
     document.addEventListener('mouseup', handleMouseUp);
   };
 
-  const toggleHighlight = (topic) => {
+  const toggleHighlight = (topic: string) => {
     setHighlightSettings(old => {
       if (old.hasOwnProperty(topic)) {
         const { [topic]: removed, ...newObject } = old;
