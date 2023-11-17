@@ -2,6 +2,54 @@
 
 
 
+
+## ShadeRunner Version 0.3.0
+
+**Features**:
+- cache llm response & allow user to change topics
+- improved string matching (first try by-word matching, then slower by-char matching)
+- improved topic prompt by introducing concept of "interesting", "outliers" and "scope". also improved training examples
+- new color for each positive topic added
+- added floating legend + click/hover effects to toggle highlight topics
+- added focus mode (only preview, removes all but highlighted text)
+
+**Settings**:
+- ensure settings are set upon installation
+- disable threshold values by default
+- added gpt temperature
+- added custom/openchat api endpoint
+- added gpt-4 turbo preview
+- disabled retrieval mode by default
+
+**Minor**:
+- mousehover on highlight shows assigned class and score
+- update plugin icon status on tab change & startup
+- reset highlights before next query
+- use session storage for query data (also on a per-url basis)
+- verbose-mode prints error when text not found on page
+- cached embeddings not found sometimes
+- dev-mode: enabled persistent storage for debugging
+- collapsed view of thought process & histograms
+- clear data on empty input
+- slight visualization improvement to show when computations are ongoing
+- input field more responsive
+- increased highlight color variance
+- changed default highlight class names (`shaderunner-highlight`)
+
+**Bugfixes**:
+- prevent concurrent highlights on startup
+- force plasmo-inline to be visible (fixes reddit)
+- fixed color not updating in some cases
+- fixed retrieval text color
+- storage quota exceed errors fixed (by moving scores from storage to state)
+- do not highlight when not active
+- `minimaleps` not working in all cases
+- enable partial classifierData objects in rendering
+- highlight-update did not use async to call highlightUsingX methods
+
+-------
+
+
 ## ShadeRunner Version 0.2.0
 
 **Features**:
