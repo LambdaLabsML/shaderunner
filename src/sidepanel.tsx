@@ -1,12 +1,13 @@
 import React, { useEffect } from 'react';
 import Logo from 'data-url:./assets/icon.png';
 import styleText from "data-text:./style.scss"
-import Legend from '~components/legend';
+import Legend from '~components/Legend';
 import MainInput from '~components/MainInput';
 
 
 // the actual shaderunner bar
 const Sidepanel = () => {
+  const tabid = new URL(window.location.href).searchParams.get("tabid")
 
   // ======= //
   // Effects //

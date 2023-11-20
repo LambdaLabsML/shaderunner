@@ -23,6 +23,11 @@ const tabUpdated = tabId => {
         const url = new URL(tab.url).hostname; // Normalize URL
         activeURLs[url] = isActive;
         await setIconBadge(isActive)
+        const tabId = tab.id;
+        await chrome.sidePanel.setOptions({
+            tabId,
+            path: 'sidepanel.html?tabid='+tab.id
+        });
     });
 }
 chrome.tabs.onActivated.addListener(activeInfo => tabUpdated(activeInfo.tabId))
@@ -55,6 +60,11 @@ chrome.tabs.query({active: true, currentWindow: true}, async (tabs) => {
     const url = new URL(tabs[0].url).hostname; // Normalize URL
     activeURLs[url] = isActive;
     await setIconBadge(isActive)
+    const tabId = tabs[0].id;
+    await chrome.sidePanel.setOptions({
+        tabId,
+        path: 'sidepanel.html?tabid='+tabs[0].id
+    });
 });
 
 
@@ -74,7 +84,7 @@ chrome.action.onClicked.addListener(async (tab) => {
             });
             await chrome.sidePanel.setOptions({
                 tabId,
-                path: 'sidepanel.html',
+                path: 'sidepanel.html?tabid='+tab.id,
                 enabled: true
             });
         }
