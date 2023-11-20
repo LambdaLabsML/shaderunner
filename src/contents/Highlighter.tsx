@@ -56,7 +56,7 @@ const Highlighter = ({highlightSetting, mode}) => {
 
     // init (make sure tabId is known, needed for messaging with other parts of this application)
     useEffect(() => {
-      if (!isActive) return;
+      if (!isActive || tabId) return;
 
       async function init() {
         const tabId = await chrome.runtime.sendMessage("get_tabid")
