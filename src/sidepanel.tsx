@@ -14,6 +14,7 @@ const Sidepanel = () => {
   const tabId = new URL(window.location.href).searchParams.get("tabId")
   const listener = usePort("listener")
   const [statusEmbedding, setStatusEmbedding] = useState(null);
+  const [statusClassifier, setStatusClassifier] = useState(null);
   const [message, setMessage] = useState(null);
 
 
@@ -31,12 +32,6 @@ const Sidepanel = () => {
       background: white;
     }
 
-    .shaderunner-status {
-      color: gray;
-      text-transform: uppercase;
-      font-size: 90%;
-    }
-    
     ${styleText}`
     window.document.head.appendChild(style);
   }, [])
@@ -61,15 +56,29 @@ const Sidepanel = () => {
   // Render //
   // ====== //
 
-  const embeddingStatus = statusEmbedding ? (
-    <span className="shaderunner-status">embeddings: <CircularProgressBar size={4.5} progress={statusEmbedding[1] || 0}/> ({statusEmbedding[0]})</span>
-  ) : "";
+  const embeddingHtml = statusEmbedding ? (
+    <div className="status">embeddings: <CircularProgressBar className={statusEmbedding[0]} size={4} progress={statusEmbedding[1] || 0}/> ({statusEmbedding[0]})</div>
+  ) : (
+    <div className="status">embeddings: -</div>
+  );
+
+  const classifierHtml = statusClassifier ? (
+    <div className="status">classifier: <CircularProgressBar size={4} progress={statusClassifier[1] || 0}/> ({statusClassifier[0]})</div>
+  ) : (
+    <div className="status">classifier: -</div>
+  );
+
 
   return <div className="ShadeRunner-Sidepanel">
-    {embeddingStatus}
-    <img className="thinking_logo" width="20" src={Logo}/>
+    <div className="statusContainer">
+      {embeddingHtml}
+      {classifierHtml}
+    </div>
     <MainInput/>
     <Legend></Legend>
+    <div className="logoContainer">
+      <img className="thinking_logo" width="30" src={Logo}/>
+    </div>
   </div>
 }
 

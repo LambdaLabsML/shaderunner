@@ -268,4 +268,26 @@ $primary-color: #8136e2;
   display: flex;
   flex-direction: column;
   gap: 1em;
+
+  .status {
+    color: gray;
+    text-transform: uppercase;
+    font-size: 90%;
+
+    .loaded {
+      filter: invert(32%) sepia(99%) saturate(1502%) hue-rotate(93deg) brightness(81%) contrast(106%);
+    }
+  }
+
+  .logoContainer {
+    width: 100%;
+    position: absolute;
+    bottom: 2em;
+
+    img {
+      display: block;
+      margin: 0 auto;
+      opacity: 0.3;
+    }
+  }
 }
