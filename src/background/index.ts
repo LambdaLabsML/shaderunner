@@ -13,36 +13,59 @@ const setIconBadge = async (active) => {
 
 // due to a bug sidePanel.open cannot be called after an async operation (https://bugs.chromium.org/p/chromium/issues/detail?id=1478648)
 // thus, we save active status globally and use the async operation after chrome.sidePanel.open
-const activeTabs = {}
+let activeURLs = {}
+
 
 // on tab change, update the plugin icon & active status
 const tabUpdated = tabId => {
     chrome.tabs.get(tabId, async function(tab) {
         const isActive = await getActiveStatus(tab.url)
-        activeTabs[tabId] = isActive;
+        const url = new URL(tab.url).hostname; // Normalize URL
+        activeURLs[url] = isActive;
         await setIconBadge(isActive)
     });
 }
 chrome.tabs.onActivated.addListener(activeInfo => tabUpdated(activeInfo.tabId))
 chrome.tabs.onUpdated.addListener(tabUpdated)
 chrome.tabs.onRemoved.addListener((tabId) => {
-    if (tabId in activeTabs)
-        delete activeTabs[tabId];
+    chrome.tabs.get(tabId, async function(tab) {
+        const url = new URL(tab.url).hostname; // Normalize URL
+        if (url in activeURLs)
+            delete activeURLs[url];
+    })
 })
 
+// listen for change of activeURLs to register the activeTab as well
+// note: to be deleted once the bug has been resolved
+chrome.storage.onChanged.addListener(change => {
+    const key = Object.keys(change)[0]
+    if (key != "activeURLs") return;
+    activeURLs = JSON.parse(change[key].newValue)
+    chrome.tabs.query({active: true, currentWindow: true}, async (tabs) => {
+        if (tabs.length == 0 || !tabs[0].url) return;
+        await setIconBadge(await getActiveStatus(tabs[0].url))
+    });
+})
+
+
 // on startup, update the plugin icon
-/*chrome.tabs.query({active: true, currentWindow: true}, async (tabs) => {
+chrome.tabs.query({active: true, currentWindow: true}, async (tabs) => {
     if (tabs.length == 0 || !tabs[0].url) return;
-    await setIconBadge(await getActiveStatus(tabs[0].url))
-});*/
+    const isActive = await getActiveStatus(tabs[0].url)
+    const url = new URL(tabs[0].url).hostname; // Normalize URL
+    activeURLs[url] = isActive;
+    await setIconBadge(isActive)
+});
+
 
 // toggle active status when clicking plugin icon
 // open sidePanel if settings requires so
 chrome.action.onClicked.addListener(async (tab) => {
     if (!tab.url) return;
     const tabId = tab.id;
-    if (tabId in activeTabs) {
-        if(!activeTabs[tabId]) {
+    const url = new URL(tab.url).hostname; // Normalize URL
+    if (url in activeURLs) {
+        if(!activeURLs[url]) {
             chrome.sidePanel.open({ windowId: tab.windowId });
         } else {
             await chrome.sidePanel.setOptions({
@@ -58,9 +81,10 @@ chrome.action.onClicked.addListener(async (tab) => {
     } else
         chrome.sidePanel.open({ windowId: tab.windowId });
     const newStatus = await toggleActive(tab.url);
-    activeTabs[tabId] = newStatus;
+    activeURLs[url] = newStatus;
     await setIconBadge(newStatus);
 })
+
 
 // ensure settinngs exist upon installation
 chrome.runtime.onInstalled.addListener(async (details) => {
