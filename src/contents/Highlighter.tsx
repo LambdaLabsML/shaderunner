@@ -64,7 +64,7 @@ const Highlighter = ({highlightSetting, mode}) => {
         const notify = msg => controller.send({tabId: tabId, ...msg})
         notify({
           message: "",
-          status_embedding: "checking"
+          status_embedding: ["checking",0]
         })
 
         // start directly by getting page embeddings
@@ -113,23 +113,28 @@ const Highlighter = ({highlightSetting, mode}) => {
       // if not in cache, check if database has embeddings
       const exists = await sendToBackground({ name: "embedding_exists", body: { collectionName: url } })
       if (!exists)
-        onStatus("computing")
-      else
-        onStatus("done")
+        onStatus(["computing", 0])
 
       // extract main content & generate splits
       //statusAdd(random(MSG_CONTENT))
       const mainEl = getMainContent(true);
       const [splits, metadata] = splitContent(mainEl.textContent, mode, url)
 
-      // retrieve embedding
-      onStatus("waiting")
-      const splitEmbeddings = await sendToBackground({ name: "embedding_compute", body: { collectionName: url, splits: splits, metadata: metadata } })
-      onStatus("predone")
+      // retrieve embedding (either all at once or batch-wise)
+      let splitEmbeddings = [];
+      if (exists)
+        splitEmbeddings = await sendToBackground({ name: "embedding_compute", body: { collectionName: url, splits: splits, metadata: metadata } })
+      else {
+        const batchSize = 64;
+        for(let i = 0; i < splits.length; i+= batchSize) {
+          const splitEmbeddingsBatch = await sendToBackground({ name: "embedding_compute", body: { collectionName: url, splits: splits.slice(i, i+batchSize), metadata: metadata.slice(i, i+batchSize) } })
+          splitEmbeddings = splitEmbeddings.concat(splitEmbeddingsBatch);
+          onStatus(["computing", Math.floor(i / splits.length * 100)])
+        }
+      }
       const _pageEmbeddings = { [mode]: { splits: splits, metadata: metadata, embeddings: splitEmbeddings } }
 
-      if (!exists)
-        onStatus("done")
+      onStatus(["loaded", 100])
 
       return _pageEmbeddings;
     }

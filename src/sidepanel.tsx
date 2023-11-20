@@ -6,6 +6,7 @@ import Legend from '~components/Legend';
 import MainInput from '~components/MainInput';
 import { useActiveState } from '~util/activeStatus';
 import { useMessage } from "@plasmohq/messaging/hook"
+import CircularProgressBar from '~components/basic/Progress';
 
 
 // the actual shaderunner bar
@@ -28,6 +29,12 @@ const Sidepanel = () => {
     body {
       //background: rgba(32,33,36);
       background: white;
+    }
+
+    .shaderunner-status {
+      color: gray;
+      text-transform: uppercase;
+      font-size: 90%;
     }
     
     ${styleText}`
@@ -54,8 +61,12 @@ const Sidepanel = () => {
   // Render //
   // ====== //
 
+  const embeddingStatus = statusEmbedding ? (
+    <span className="shaderunner-status">embeddings: <CircularProgressBar size={4.5} progress={statusEmbedding[1] || 0}/> ({statusEmbedding[0]})</span>
+  ) : "";
+
   return <div className="ShadeRunner-Sidepanel">
-    Embedding: {statusEmbedding}
+    {embeddingStatus}
     <img className="thinking_logo" width="20" src={Logo}/>
     <MainInput/>
     <Legend></Legend>
