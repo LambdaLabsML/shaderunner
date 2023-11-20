@@ -39,9 +39,6 @@
     "host_permissions": [
       "https://*/*"
     ],
-    "action": {
-      "default_title": "Click to open panel"
-    },
     "permissions": ["contextMenus"],
     "commands": {
       "_execute_action": {

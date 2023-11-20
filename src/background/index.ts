@@ -11,30 +11,56 @@ const setIconBadge = async (active) => {
     });
 }
 
+// due to a bug sidePanel.open cannot be called after an async operation (https://bugs.chromium.org/p/chromium/issues/detail?id=1478648)
+// thus, we save active status globally and use the async operation after chrome.sidePanel.open
+const activeTabs = {}
 
-// toggle active status when clicking plugin icon
-chrome.action.onClicked.addListener(async (tab) => {
-    const newStatus = await toggleActive(tab.url);
-    await setIconBadge(newStatus);
-
-})
-
-
-// on tab change, update the plugin icon
-chrome.tabs.onActivated.addListener(activeInfo => {
-    chrome.tabs.get(activeInfo.tabId, async function(tab) {
+// on tab change, update the plugin icon & active status
+const tabUpdated = tabId => {
+    chrome.tabs.get(tabId, async function(tab) {
         const isActive = await getActiveStatus(tab.url)
+        activeTabs[tabId] = isActive;
         await setIconBadge(isActive)
     });
+}
+chrome.tabs.onActivated.addListener(activeInfo => tabUpdated(activeInfo.tabId))
+chrome.tabs.onUpdated.addListener(tabUpdated)
+chrome.tabs.onRemoved.addListener((tabId) => {
+    if (tabId in activeTabs)
+        delete activeTabs[tabId];
 })
 
-
 // on startup, update the plugin icon
-chrome.tabs.query({active: true, currentWindow: true}, async (tabs) => {
-    if (tabs.length == 0) return;
+/*chrome.tabs.query({active: true, currentWindow: true}, async (tabs) => {
+    if (tabs.length == 0 || !tabs[0].url) return;
     await setIconBadge(await getActiveStatus(tabs[0].url))
-});
+});*/
 
+// toggle active status when clicking plugin icon
+// open sidePanel if settings requires so
+chrome.action.onClicked.addListener(async (tab) => {
+    if (!tab.url) return;
+    const tabId = tab.id;
+    if (tabId in activeTabs) {
+        if(!activeTabs[tabId]) {
+            chrome.sidePanel.open({ windowId: tab.windowId });
+        } else {
+            await chrome.sidePanel.setOptions({
+                tabId,
+                enabled: false
+            });
+            await chrome.sidePanel.setOptions({
+                tabId,
+                path: 'sidepanel.html',
+                enabled: true
+            });
+        }
+    } else
+        chrome.sidePanel.open({ windowId: tab.windowId });
+    const newStatus = await toggleActive(tab.url);
+    activeTabs[tabId] = newStatus;
+    await setIconBadge(newStatus);
+})
 
 // ensure settinngs exist upon installation
 chrome.runtime.onInstalled.addListener(async (details) => {
@@ -55,7 +81,6 @@ chrome.runtime.onInstalled.addListener(async (details) => {
 
 
 // add context menu "open side pannel"
-/*
 chrome.runtime.onInstalled.addListener(() => {
     chrome.contextMenus.create({
         id: 'openSidePanel',
@@ -71,33 +96,3 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
         await setActiveStatus(tab.url, true);
     }
 });
-*/
-
-
-chrome.sidePanel
-  .setPanelBehavior({ openPanelOnActionClick: true })
-  .catch((error) => console.error(error));
-
-/*
-chrome.tabs.onActivated.addListener(async (activeInfo) => {
-    chrome.tabs.get(activeInfo.tabId, async function(tab) {
-        if (!tab.url) return;
-        console.log("update", tab.url, tab)
-        const isActive = await getActiveStatus(tab.url);
-        const tabId = tab.id;
-        console.log("isActive", isActive)
-        if (isActive) {
-            await chrome.sidePanel.setOptions({
-                tabId,
-                path: 'sidepanel.html',
-                enabled: true
-            });
-        } else {
-            await chrome.sidePanel.setOptions({
-                tabId,
-                enabled: false
-            });
-        }
-    })
-});
-*/
