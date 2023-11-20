@@ -56,6 +56,8 @@ const Highlighter = ({highlightSetting, mode}) => {
 
     // init (make sure tabId is known, needed for messaging with other parts of this application)
     useEffect(() => {
+      if (!isActive) return;
+
       async function init() {
         const tabId = await chrome.runtime.sendMessage("get_tabid")
         setTabId(tabId);
@@ -72,7 +74,7 @@ const Highlighter = ({highlightSetting, mode}) => {
         await getPageEmbeddings(mode, status => notify({status_embedding: status}));
       }
       init();
-    }, [])
+    }, [isActive])
 
 
     // on every classifier change, recompute highlights
