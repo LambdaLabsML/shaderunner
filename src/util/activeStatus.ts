@@ -35,11 +35,12 @@ const setActiveStatus = async (_url: string, isActive: boolean) => {
 
 
 // react hook to get active status
-const useActiveState = (_url) => {
-  const [activeURLs] = useStorage("activeURLs", {})
-  const url = new URL(_url).hostname; // Normalize URL
+const useActiveState = (_url: string | Location | URL) => {
+  const [activeURLs, setActiveURLs] = useStorage("activeURLs", {})
+  const url = new URL(_url as URL).hostname; // Normalize URL
   const fullurl = window.location.hostname + window.location.pathname;
-  return [fullurl, url in activeURLs];
+  const setActive = (active: Boolean) => setActiveURLs({ ...activeURLs, [url]: active });
+  return [fullurl, url in activeURLs, setActive];
 }
 
 

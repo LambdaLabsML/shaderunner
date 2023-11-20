@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useMessage, usePort } from "@plasmohq/messaging/hook"
 import { getMainContent, splitContent } from '~util/extractContent'
 import { textNodesUnderElem, findTextSlow, findTextFast, highlightText, resetHighlights, textNodesNotUnderHighlight, surroundTextNode } from '~util/DOM'
 import { computeEmbeddingsLocal } from '~util/embedding'
@@ -15,6 +16,8 @@ type JSX = React.JSX.Element;
 
 
 const Highlighter = ({highlightSetting, mode}) => {
+    const [ tabId, setTabId ] = useState(null);
+    const controller = usePort("controller")
     const [url, isActive] = useActiveState(window.location)
     const [ savedHighlightQuery, setSavedHighlightQuery ] = useSessionStorage("savedHighlightQuery:"+url, "");
     const [ pageEmbeddings, setPageEmbeddings] = useState({});
@@ -51,6 +54,27 @@ const Highlighter = ({highlightSetting, mode}) => {
     // effects //
     // ------- //
 
+    // init (make sure tabId is known, needed for messaging with other parts of this application)
+    useEffect(() => {
+      async function init() {
+        const tabId = await chrome.runtime.sendMessage("get_tabid")
+        setTabId(tabId);
+        
+        // init data
+        const notify = msg => controller.send({tabId: tabId, ...msg})
+        notify({
+          message: "",
+          status_embedding: "checking"
+        })
+
+        // start directly by getting page embeddings
+        const mode = "sentences";
+        await getPageEmbeddings(mode, status => notify({status_embedding: status}));
+      }
+      init();
+    }, [])
+
+
     // on every classifier change, recompute highlights
     useEffect(() => {
       if(!savedHighlightQuery || !isActive || !classifierData.thought) return resetHighlights();
@@ -81,7 +105,7 @@ const Highlighter = ({highlightSetting, mode}) => {
     // --------- //
 
     // ensure page embeddings exist
-    const getPageEmbeddings = async (mode = "sentences", onEmbed = () => {}, onEmbedDone = () => {}) => {
+    const getPageEmbeddings = async (mode = "sentences", onStatus = (status) => {}) => {
 
       // use cache if already computed
       if (pageEmbeddings[mode]) return pageEmbeddings[mode];
@@ -89,7 +113,9 @@ const Highlighter = ({highlightSetting, mode}) => {
       // if not in cache, check if database has embeddings
       const exists = await sendToBackground({ name: "embedding_exists", body: { collectionName: url } })
       if (!exists)
-        onEmbed()
+        onStatus("computing")
+      else
+        onStatus("done")
 
       // extract main content & generate splits
       //statusAdd(random(MSG_CONTENT))
@@ -97,11 +123,13 @@ const Highlighter = ({highlightSetting, mode}) => {
       const [splits, metadata] = splitContent(mainEl.textContent, mode, url)
 
       // retrieve embedding
+      onStatus("waiting")
       const splitEmbeddings = await sendToBackground({ name: "embedding_compute", body: { collectionName: url, splits: splits, metadata: metadata } })
+      onStatus("predone")
       const _pageEmbeddings = { [mode]: { splits: splits, metadata: metadata, embeddings: splitEmbeddings } }
 
       if (!exists)
-        onEmbedDone()
+        onStatus("done")
 
       return _pageEmbeddings;
     }

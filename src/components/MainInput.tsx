@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSessionStorage as _useSessionStorage } from '~util/misc'
+import { useSessionStorage as _useSessionStorage, random } from '~util/misc'
 import { useActiveState } from '~util/activeStatus'
 import { useStorage } from "@plasmohq/storage/hook";
 import { MSG_CONTENT, MSG_EMBED, MSG_QUERY2CLASS } from "../util/messages";

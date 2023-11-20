@@ -26,7 +26,7 @@ const tabUpdated = tabId => {
         const tabId = tab.id;
         await chrome.sidePanel.setOptions({
             tabId,
-            path: 'sidepanel.html?tabid='+tab.id
+            path: 'sidepanel.html?tabId='+tab.id
         });
     });
 }
@@ -52,6 +52,13 @@ chrome.storage.onChanged.addListener(change => {
     });
 })
 
+// tell content script about tabId
+chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse){
+    if (msg == "get_tabid"){
+        sendResponse(sender.tab.id)
+    }
+});
+
 
 // on startup, update the plugin icon
 chrome.tabs.query({active: true, currentWindow: true}, async (tabs) => {
@@ -63,7 +70,7 @@ chrome.tabs.query({active: true, currentWindow: true}, async (tabs) => {
     const tabId = tabs[0].id;
     await chrome.sidePanel.setOptions({
         tabId,
-        path: 'sidepanel.html?tabid='+tabs[0].id
+        path: 'sidepanel.html?tabId='+tabs[0].id
     });
 });
 
@@ -84,7 +91,7 @@ chrome.action.onClicked.addListener(async (tab) => {
             });
             await chrome.sidePanel.setOptions({
                 tabId,
-                path: 'sidepanel.html?tabid='+tab.id,
+                path: 'sidepanel.html?tabId='+tab.id,
                 enabled: true
             });
         }
