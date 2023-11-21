@@ -54,14 +54,14 @@ const MainInput = ({tabId}) => {
 
     const onEnterPress = async (ev) => {
       const highlightQuery = ev.target.value;
-      if (!highlightQuery) onReset();
 
       if (ev.keyCode == 13 && ev.shiftKey == false) {
         ev.preventDefault(); 
         onReset();
-        setSavedHighlightQuery(highlightQuery)
+        if (!highlightQuery) return;
 
-        // set retrieval query
+        // set query settings
+        setSavedHighlightQuery(highlightQuery)
         setRetrievalQuery(textretrieval ? highlightQuery : null);
 
         // query llm to give classes
