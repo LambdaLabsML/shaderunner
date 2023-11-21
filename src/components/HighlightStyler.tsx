@@ -8,7 +8,7 @@ import { useGlobalStorage } from "~util/useGlobalStorage";
 const useSessionStorage = process.env.NODE_ENV == "development" && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;
 
 
-const HighlightStyler = ({mode, tabId}) => {
+const HighlightStyler = ({tabId}) => {
     const [ [highlightSetting] ] = useGlobalStorage(tabId, "highlightSetting")
     const [ classifierData ] = useSessionStorage("classifierData:"+tabId, {});
     const [ styleEl, setStyleEl ] = useState(null);
@@ -29,17 +29,19 @@ const HighlightStyler = ({mode, tabId}) => {
 
     // adapt style dynamically according to classifier & highlightSettings 
     useEffect(() => {
-        if (!Array.isArray(classifierData.classes_pos) || !styleEl || !highlightSetting) return;
+        if (!Array.isArray(classifierData.classes_pos) || !styleEl) return;
+
+        const mode = highlightSetting?._mode || "highlight";
 
         // default / fallback style
-        const defaultSetting = highlightSetting["_default"] || "highlight";
+        const defaultSetting = highlightSetting?._default || "highlight";
 
         // create class for each pos-class
         const colorStyle = classifierData.classes_pos.map((c, i) => {
 
             // use default setting unless we have a specific highlight setting given
             // i.e. if class is "active", use "strong-highlight" setting
-            const classSetting = c in highlightSetting ? highlightSetting[c] : highlightSetting["_active"] == c ? "strong-highlight" : defaultSetting;
+            const classSetting = highlightSetting && c in highlightSetting ? highlightSetting[c] : highlightSetting?._active == c ? "strong-highlight" : defaultSetting;
 
             if (mode == "focus" && classSetting == "no-highlight")
                 return `span.highlightclass-${i} {
@@ -65,7 +67,7 @@ const HighlightStyler = ({mode, tabId}) => {
         }).join("\n")
 
         // focus mode: disable all non-header normal text
-        const focusStyle = (mode == "focus") ? "" : `
+        const focusStyle = (mode != "focus") ? "" : `
             h1 span.highlightclass-normaltext, h2 span.highlightclass-normaltext, h3 span.highlightclass-normaltext, h4 span.highlightclass-normaltext, h5 span.highlightclass-normaltext, h6 span.highlightclass-normaltext {
                 display: inline;
             }
@@ -77,7 +79,7 @@ const HighlightStyler = ({mode, tabId}) => {
 
         // apply styles
         styleEl.textContent = focusStyle + colorStyle
-    }, [classifierData.classes_pos, styleEl, highlightSetting, mode])
+    }, [classifierData.classes_pos, styleEl, highlightSetting])
 
 
     return "";

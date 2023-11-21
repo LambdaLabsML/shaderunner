@@ -15,7 +15,7 @@ const useSessionStorage = process.env.NODE_ENV == "development" && process.env.P
 type JSX = React.JSX.Element;
 
 
-const Highlighter = ({highlightSetting, mode}) => {
+const Highlighter = () => {
     const [ tabId, setTabId ] = useState(null);
     const controller = usePort("controller")
     const [url, isActive] = useActiveState(window.location)
@@ -233,7 +233,7 @@ const Highlighter = ({highlightSetting, mode}) => {
       }
     }
 
-    return <HighlightStyler highlightSetting={highlightSetting} mode={mode} tabId={tabId}/>
+    return <HighlightStyler tabId={tabId}/>
 };
 
 export default Highlighter;
