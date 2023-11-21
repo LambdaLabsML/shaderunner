@@ -19,13 +19,10 @@ const Highlighter = ({highlightSetting, mode}) => {
     const [ tabId, setTabId ] = useState(null);
     const controller = usePort("controller")
     const [url, isActive] = useActiveState(window.location)
-    const [ savedHighlightQuery, setSavedHighlightQuery ] = useSessionStorage("savedHighlightQuery:"+url, "");
     const [ pageEmbeddings, setPageEmbeddings] = useState({});
-    const [ classifierData, setClassifierData] = useSessionStorage("classifierData:"+url, {});
-    const [ retrievalQuery, setRetrievalQuery] = useSessionStorage("retrievalQuery:"+url, null);
+    const [ classifierData ] = useSessionStorage("classifierData:"+tabId, {});
+    const [ retrievalQuery ] = useSessionStorage("retrievalQuery:"+tabId, null);
     const [ scores, setScores] = useState([]);
-    const [ statusMsg, setStatusMsg] = useState([]);
-    const [ isThinking, setIsThinking] = useState(false);
     const [ verbose ] = useStorage("verbose", false);
     const [ textclassifier ] = useStorage('textclassifier')
     const [ textretrieval ] = useStorage('textretrieval')
@@ -38,16 +35,6 @@ const Highlighter = ({highlightSetting, mode}) => {
     let poseps = [];
     if (alwayshighlighteps > 0) poseps.push(alwayshighlighteps);
     if (minimalhighlighteps > 0) poseps.push(minimalhighlighteps);
-
-
-    const statusAdd = (type: string | JSX, msg: string | JSX) => setStatusMsg((old) => [...old, [type, msg]]);
-    const statusClear = () => setStatusMsg(old => []);
-    const statusAmend = (fn: ((msg: ([string, string])) => [string,string]), i?: number) => setStatusMsg(old => {
-        if(!i) i = old.length - 1;
-        const newStatus = [...old];
-        newStatus[i] = fn(newStatus[i]);
-        return newStatus;
-    })
 
 
     // ------- //
@@ -66,12 +53,15 @@ const Highlighter = ({highlightSetting, mode}) => {
         const notify = msg => controller.send({tabId: tabId, ...msg})
         notify({
           message: "",
-          status_embedding: ["checking",0]
+          status_embedding: ["checking",0],
+          title: document.title,
+          url: url
         })
 
         // start directly by getting page embeddings
         const mode = "sentences";
-        await getPageEmbeddings(mode, status => notify({status_embedding: status}));
+        const newEmbeddings = await getPageEmbeddings(mode, status => notify({status_embedding: status}));
+        setPageEmbeddings(old => ({...old, [mode]: newEmbeddings}));
       }
       init();
     }, [isActive])
@@ -79,24 +69,22 @@ const Highlighter = ({highlightSetting, mode}) => {
 
     // on every classifier change, recompute highlights
     useEffect(() => {
-      if(!savedHighlightQuery || !isActive || !classifierData.thought) return resetHighlights();
       resetHighlights()
+      if(!tabId || !isActive || !classifierData.thought) return;
 
       const applyHighlight = () => {
-        setIsThinking(true)
         try {
           if (textclassifier) {
-            statusAdd(<b>Applying Class Highlights</b>, random(MSG_CONTENT))
+            //statusAdd(<b>Applying Class Highlights</b>, random(MSG_CONTENT))
             highlightUsingClasses()
           }
           if (textretrieval) {
-            statusAdd(<b>Applying Retrieval Highlights</b>, random(MSG_CONTENT))
+            //statusAdd(<b>Applying Retrieval Highlights</b>, random(MSG_CONTENT))
             highlightUsingRetrieval(retrievalQuery)
           }
         } catch (error) {
           console.error('Error in applyHighlight:', error);
         }
-        setIsThinking(false)
       }
       applyHighlight()
     }, [classifierData, isActive, textclassifier, textretrieval, retrievalQuery])
@@ -116,6 +104,8 @@ const Highlighter = ({highlightSetting, mode}) => {
       const exists = await sendToBackground({ name: "embedding_exists", body: { collectionName: url } })
       if (!exists)
         onStatus(["computing", 0])
+      else
+        onStatus(["found database", 0])
 
       // extract main content & generate splits
       //statusAdd(random(MSG_CONTENT))
@@ -247,7 +237,7 @@ const Highlighter = ({highlightSetting, mode}) => {
       }
     }
 
-    return <HighlightStyler/>;
+    return <HighlightStyler highlightSetting={highlightSetting} mode={mode} tabId={tabId}/>
 };
 
 export default Highlighter;
