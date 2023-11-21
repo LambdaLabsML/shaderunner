@@ -316,9 +316,9 @@ function findMainContent() {
 
 
 let colors = {}
-const consistentColor = (s, alpha, saturation) => {
+const consistentColor = (s: string, alpha=0.7, saturation=80) => {
     alpha = alpha || 0.7;
-    saturation = saturation || 80; 
+    saturation = saturation || 80;
     const S = JSON.stringify([s,alpha,saturation])
     if (S in colors)
         return colors[S];
