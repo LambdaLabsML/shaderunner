@@ -15,7 +15,7 @@ type JSX = React.JSX.Element;
 
 const Highlighter = () => {
     const [ tabId, setTabId ] = useState(null);
-    const [ [scores, setScores], [setGlobalStorage] ] = useGlobalStorage(tabId, "classifierScores");
+    const [ [savedUrl], [scores, setScores], [setGlobalStorage] ] = useGlobalStorage(tabId, "url", "classifierScores");
     const [url, isActive] = useActiveState(window.location);
     const [ pageEmbeddings, setPageEmbeddings] = useState({});
     const [ classifierData ] = useSessionStorage("classifierData:"+tabId, {});
@@ -39,28 +39,40 @@ const Highlighter = () => {
 
     // init (make sure tabId is known, needed for messaging with other parts of this application)
     useEffect(() => {
-      if (!isActive || tabId) return;
+      if (!isActive) return;
 
       async function init() {
         const tabId = await chrome.runtime.sendMessage("get_tabid")
         setTabId(tabId);
-        
-        // init data
-        setGlobalStorage({
-          message: "",
-          status_embedding: ["checking",0],
-          title: document.title,
-          url: url,
-          _tabId: tabId
-        })
-
-        // start directly by getting page embeddings
-        const mode = "sentences";
-        const newEmbeddings = await getPageEmbeddings(mode, status => setGlobalStorage({status_embedding: status, _tabId: tabId}));
-        setPageEmbeddings(old => ({...old, [mode]: newEmbeddings}));
       }
       init();
     }, [isActive])
+
+        
+    // start directly by getting page embeddings
+    useEffect(() => {
+      if (!isActive || !tabId) return;
+
+      // reset only if we have a new url
+      if (url == savedUrl) return;
+
+      // data
+      setGlobalStorage({
+        message: "",
+        status_embedding: ["checking", 0],
+        title: document.title,
+        url: url,
+        _tabId: tabId
+      })
+
+      // start directly by getting page embeddings
+      async function init() {
+        const mode = "sentences";
+        const newEmbeddings = await getPageEmbeddings(mode, status => setGlobalStorage({ status_embedding: status}));
+        setPageEmbeddings(old => ({ ...old, [mode]: newEmbeddings }));
+      }
+      init();
+    }, [isActive, tabId])
 
 
     // on every classifier change, recompute highlights
@@ -118,9 +130,7 @@ const Highlighter = () => {
         }
       }
       const _pageEmbeddings = { [mode]: { splits: splits, metadata: metadata, embeddings: splitEmbeddings } }
-
       onStatus(["loaded", 100])
-
       return _pageEmbeddings;
     }
 
