@@ -9,6 +9,7 @@ import { useSessionStorage as _useSessionStorage } from '~util/misc'
 import { useActiveState } from '~util/activeStatus'
 import HighlightStyler from '~components/HighlightStyler';
 import { useGlobalStorage } from '~util/useGlobalStorage';
+import { assert } from 'console';
 const useSessionStorage = process.env.NODE_ENV == "development" && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;
 type JSX = React.JSX.Element;
 
@@ -141,7 +142,7 @@ const Highlighter = () => {
       if (!classes_pos || !classes_neg)
         return;
 
-      setStatusHighlight(["computing", 0]);
+      setStatusHighlight(["compute", 0]);
 
       // ensure we have embedded the page contents
       const pageEmbeddings = await getPageEmbeddings(mode)
@@ -150,9 +151,13 @@ const Highlighter = () => {
 
       // compute embeddings of classes
       const allclasses = [...classes_pos, ...classes_neg]
-      const result = await computeEmbeddingsLocal(allclasses, []);
-      const classStore = result[0] as VectorStore;
+      const [classStore] = await computeEmbeddingsLocal(allclasses, []);
       const class2Id = Object.fromEntries(allclasses.map((c, i) => [c, i]))
+
+      // get all text nodes
+      const textNodes = textNodesUnderElem(document.body);
+      let currentTextNodes = textNodes;
+      const toHighlight = [];
 
       // mark sentences based on similarity
       let scores_diffs = [];
@@ -170,45 +175,64 @@ const Highlighter = () => {
         scores_plus.push(score_plus);
         scores_diffs.push(score_plus - score_minus);
 
-        let highlightanyway = false;
+        let highlight = false;
 
         // always highlight if similarity is above given value
-        if (alwayshighlighteps > 0 && score_plus > alwayshighlighteps)
-          highlightanyway = true;
+        if (alwayshighlighteps > 0 && score_plus > alwayshighlighteps) {
+          if (verbose) console.log("mark", split, score_plus, score_minus)
+          highlight = true;
+        }
 
         // ignore anything that is not distinguishable
         //if (score_plus < MIN_CLASS_EPS || Math.abs(score_plus - score_minus) < EPS) {
-        else if (!highlightanyway && (decisioneps > 0 && Math.abs(score_plus - score_minus) < decisioneps || minimalhighlighteps > 0 && score_plus < minimalhighlighteps)) {
+        else if (!highlight && (decisioneps > 0 && Math.abs(score_plus - score_minus) < decisioneps || minimalhighlighteps > 0 && score_plus < minimalhighlighteps)) {
           if (verbose) console.log("skipping", split, score_plus, score_minus)
-          continue
         }
 
         // apply color if is first class
-        if (score_plus > score_minus || highlightanyway) {
+        else if (score_plus > score_minus) {
           if (verbose) console.log("mark", split, score_plus, score_minus)
+          highlight = true;
+        }
+        
+        else {
+          if (verbose) console.log("reject", split, score_plus, score_minus)
+        }
 
-          // get all text nodes
-          const textNodes = textNodesUnderElem(document.body);
-
-          // mark sentence
-          let [texts, nodes] = findTextFast(textNodes, split);
+        // remember to mark split for highlighting later streamlined
+        if (true || highlight) {
+          let [texts, from_node_pos, to_node_pos] = findTextFast(currentTextNodes, split);
           if (texts.length == 0) {
-            [texts, nodes] = findTextSlow(textNodes, split);
+            [texts, from_node_pos, to_node_pos] = findTextSlow(currentTextNodes, split);
             if (texts.length == 0) {
               if (verbose) console.log("ERROR: text not found", split)
             }
           }
-          highlightText(texts, nodes, class2Id[closest[0][0].pageContent], closest[0][0].pageContent + " " + closest[0][1]);
-        } else {
-          if (verbose) console.log("reject", split, score_plus, score_minus)
+          if (to_node_pos >= 0) {
+            currentTextNodes = currentTextNodes.slice(to_node_pos-1);
+            const closestClass = closest[0][0].pageContent;
+            const closestScore = closest[0][1]
+            toHighlight.push({texts, from_node_pos, to_node_pos, closestClass, closestScore})
+          }
         }
 
         setStatusHighlight(["computing", 100 * Number(i) / splits.length]);
       }
 
+      // streamlined text highlighting
+      currentTextNodes = textNodes;
+      for(let i=0; i<toHighlight.length; i++) {
+        const {texts, from_node_pos, to_node_pos, closestClass, closestScore} = toHighlight[i];
+        const nonWhiteTexts = texts.filter(t => t.trim())
+        const textNodesSubset = currentTextNodes.slice(from_node_pos, to_node_pos).filter(t => t.textContent.trim());
+        const replacedNodes = highlightText(nonWhiteTexts, textNodesSubset, class2Id[closestClass], closestClass + " " + closestScore);
+        currentTextNodes = currentTextNodes.slice(to_node_pos);
+        currentTextNodes.unshift(replacedNodes.pop())
+      }
+
       // finally, let's highlight all textnodes that are not highlighted
-      const textNodes = textNodesNotUnderHighlight(document.body);
-      textNodes.forEach(node => surroundTextNode(node, "normaltext"))
+      //const emptyTextNodes = textNodesNotUnderHighlight(document.body);
+      //emptyTextNodes.forEach(node => surroundTextNode(node, "normaltext"))
 
       setScores([scores_plus, scores_diffs])
       setStatusHighlight(["loaded", 100]);
