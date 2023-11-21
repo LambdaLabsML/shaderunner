@@ -9,7 +9,7 @@ const useSessionStorage = process.env.NODE_ENV == "development" && process.env.P
 
 
 const HighlightStyler = ({tabId}) => {
-    const [ [highlightSetting] ] = useGlobalStorage(tabId, "highlightSetting")
+    const [ [highlightMode], [highlightDefaultStyle], [activeTopic], [topicStyles] ] = useGlobalStorage(tabId, "highlightMode", "highlightDefaultStyle", "highlightActiveTopic", "highlightTopicStyles")
     const [ classifierData ] = useSessionStorage("classifierData:"+tabId, {});
     const [ styleEl, setStyleEl ] = useState(null);
 
@@ -27,21 +27,21 @@ const HighlightStyler = ({tabId}) => {
         window.document.head.appendChild(style);
     }, []);
 
-    // adapt style dynamically according to classifier & highlightSettings 
+    // adapt style dynamically according to classifier & topicStyles 
     useEffect(() => {
         if (!Array.isArray(classifierData.classes_pos) || !styleEl) return;
 
-        const mode = highlightSetting?._mode || "highlight";
+        const mode = highlightMode || "highlight";
 
         // default / fallback style
-        const defaultSetting = highlightSetting?._default || "highlight";
+        const defaultStyle = highlightDefaultStyle || "highlight";
 
         // create class for each pos-class
         const colorStyle = classifierData.classes_pos.map((c, i) => {
 
             // use default setting unless we have a specific highlight setting given
             // i.e. if class is "active", use "strong-highlight" setting
-            const classSetting = highlightSetting && c in highlightSetting ? highlightSetting[c] : highlightSetting?._active == c ? "strong-highlight" : defaultSetting;
+            const classSetting = topicStyles && c in topicStyles && activeTopic != c ? topicStyles[c] : activeTopic == c ? "strong-highlight" : defaultStyle;
 
             if (mode == "focus" && classSetting == "no-highlight")
                 return `span.highlightclass-${i} {
@@ -79,7 +79,7 @@ const HighlightStyler = ({tabId}) => {
 
         // apply styles
         styleEl.textContent = focusStyle + colorStyle
-    }, [classifierData.classes_pos, styleEl, highlightSetting])
+    }, [classifierData.classes_pos, styleEl, highlightMode, highlightDefaultStyle, activeTopic, topicStyles])
 
 
     return "";

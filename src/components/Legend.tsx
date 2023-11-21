@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useGlobalStorage } from '~util/useGlobalStorage';
 import { useSessionStorage as _useSessionStorage } from '~util/misc'
-import { useActiveState } from '~util/activeStatus'
 import { useStorage } from "@plasmohq/storage/hook";
 import { consistentColor } from '~util/DOM'
 import SwitchInput from "~components/basic/SwitchInput";
@@ -9,29 +9,48 @@ import SwitchInput from "~components/basic/SwitchInput";
 const useSessionStorage = process.env.NODE_ENV == "development" && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;
 
 
-// load style
-import styleText from "data-text:../style.scss"
-import type { PlasmoGetStyle } from "plasmo"
-import { useGlobalStorage } from '~util/useGlobalStorage';
-export const getStyle: PlasmoGetStyle = () => {
-  const style = document.createElement("style")
-  style.textContent = styleText
-  return style
-}
-
-
-// the actual shaderunner bar
 const Legend = ({tabId}) => {
   const [retrievalQuery] = useSessionStorage("retrievalQuery:"+tabId, null);
   const [classifierData] = useSessionStorage("classifierData:"+tabId, {});
-  const [[highlightSetting, setHighlightSetting]] = useGlobalStorage(tabId, "highlightSetting")
+  const [
+    [mode, setMode],
+    [topicStyles, setTopicStyles],
+    [ setGlobalStorage ]
+  ] = useGlobalStorage(tabId, "highlightMode", "highlightTopicStyles")
 
-  console.log("highlightSetting", highlightSetting)
-  console.log("classifierData", classifierData)
 
+  // --------- //
+  // functions //
+  // --------- //
 
+  // active current, hide all others
+  const onFocusHighlight = (topic: string) => {
+    setGlobalStorage({
+      highlightActiveTopic: topic,
+      highlightDefaultStyle: "dim-highlight",
+      highlightTopicStyles: Object.fromEntries(classifierData.classes_pos.map((c: string) => [c, "no-highlight"]))
+    })
+  }
+
+  // active current, dim all others
+  const mouseOverHighlight = (topic: string) => {
+    setGlobalStorage({
+      highlightActiveTopic: topic,
+      highlightDefaultStyle: "dim-highlight"
+    })
+  }
+
+  // restore state before mouseOver
+  const mouseOverHighlightFinish = () => {
+    setGlobalStorage({
+      highlightActiveTopic: null,
+      highlightDefaultStyle: null
+    })
+  }
+
+  // hide topic
   const toggleHighlight = (topic: string) => {
-    setHighlightSetting(old => {
+    setTopicStyles(old => {
       if (old.hasOwnProperty(topic)) {
         const { [topic]: removed, ...newObject } = old;
         return newObject;
@@ -41,45 +60,36 @@ const Legend = ({tabId}) => {
     })
   }
 
-  const onFocusHighlight = (topic) => {
-    setHighlightSetting(old => ({ ["_active"]: topic, "_default": "dim-highlight", ...Object.fromEntries(classifierData.classes_pos.map(c => [c, "no-highlight"]))}))
-  }
 
-  const mouseOverHighlight = (topic) => {
-    setHighlightSetting(old => ({ ...old, ["_active"]: topic, "_default": "dim-highlight"}))
-  }
 
-  const mouseOverHighlightFinish = (topic) => {
-    setHighlightSetting(old => {
-      const { ["_active"]: removed, "_default": removed2, ...newObject } = old;
-      return newObject;
-    });
-  }
+  // ------ //
+  // render //
+  // ------ //
 
   if (!Array.isArray(classifierData.classes_pos) || classifierData.classes_pos.length == 0)
     return "";
 
   return <div className="ShadeRunner-Legend">
-    <div className="header">ShadeRunner</div>
+    <div className="header">Legend</div>
     <SwitchInput
         label=""
         options={['highlight', "focus"]}
-        selected={highlightSetting && highlightSetting["_mode"] || "highlight"}
-        onChange={(value) => setHighlightSetting(old => ({ ...old, "_mode": value}))}
+        selected={mode || "highlight"}
+        onChange={(value: string) => setMode(value)}
       />
     <span>(Click topic to hide/show highlights)</span>
     <span>
-       <span onClick={() => setHighlightSetting({})}>all</span> / <span onClick={() => {setHighlightSetting(Object.fromEntries(classifierData.classes_pos.map(c => [c, "no-highlight"])))}}>none</span>
+       <span onClick={() => setTopicStyles({})}>all</span> / <span onClick={() => {setTopicStyles(Object.fromEntries(classifierData.classes_pos.map(c => [c, "no-highlight"])))}}>none</span>
     </span>
     {Array.isArray(classifierData.classes_pos) ? classifierData.classes_pos.map(c => (
-      <span key={c} style={{ backgroundColor: consistentColor(c, highlightSetting && highlightSetting[c] ? 0.125 : null) }} onClick={() => toggleHighlight(c)} onMouseOver={() => mouseOverHighlight(c)} onMouseLeave={() => mouseOverHighlightFinish(c)}>
+      <span key={c} style={{ backgroundColor: consistentColor(c, topicStyles && topicStyles[c] ? 0.125 : null) }} onClick={() => toggleHighlight(c)} onMouseOver={() => mouseOverHighlight(c)} onMouseLeave={() => mouseOverHighlightFinish()}>
         <span onClick={() => onFocusHighlight(c)}>focus</span>
         {/*<span>prev</span>
         <span>next</span>*/}
         {c}
       </span>
     )) : ""}
-    {retrievalQuery ? <span style={{ backgroundColor: consistentColor(retrievalQuery + " (retrieval)", highlightSetting && highlightSetting["_retrieval"] ? 0.125 : 1.0) }}>{retrievalQuery + " (retrieval)"}</span> : ""}
+    {retrievalQuery ? <span style={{ backgroundColor: consistentColor(retrievalQuery + " (retrieval)", topicStyles && topicStyles?._retrieval ? 0.125 : 1.0) }}>{retrievalQuery + " (retrieval)"}</span> : ""}
   </div>
 }
 
