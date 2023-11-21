@@ -8,13 +8,13 @@ import { useGlobalStorage } from '~util/useGlobalStorage';
 
 
 
-const StatusIndicator = ({status, size=4}) => {
-  if (!status) return "off"
-  const [statusMsg, progress] = status;
-  return <span>
-    <CircularProgressBar className={statusMsg} size={size} progress={statusMsg == "checking" ? 50 : progress || 0} color={progress == 100 ? "#000" : "#777"}/>
-    <span className="status-msg">({statusMsg})</span>
-  </span>;
+const StatusIndicator = ({name, status, size=4}) => {
+  const [statusClass, progress, statusMsg] = status || ["", 0, "off"];
+  return [
+    <span key={name+" label"} className="statuslabel">{name}</span>,
+    <span key={name+" progress"}><CircularProgressBar className={statusClass} size={size} progress={statusClass == "checking" ? 50 : progress || 0} color={progress == 100 ? "#000" : "#777"}/></span>,
+    <span key={name+" msg"} className="statusmsg">({statusMsg || statusClass})</span>
+  ];
 }
 
 
@@ -45,9 +45,9 @@ const Sidepanel = () => {
 
   return <div className="ShadeRunner-Sidepanel">
     <div className="statusContainer">
-      <div className="status">embeddings: <StatusIndicator status={statusEmbedding}/></div>
-      <div className="status">classifier: <StatusIndicator status={statusClassifier}/></div>
-      <div className="status">highlight: <StatusIndicator status={statusHighlight}/></div>
+      <StatusIndicator name="embedding" status={statusEmbedding}/>
+      <StatusIndicator name="classifier" status={statusClassifier}/>
+      <StatusIndicator name="highlight" status={statusHighlight}/>
     </div>
     <MainInput tabId={tabId}/>
     <Legend tabId={tabId}></Legend>

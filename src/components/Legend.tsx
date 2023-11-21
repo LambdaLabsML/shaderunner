@@ -69,7 +69,7 @@ const Legend = ({tabId}) => {
   if (!Array.isArray(classifierData.classes_pos) || classifierData.classes_pos.length == 0)
     return "";
 
-  return <div className="ShadeRunner-Legend">
+  return <div className="ShadeRunner Legend">
     <div className="header">Legend</div>
     <SwitchInput
         label=""

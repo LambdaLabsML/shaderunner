@@ -6,13 +6,35 @@ $primary-color: #8136e2;
     visibility: visible;
 }
 
-.ShadeRunner-Bar {
-    border-radius: 20px;
-    border: 3px solid $primary-color;
-    background: transparent;
-    width: 100%;
-    //padding: 0.5em 1.5em 0.5em;
+
+
+// ----------- //
+// Default Box //
+// ----------- //
+
+.ShadeRunner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2em;
+
+
+  div.header {
+    border-radius: 4px;
+    background: #8136e2;
+    top: 0;
+    left: 0;
+    right: 0;
     padding: 0.5em;
+    color: white;
+    text-align: center;
+    font-size: 90%;
+    margin-top: -0.5em;
+    margin-bottom: 0.5em;
+  }
+}
+
+
+.ShadeRunner.MainInput {
     display: flex;
     flex-direction: column;
     margin: 2em 0;
@@ -30,7 +52,7 @@ $primary-color: #8136e2;
         font-size: 120%;
         background: white;
         padding: 1em;
-        border-radius: 10px;
+        border-radius: 4px;
         color: $primary-color;
         border:1px solid $primary-color;
 
@@ -205,36 +227,15 @@ $primary-color: #8136e2;
 
 
 
-.ShadeRunner-Legend {
-  display: flex;
-  flex-direction: column;
 
-  border: 1px solid #8136e2;
-  border-radius: 1em;
-  padding: 0.5em;
-  background: white;
-  gap: 0.2em;
+// ------ //
+// Legend //
+// ------ //
 
-  padding-top: 2.2em;
-  overflow: hidden;
-
-  div.header {
-    background: #8136e2;
-    top: 0;
-    left: 0;
-    right: 0;
-    padding: 0.5em;
-    color: white;
-    text-align: center;
-    cursor: grab;
-    font-size: 90%;
-    margin-top: -0.5em;
-    margin-bottom: 0.5em;
-  }
+.ShadeRunner.Legend {
 
   span {
     padding: 0.25em 0.2em;
-    font-size: 85%;
     border-radius: 0.4em;
     cursor: pointer;
   }
@@ -269,13 +270,19 @@ $primary-color: #8136e2;
   flex-direction: column;
   gap: 1em;
 
-  .status {
+  .statusContainer {
+    display: grid;
+    grid-template-columns: 1fr 1em 3fr;;
     color: gray;
-    text-transform: uppercase;
-    font-size: 90%;
+    font-size: 95%;
+    row-gap: 0.3em;
 
-    .status-msg {
+    .statusmsg {
       margin-left: 0.4em;
+    }
+
+    span {
+      align-self: center;
     }
 
     // src: CSS filter generator https://codepen.io/sosuke/pen/Pjoqqp

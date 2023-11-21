@@ -111,7 +111,7 @@ const Highlighter = () => {
       if (!exists)
         onStatus(["computing", 0])
       else
-        onStatus(["found database", 0])
+        onStatus(["computing", 0, "found database"])
 
       // extract main content & generate splits
       const mainEl = getMainContent(true);

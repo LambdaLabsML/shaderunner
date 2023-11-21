@@ -8,6 +8,7 @@ import CollapsibleBox from "~components/basic/Collapsible";
 import ClassModifierList from "./basic/ClassModifierList";
 import { sendToBackground } from '@plasmohq/messaging';
 import { usePort } from '@plasmohq/messaging/hook';
+import { useGlobalStorage } from '~util/useGlobalStorage';
 type JSX = React.JSX.Element;
 
 // in development mode we want to use persistent storage for debugging
@@ -19,87 +20,55 @@ console.log(process.env.NODE_ENV, process.env.PLASMO_PUBLIC_STORAGE)
 
 // the actual shaderunner bar
 const MainInput = ({tabId}) => {
-    const listener = usePort("listener")
-    const [ url, setUrl] = useState(null);
-    const [ title, setTitle] = useState(null);
+
+    const [ [title], [url], [statusClassifier, setStatusClassifier]] = useGlobalStorage(tabId, "title", "url", "status_classifier")
     const [ savedHighlightQuery, setSavedHighlightQuery ] = useSessionStorage("savedHighlightQuery:"+tabId, "");
-    const [ pageEmbeddings, setPageEmbeddings] = useState({});
     const [ classifierData, setClassifierData] = useSessionStorage("classifierData:"+tabId, {});
     const [ retrievalQuery, setRetrievalQuery] = useSessionStorage("retrievalQuery:"+tabId, null);
-    const [ scores, setScores] = useState([]);
-    const [ statusMsg, setStatusMsg] = useState([]);
-    const [ isThinking, setIsThinking] = useState(false);
+
+
+    // -------- //
+    // Settings //
+    // -------- //
     const [ verbose ] = useStorage("verbose", false);
     const [ textclassifier ] = useStorage('textclassifier')
     const [ textretrieval ] = useStorage('textretrieval')
     const [ textretrieval_k ] = useStorage('textretrieval_k')
 
 
-    // ------ //
-    // helper //
-    // ------ //
-    const statusAdd = (type: string | JSX, msg: string | JSX) => setStatusMsg((old) => [...old, [type, msg]]);
-    const statusClear = () => setStatusMsg(old => []);
-    const statusAmend = (fn: ((msg: ([string, string])) => [string,string]), i?: number) => setStatusMsg(old => {
-        if(!i) i = old.length - 1;
-        const newStatus = [...old];
-        newStatus[i] = fn(newStatus[i]);
-        return newStatus;
-    })
-
-    const resetState = () => {
-      setSavedHighlightQuery("")
-      setClassifierData({})
-      setRetrievalQuery(null)
-      setScores([])
-      setStatusMsg([])
-      setIsThinking(false)
-    }
 
     // ------ //
     // events //
     // ------ //
 
-    // register as a listener of tabId results
-    useEffect(() => {
-      listener.send({
-        cmd: "register",
-        tabId: tabId
-      });
-    }, [tabId])
-
-    // whenever listener changes message, we know we got something new
-    useEffect(() => {
-      const data = listener.data;
-      if (data?.title) setTitle(data?.title);
-      if (data?.url) setUrl(data?.url);
-    }, [listener.data])
+    const onReset = () => {
+      setSavedHighlightQuery("")
+      setClassifierData({})
+      setRetrievalQuery(null)
+    }
 
     const onEnterPress = async (ev) => {
       const highlightQuery = ev.target.value;
-      if (!highlightQuery) resetState();
+      if (!highlightQuery) onReset();
 
       if (ev.keyCode == 13 && ev.shiftKey == false) {
         ev.preventDefault(); 
-        resetState();
-
+        onReset();
         setSavedHighlightQuery(highlightQuery)
-        setIsThinking(true)
-        //await query2embedding(highlightQuery);
 
         // set retrieval query
         setRetrievalQuery(textretrieval ? highlightQuery : null);
 
         // query llm to give classes
         if (textclassifier) {
+          setStatusClassifier(["checking", 0])
           await getQueryClasses(highlightQuery, () => {
-            statusAdd(<b>Creating Classes</b>, random(MSG_QUERY2CLASS))
+            setStatusClassifier(["checking", 0, random(MSG_QUERY2CLASS)])
           }, () => {
-            statusAmend(status => [status[0], status[1] + " done"])
+            setStatusClassifier(["loaded", 100])
           })
         }
 
-        setIsThinking(false)
       }
     }
 
@@ -109,20 +78,6 @@ const MainInput = ({tabId}) => {
     // functions //
     // --------- //
 
-    // apply class change when user changes inputs
-    const onClassChange = (classList, c_new, pos) => {
-      setClassifierData(oldData => {
-        const list = (classList == classifierData.classes_pos) ? "classes_pos" : "classes_neg"
-        let newClasses = oldData[list]
-        if (!c_new)
-          newClasses = newClasses.filter((c,i) => i != pos)
-        else if (pos < 0)
-          newClasses.push(c_new)
-        else
-          newClasses[pos] = c_new;
-        return {...oldData, [list]: newClasses}
-      })
-    }
 
     // ask llm for classes
     const getQueryClasses = async (query, onLLM = () => {}, onLLMDone = () => {}) => {
@@ -138,16 +93,8 @@ const MainInput = ({tabId}) => {
     // render //
     // ------ //
 
-    const statusHtml = (
-      <div className="status">
-        {statusMsg && Array.isArray(statusMsg) && statusMsg.length > 0 ? [statusMsg[statusMsg.length-1]].map((status, i) => ( <div key={i} className="status_msg">{status[0]}: {status[1]}</div>)) : ""}
-        {/*!statusMsg ? "" : statusMsg.map((status, i) => ( <div key={i} className={`status_msg ${isThinking ? "processing" : "done"}`}>{status[0]}: {status[1]}</div>))*/}
-      </div>
-      
-    )
-
-    return <div className="ShadeRunner-Bar">
-      <h1 className="title">ShadeRunner</h1>
+    return <div className="ShadeRunner MainInput">
+      <div className="header">What to Highlight</div>
       <textarea
         disabled={!title}
         className="text-box"
@@ -156,31 +103,6 @@ const MainInput = ({tabId}) => {
         onKeyDown={onEnterPress}
         rows={4}
       />
-      {isThinking && statusMsg && statusMsg.length ? statusHtml : ""}
-      {!isThinking && classifierData.thought && Array.isArray(classifierData.classes_pos) && Array.isArray(classifierData.classes_neg) ? (
-        <CollapsibleBox title="Highlight Classes">
-          <h3>Scope:</h3>
-          {classifierData.scope}
-          <h3>Thought:</h3>
-          {classifierData.thought}
-          <ClassModifierList title="Positive Terms" classList={classifierData.classes_pos} onSubmit={onClassChange}/>
-          <ClassModifierList title="Negative Terms" classList={classifierData.classes_neg} onSubmit={onClassChange}/>
-        </CollapsibleBox>
-      ) : ""}
-      {!isThinking && scores.length > 0 && scores[0].length > 0 ? ( 
-        <CollapsibleBox title="Histograms">
-          <div className="histograms" style={{display: "flex", flexDirection: "row"}}>
-            <div style={{ flex: "1" }}>
-              <b style={{display: "block", width: "100%", textAlign: "center"}}>Scores of Positive Class</b>
-              <Histogram scores={scores[0]} lines={poseps} />
-            </div>
-            <div style={{ flex: "1" }}>
-              <b style={{display: "block", width: "100%", textAlign: "center"}}>Score Differences (score_plus - score_minus)</b>
-              <Histogram scores={scores[1]} lines={decisioneps > 0 ? [decisioneps] : []} />
-            </div>
-          </div>
-        </CollapsibleBox>
-      ) : ""}
     </div>
 }
 
