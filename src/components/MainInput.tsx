@@ -33,6 +33,13 @@ const MainInput = ({tabId}) => {
     const [ textretrieval ] = useStorage('textretrieval')
 
 
+    // ------- //
+    // effects //
+    // ------- //
+    useEffect(() => {
+      setStatusClassifier(classifierData ? ["loaded", 100] : null)
+    }, []);
+
     // ------ //
     // events //
     // ------ //
