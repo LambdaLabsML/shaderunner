@@ -20,7 +20,6 @@ console.log(process.env.NODE_ENV, process.env.PLASMO_PUBLIC_STORAGE)
 
 // the actual shaderunner bar
 const MainInput = ({tabId}) => {
-
     const [ [title], [url], [statusClassifier, setStatusClassifier]] = useGlobalStorage(tabId, "title", "url", "status_classifier")
     const [ savedHighlightQuery, setSavedHighlightQuery ] = useSessionStorage("savedHighlightQuery:"+tabId, "");
     const [ classifierData, setClassifierData] = useSessionStorage("classifierData:"+tabId, {});
@@ -30,21 +29,27 @@ const MainInput = ({tabId}) => {
     // -------- //
     // Settings //
     // -------- //
-    const [ verbose ] = useStorage("verbose", false);
     const [ textclassifier ] = useStorage('textclassifier')
     const [ textretrieval ] = useStorage('textretrieval')
-    const [ textretrieval_k ] = useStorage('textretrieval_k')
-
 
 
     // ------ //
     // events //
     // ------ //
 
+    // reset input & data
     const onReset = () => {
       setSavedHighlightQuery("")
       setClassifierData({})
       setRetrievalQuery(null)
+    }
+
+    // ask llm for classes
+    const getQueryClasses = async (query, onLLM = () => {}, onLLMDone = () => {}) => {
+      onLLM()
+      const result = await sendToBackground({ name: "llm_classify", body: {query: query, url: url, title: title }})
+      setClassifierData(old => ({...old, classes_pos: result.classes_pos, classes_neg: result.classes_neg, thought: result.thought, scope: result.scope}))
+      onLLMDone()
     }
 
     const onEnterPress = async (ev) => {
@@ -71,22 +76,6 @@ const MainInput = ({tabId}) => {
 
       }
     }
-
-
-
-    // --------- //
-    // functions //
-    // --------- //
-
-
-    // ask llm for classes
-    const getQueryClasses = async (query, onLLM = () => {}, onLLMDone = () => {}) => {
-      onLLM()
-      const result = await sendToBackground({ name: "llm_classify", body: {query: query, url: url, title: title }})
-      setClassifierData(old => ({...old, classes_pos: result.classes_pos, classes_neg: result.classes_neg, thought: result.thought, scope: result.scope}))
-      onLLMDone()
-    }
-
 
 
     // ------ //
