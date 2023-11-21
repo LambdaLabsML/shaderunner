@@ -1,28 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { useMessage, usePort } from "@plasmohq/messaging/hook"
 import { getMainContent, splitContent } from '~util/extractContent'
 import { textNodesUnderElem, findTextSlow, findTextFast, highlightText, resetHighlights, textNodesNotUnderHighlight, surroundTextNode } from '~util/DOM'
 import { computeEmbeddingsLocal } from '~util/embedding'
-import { sendToBackground, type MessagesMetadata } from "@plasmohq/messaging"
-import { MSG_CONTENT, MSG_EMBED, MSG_QUERY2CLASS } from "~util/messages";
+import { sendToBackground } from "@plasmohq/messaging"
 import type { VectorStore } from "langchain/dist/vectorstores/base";
 import { useStorage } from "@plasmohq/storage/hook";
 import { useSessionStorage as _useSessionStorage } from '~util/misc'
 import { useActiveState } from '~util/activeStatus'
-import { random } from '~util/misc';
 import HighlightStyler from '~components/HighlightStyler';
+import { useGlobalStorage } from '~util/useGlobalStorage';
 const useSessionStorage = process.env.NODE_ENV == "development" && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;
 type JSX = React.JSX.Element;
 
 
 const Highlighter = () => {
     const [ tabId, setTabId ] = useState(null);
-    const controller = usePort("controller")
-    const [url, isActive] = useActiveState(window.location)
+    const [ [scores, setScores], [setGlobalStorage] ] = useGlobalStorage(tabId, "classifierScores");
+    const [url, isActive] = useActiveState(window.location);
     const [ pageEmbeddings, setPageEmbeddings] = useState({});
     const [ classifierData ] = useSessionStorage("classifierData:"+tabId, {});
     const [ retrievalQuery ] = useSessionStorage("retrievalQuery:"+tabId, null);
-    const [ scores, setScores] = useState([]);
 
     // -------- //
     // settings //
@@ -33,7 +30,7 @@ const Highlighter = () => {
     const [ textretrieval_k ] = useStorage('textretrieval_k')
     const [ alwayshighlighteps ] = useStorage("alwayshighlighteps");
     const [ minimalhighlighteps ] = useStorage("minimalhighlighteps");
-    const [ decisioneps, setdecisioneps ] = useStorage("decisioneps");
+    const [ decisioneps ] = useStorage("decisioneps");
 
 
     // ------- //
@@ -49,17 +46,17 @@ const Highlighter = () => {
         setTabId(tabId);
         
         // init data
-        const notify = msg => controller.send({_tabId: tabId, ...msg})
-        notify({
+        setGlobalStorage({
           message: "",
           status_embedding: ["checking",0],
           title: document.title,
-          url: url
+          url: url,
+          _tabId: tabId
         })
 
         // start directly by getting page embeddings
         const mode = "sentences";
-        const newEmbeddings = await getPageEmbeddings(mode, status => notify({status_embedding: status}));
+        const newEmbeddings = await getPageEmbeddings(mode, status => setGlobalStorage({status_embedding: status, _tabId: tabId}));
         setPageEmbeddings(old => ({...old, [mode]: newEmbeddings}));
       }
       init();

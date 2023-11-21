@@ -10,6 +10,10 @@ const useGlobalStorage = (_tabId: Number | string, ...names: string[]) => {
 
     // register as a listener of tabId results
     useEffect(() => {
+
+        // wait for true _tabId if not initialized, yet
+        if (!_tabId) return;
+
         listener.send({
             cmd: "register",
             tabId: _tabId
@@ -17,19 +21,19 @@ const useGlobalStorage = (_tabId: Number | string, ...names: string[]) => {
     }, [_tabId])
 
     // create state getter/setter for each name
-    const stateVars = names.map(name => [...useState(null), name]);
+    const stateVarsReact = names.map(name => [...useState(null), name]);
 
     // whenever listener changes message, we know we got something new
     useEffect(() => {
         const data = listener.data;
         if (!data) return;
         if (data._who == _who) return;
-        stateVars.forEach(([_, setName, name]) => {
+        stateVarsReact.forEach(([_, setName, name]) => {
             if (data[name]) setName(data[name]);
         })
     }, [listener.data]);
 
-    return stateVars.map(([getName, setName, name]) => {
+    const stateVars = stateVarsReact.map(([getName, setName, name]) => {
 
         // when saving, we also send the update to the controller
         function setWrapper(val: any) {
@@ -41,6 +45,12 @@ const useGlobalStorage = (_tabId: Number | string, ...names: string[]) => {
         }
         return [getName, setWrapper];
     });
+
+    function setGlobalStorage(obj) {
+        controller.send({ _tabId, ...obj })
+    }
+
+    return [...stateVars, [setGlobalStorage]];
 }
 
 
