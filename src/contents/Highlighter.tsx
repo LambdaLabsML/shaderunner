@@ -234,14 +234,15 @@ const Highlighter = () => {
         const {texts, from_node_pos, to_node_pos, closestClass, closestScore} = toHighlight[i];
         const nonWhiteTexts = texts.filter(t => t.trim())
         const textNodesSubset = currentTextNodes.slice(from_node_pos, to_node_pos).filter(t => t.textContent.trim());
-        const replacedNodes = highlightText(nonWhiteTexts, textNodesSubset, class2Id[closestClass], closestClass + " " + closestScore);
+        const highlightClass = class2Id[closestClass] >= classes_pos.length ? "normaltext" : class2Id[closestClass];
+        const replacedNodes = highlightText(nonWhiteTexts, textNodesSubset, highlightClass, closestClass + " " + closestScore);
         currentTextNodes = currentTextNodes.slice(to_node_pos);
         currentTextNodes.unshift(replacedNodes.pop())
       }
 
       // finally, let's highlight all textnodes that are not highlighted
-      //const emptyTextNodes = textNodesNotUnderHighlight(document.body);
-      //emptyTextNodes.forEach(node => surroundTextNode(node, "normaltext"))
+      const emptyTextNodes = textNodesNotUnderHighlight(document.body);
+      emptyTextNodes.forEach(node => surroundTextNode(node, "normaltext"))
 
       setScores([scores_plus, scores_diffs])
       setStatusHighlight(["loaded", 100]);
