@@ -15,7 +15,7 @@ type JSX = React.JSX.Element;
 
 const Highlighter = () => {
     const [ tabId, setTabId ] = useState(null);
-    const [ [savedUrl], [scores, setScores], [setGlobalStorage] ] = useGlobalStorage(tabId, "url", "classifierScores");
+    const [ [savedUrl], [,setScores], [,setStatusEmbeddings], [,setStatusHighlight], [setGlobalStorage] ] = useGlobalStorage(tabId, "url", "classifierScores", "status_embedding", "status_highlight");
     const [url, isActive] = useActiveState(window.location);
     const [ pageEmbeddings, setPageEmbeddings] = useState({});
     const [ classifierData ] = useSessionStorage("classifierData:"+tabId, {});
@@ -68,7 +68,7 @@ const Highlighter = () => {
       // start directly by getting page embeddings
       async function init() {
         const mode = "sentences";
-        const newEmbeddings = await getPageEmbeddings(mode, status => setGlobalStorage({ status_embedding: status}));
+        const newEmbeddings = await getPageEmbeddings(mode, setStatusEmbeddings);
         setPageEmbeddings(old => ({ ...old, [mode]: newEmbeddings }));
       }
       init();
@@ -101,7 +101,7 @@ const Highlighter = () => {
     // --------- //
 
     // ensure page embeddings exist
-    const getPageEmbeddings = async (mode = "sentences", onStatus = (status) => {}) => {
+    const getPageEmbeddings = async (mode = "sentences", onStatus = (status: [string, Number, string?]) => {}) => {
 
       // use cache if already computed
       if (pageEmbeddings[mode]) return pageEmbeddings[mode];
@@ -115,7 +115,7 @@ const Highlighter = () => {
 
       // extract main content & generate splits
       const mainEl = getMainContent(true);
-      const [splits, metadata] = splitContent(mainEl.textContent, mode, url)
+      const [splits, metadata] = splitContent(mainEl.textContent, mode, url as string)
 
       // retrieve embedding (either all at once or batch-wise)
       let splitEmbeddings = [];
@@ -140,6 +140,8 @@ const Highlighter = () => {
       const classes_neg = classifierData.classes_neg;
       if (!classes_pos || !classes_neg)
         return;
+
+      setStatusHighlight(["computing", 0]);
 
       // ensure we have embedded the page contents
       const pageEmbeddings = await getPageEmbeddings(mode)
@@ -201,6 +203,7 @@ const Highlighter = () => {
           if (verbose) console.log("reject", split, score_plus, score_minus)
         }
 
+        setStatusHighlight(["computing", 100 * Number(i) / splits.length]);
       }
 
       // finally, let's highlight all textnodes that are not highlighted
@@ -208,6 +211,7 @@ const Highlighter = () => {
       textNodes.forEach(node => surroundTextNode(node, "normaltext"))
 
       setScores([scores_plus, scores_diffs])
+      setStatusHighlight(["loaded", 100]);
     }
 
 
