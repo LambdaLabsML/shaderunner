@@ -29,7 +29,7 @@ const useGlobalStorage = (_tabId: Number | string, ...names: string[]) => {
         if (!data) return;
         if (data._who == _who) return;
         stateVarsReact.forEach(([_, setName, name]) => {
-            if (data[name]) setName(data[name]);
+            if (name in data) setName(data[name]);
         })
     }, [listener.data]);
 
