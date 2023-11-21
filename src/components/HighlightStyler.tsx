@@ -9,7 +9,7 @@ const useSessionStorage = process.env.NODE_ENV == "development" && process.env.P
 
 
 const HighlightStyler = ({mode, tabId}) => {
-    const [ highlightSetting ] = useGlobalStorage(tabId, "highlightSetting")
+    const [ [highlightSetting] ] = useGlobalStorage(tabId, "highlightSetting")
     const [ classifierData ] = useSessionStorage("classifierData:"+tabId, {});
     const [ styleEl, setStyleEl ] = useState(null);
 

@@ -1,17 +1,20 @@
 import { usePort } from "@plasmohq/messaging/hook";
 import { useEffect, useState } from "react";
+import { generateRandomHash } from "./misc";
 
 
-const useGlobalStorage = (tabId: Number | string, ...names: string[]) => {
+const useGlobalStorage = (_tabId: Number | string, ...names: string[]) => {
     const listener = usePort("listener")
+    const controller = usePort("controller")
+    const [_who] = useState(generateRandomHash(32))
 
     // register as a listener of tabId results
     useEffect(() => {
         listener.send({
             cmd: "register",
-            tabId: tabId
+            tabId: _tabId
         });
-    }, [tabId])
+    }, [_tabId])
 
     // create state getter/setter for each name
     const stateVars = names.map(name => [...useState(null), name]);
@@ -20,12 +23,24 @@ const useGlobalStorage = (tabId: Number | string, ...names: string[]) => {
     useEffect(() => {
         const data = listener.data;
         if (!data) return;
+        if (data._who == _who) return;
         stateVars.forEach(([_, setName, name]) => {
             if (data[name]) setName(data[name]);
         })
     }, [listener.data]);
 
-    return stateVars.map(vars => vars[0]);
+    return stateVars.map(([getName, setName, name]) => {
+
+        // when saving, we also send the update to the controller
+        function setWrapper(val: any) {
+            setName(async old => {
+                val = (typeof val === 'function') ? val(old) : val;
+                controller.send({ [name]: val, _who, _tabId })
+                return val;
+            });
+        }
+        return [getName, setWrapper];
+    });
 }
 
 

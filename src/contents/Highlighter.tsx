@@ -23,18 +23,17 @@ const Highlighter = ({highlightSetting, mode}) => {
     const [ classifierData ] = useSessionStorage("classifierData:"+tabId, {});
     const [ retrievalQuery ] = useSessionStorage("retrievalQuery:"+tabId, null);
     const [ scores, setScores] = useState([]);
+
+    // -------- //
+    // settings //
+    // -------- //
     const [ verbose ] = useStorage("verbose", false);
     const [ textclassifier ] = useStorage('textclassifier')
     const [ textretrieval ] = useStorage('textretrieval')
     const [ textretrieval_k ] = useStorage('textretrieval_k')
-
-    // eps values
-    const [ alwayshighlighteps, setalwayshighlighteps ] = useStorage("alwayshighlighteps");
-    const [ minimalhighlighteps, setminimalhighlighteps ] = useStorage("minimalhighlighteps");
+    const [ alwayshighlighteps ] = useStorage("alwayshighlighteps");
+    const [ minimalhighlighteps ] = useStorage("minimalhighlighteps");
     const [ decisioneps, setdecisioneps ] = useStorage("decisioneps");
-    let poseps = [];
-    if (alwayshighlighteps > 0) poseps.push(alwayshighlighteps);
-    if (minimalhighlighteps > 0) poseps.push(minimalhighlighteps);
 
 
     // ------- //
@@ -50,7 +49,7 @@ const Highlighter = ({highlightSetting, mode}) => {
         setTabId(tabId);
         
         // init data
-        const notify = msg => controller.send({tabId: tabId, ...msg})
+        const notify = msg => controller.send({_tabId: tabId, ...msg})
         notify({
           message: "",
           status_embedding: ["checking",0],
@@ -75,11 +74,9 @@ const Highlighter = ({highlightSetting, mode}) => {
       const applyHighlight = () => {
         try {
           if (textclassifier) {
-            //statusAdd(<b>Applying Class Highlights</b>, random(MSG_CONTENT))
             highlightUsingClasses()
           }
           if (textretrieval) {
-            //statusAdd(<b>Applying Retrieval Highlights</b>, random(MSG_CONTENT))
             highlightUsingRetrieval(retrievalQuery)
           }
         } catch (error) {
@@ -108,7 +105,6 @@ const Highlighter = ({highlightSetting, mode}) => {
         onStatus(["found database", 0])
 
       // extract main content & generate splits
-      //statusAdd(random(MSG_CONTENT))
       const mainEl = getMainContent(true);
       const [splits, metadata] = splitContent(mainEl.textContent, mode, url)
 

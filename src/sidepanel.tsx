@@ -22,7 +22,7 @@ const StatusIndicator = ({status, size=4}) => {
 // mount in sidepanel
 const Sidepanel = () => {
   const tabId = new URL(window.location.href).searchParams.get("tabId")
-  const [statusEmbedding, statusClassifier, statusHighlight] = useGlobalStorage(tabId, "status_embedding", "status_classifier", "status_highlight")
+  const [[statusEmbedding], [statusClassifier], [statusHighlight]] = useGlobalStorage(tabId, "status_embedding", "status_classifier", "status_highlight")
 
 
   // ======= //
@@ -50,7 +50,7 @@ const Sidepanel = () => {
       <div className="status">highlight: <StatusIndicator status={statusHighlight}/></div>
     </div>
     <MainInput tabId={tabId}/>
-    <Legend></Legend>
+    <Legend tabId={tabId}></Legend>
     <div className="logoContainer">
       <img className="thinking_logo" width="30" src={Logo}/>
     </div>

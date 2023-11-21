@@ -26,6 +26,19 @@ const random = function (A) {
 }
 
 
+function generateRandomHash(length) {
+  let result = '';
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const charactersLength = characters.length;
+
+  for (let i = 0; i < length; i++) {
+      result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+
+  return result;
+}
+
+
 // react hook to save in session Storage
 export default function useSessionStorage(key, initialValue) {
   const [item, setInnerValue] = useState(() => {
@@ -51,4 +64,4 @@ export default function useSessionStorage(key, initialValue) {
 }
 
 
-export { useSessionStorage, simpleHash, random };
+export { useSessionStorage, simpleHash, random, generateRandomHash };
