@@ -64,4 +64,9 @@ export default function useSessionStorage(key, initialValue) {
 }
 
 
-export { useSessionStorage, simpleHash, random, generateRandomHash };
+function arraysAreEqual(arr1, arr2) {
+  return arr1.length === arr2.length && arr1.every((value, index) => value === arr2[index]);
+}
+
+
+export { useSessionStorage, simpleHash, random, generateRandomHash, arraysAreEqual };

@@ -5,7 +5,7 @@ import { computeEmbeddingsLocal } from '~util/embedding'
 import { sendToBackground } from "@plasmohq/messaging"
 import type { VectorStore } from "langchain/dist/vectorstores/base";
 import { useStorage } from "@plasmohq/storage/hook";
-import { useSessionStorage as _useSessionStorage } from '~util/misc'
+import { useSessionStorage as _useSessionStorage, arraysAreEqual } from '~util/misc'
 import { useActiveState } from '~util/activeStatus'
 import HighlightStyler from '~components/HighlightStyler';
 import { useGlobalStorage } from '~util/useGlobalStorage';
@@ -17,8 +17,9 @@ type JSX = React.JSX.Element;
 const Highlighter = () => {
     const [ tabId, setTabId ] = useState(null);
     const [ [savedUrl], [,setScores], [,setStatusEmbeddings], [,setStatusHighlight], [setGlobalStorage] ] = useGlobalStorage(tabId, "url", "classifierScores", "status_embedding", "status_highlight");
-    const [url, isActive] = useActiveState(window.location);
-    const [ pageEmbeddings, setPageEmbeddings] = useState({});
+    const [ url, isActive ] = useActiveState(window.location);
+    const [ pageEmbeddings, setPageEmbeddings ] = useState({});
+    const [ classEmbeddings, setClassEmbeddings ] = useState({});
     const [ classifierData ] = useSessionStorage("classifierData:"+tabId, {});
     const [ retrievalQuery ] = useSessionStorage("retrievalQuery:"+tabId, null);
 
@@ -142,17 +143,25 @@ const Highlighter = () => {
       if (!classes_pos || !classes_neg)
         return;
 
-      setStatusHighlight(["compute", 0]);
+      setStatusHighlight(["checking", 0]);
+      const allclasses = [...classes_pos, ...classes_neg]
+      const class2Id = Object.fromEntries(allclasses.map((c, i) => [c, i]))
 
       // ensure we have embedded the page contents
       const pageEmbeddings = await getPageEmbeddings(mode)
       const splits = pageEmbeddings[mode].splits;
       const splitEmbeddings = pageEmbeddings[mode].embeddings;
 
-      // compute embeddings of classes
-      const allclasses = [...classes_pos, ...classes_neg]
-      const [classStore] = await computeEmbeddingsLocal(allclasses, []);
-      const class2Id = Object.fromEntries(allclasses.map((c, i) => [c, i]))
+      // use cached / compute embeddings of classes
+      let classStore;
+      if (classEmbeddings?.allclasses && arraysAreEqual(classEmbeddings.allclasses, allclasses)) {
+        setStatusHighlight(["checking", 0, "found cache"]);
+        classStore = classEmbeddings.classStore;
+      } else {
+        setStatusHighlight(["checking", 0, "embedding classes"]);
+        [ classStore ] = await computeEmbeddingsLocal(allclasses, []);
+        setClassEmbeddings({allclasses, classStore})
+      }
 
       // get all text nodes
       const textNodes = textNodesUnderElem(document.body);
