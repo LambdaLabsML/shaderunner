@@ -11,7 +11,7 @@ import HighlightStyler from '~components/HighlightStyler';
 import { useGlobalStorage } from '~util/useGlobalStorage';
 import { assert } from 'console';
 const useSessionStorage = process.env.NODE_ENV == "development" && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;
-type JSX = React.JSX.Element;
+type classEmbeddingType = {allclasses: string[], classStore: any};
 
 
 const Highlighter = () => {
@@ -154,9 +154,9 @@ const Highlighter = () => {
 
       // use cached / compute embeddings of classes
       let classStore;
-      if (classEmbeddings?.allclasses && arraysAreEqual(classEmbeddings.allclasses, allclasses)) {
+      if ((classEmbeddings as classEmbeddingType)?.allclasses && arraysAreEqual((classEmbeddings as classEmbeddingType).allclasses, allclasses)) {
         setStatusHighlight(["checking", 0, "found cache"]);
-        classStore = classEmbeddings.classStore;
+        classStore = (classEmbeddings as classEmbeddingType).classStore;
       } else {
         setStatusHighlight(["checking", 0, "embedding classes"]);
         [ classStore ] = await computeEmbeddingsLocal(allclasses, []);

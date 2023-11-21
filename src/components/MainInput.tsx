@@ -9,7 +9,6 @@ import ClassModifierList from "./basic/ClassModifierList";
 import { sendToBackground } from '@plasmohq/messaging';
 import { usePort } from '@plasmohq/messaging/hook';
 import { useGlobalStorage } from '~util/useGlobalStorage';
-type JSX = React.JSX.Element;
 
 // in development mode we want to use persistent storage for debugging
 const useSessionStorage = process.env.NODE_ENV == "development" && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;
