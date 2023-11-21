@@ -3,7 +3,6 @@ import { useSessionStorage as _useSessionStorage } from '~util/misc'
 import { useActiveState } from '~util/activeStatus'
 import { useStorage } from "@plasmohq/storage/hook";
 import { consistentColor } from '~util/DOM'
-import HighlightStyler from "./HighlightStyler";
 import SwitchInput from "~components/basic/SwitchInput";
 
 // in development mode we want to use persistent storage for debugging
@@ -59,7 +58,6 @@ const Legend = () => {
     return "";
 
   return <div className="ShadeRunner-Legend">
-    <HighlightStyler highlightSetting={highlightSetting} mode={mode}/>
     <div className="header">ShadeRunner</div>
     <SwitchInput
         label=""

@@ -2,19 +2,18 @@ import { useEffect, useState } from "react"
 import { useStorage } from "@plasmohq/storage/hook";
 import { consistentColor } from "~util/DOM";
 import { useSessionStorage as _useSessionStorage } from '~util/misc'
-import { useActiveState } from '~util/activeStatus'
 
 // in development mode we want to use persistent storage for debugging
 const useSessionStorage = process.env.NODE_ENV == "development" && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;
 
 
-const HighlightStyler = ({highlightSetting, mode}) => {
-    const [url, isActive] = useActiveState(window.location)
-    const [ classifierData ] = useSessionStorage("classifierData:"+url, {});
+const HighlightStyler = ({mode, tabId}) => {
+    const [ classifierData ] = useSessionStorage("classifierData:"+tabId, {});
     const [ styleEl, setStyleEl ] = useState(null);
+    const highlightSetting = {};
 
     useEffect(() => {
-        if (!isActive || !Array.isArray(classifierData.classes_pos) || !styleEl) return;
+        if (!Array.isArray(classifierData.classes_pos) || !styleEl) return;
 
         const defaultSetting = highlightSetting["_default"] || "highlight";
         const colorStyle = classifierData.classes_pos.map((c, i) => {
@@ -63,17 +62,16 @@ const HighlightStyler = ({highlightSetting, mode}) => {
                     display: none;
                 }
             `
-    }, [isActive, classifierData.classes_pos, styleEl, highlightSetting, mode])
+    }, [classifierData.classes_pos, styleEl, highlightSetting, mode])
 
     useEffect(() => {
-        if (!isActive || styleEl) return;
-
+        if (styleEl) return;
 
         const style = document.createElement('style');
         style.title = 'shaderunner-css';
         setStyleEl(style)
         window.document.head.appendChild(style);
-    }, [isActive]);
+    }, []);
 
     return "";
 };
