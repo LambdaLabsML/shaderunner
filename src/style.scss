@@ -274,8 +274,18 @@ $primary-color: #8136e2;
     text-transform: uppercase;
     font-size: 90%;
 
+    .status-msg {
+      margin-left: 0.4em;
+    }
+
+    // src: CSS filter generator https://codepen.io/sosuke/pen/Pjoqqp
+
+    .checking {
+      animation: rotate 1.0s linear infinite; 
+    }
+
     .loaded {
-      filter: invert(32%) sepia(99%) saturate(1502%) hue-rotate(93deg) brightness(81%) contrast(106%);
+      filter: invert(23%) sepia(78%) saturate(4050%) hue-rotate(260deg) brightness(92%) contrast(91%);
     }
   }
 
@@ -290,4 +300,13 @@ $primary-color: #8136e2;
       opacity: 0.3;
     }
   }
+}
+
+
+/* ENDLESS ROTATE */
+.rotate{
+  animation: rotate 1.5s linear infinite; 
+}
+@keyframes rotate{
+  to{ transform: rotate(360deg); }
 }
