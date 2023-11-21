@@ -7,6 +7,7 @@ import Histogram from "~components/basic/Histogram";
 import CollapsibleBox from "~components/basic/Collapsible";
 import ClassModifierList from "./basic/ClassModifierList";
 import { sendToBackground } from '@plasmohq/messaging';
+import { usePort } from '@plasmohq/messaging/hook';
 type JSX = React.JSX.Element;
 
 // in development mode we want to use persistent storage for debugging
@@ -17,12 +18,14 @@ console.log(process.env.NODE_ENV, process.env.PLASMO_PUBLIC_STORAGE)
 
 
 // the actual shaderunner bar
-const MainInput = () => {
-    const [url, isActive] = useActiveState(window.location)
-    const [ savedHighlightQuery, setSavedHighlightQuery ] = useSessionStorage("savedHighlightQuery:"+url, "");
+const MainInput = ({tabId}) => {
+    const listener = usePort("listener")
+    const [ url, setUrl] = useState(null);
+    const [ title, setTitle] = useState(null);
+    const [ savedHighlightQuery, setSavedHighlightQuery ] = useSessionStorage("savedHighlightQuery:"+tabId, "");
     const [ pageEmbeddings, setPageEmbeddings] = useState({});
-    const [ classifierData, setClassifierData] = useSessionStorage("classifierData:"+url, {});
-    const [ retrievalQuery, setRetrievalQuery] = useSessionStorage("retrievalQuery:"+url, null);
+    const [ classifierData, setClassifierData] = useSessionStorage("classifierData:"+tabId, {});
+    const [ retrievalQuery, setRetrievalQuery] = useSessionStorage("retrievalQuery:"+tabId, null);
     const [ scores, setScores] = useState([]);
     const [ statusMsg, setStatusMsg] = useState([]);
     const [ isThinking, setIsThinking] = useState(false);
@@ -30,7 +33,6 @@ const MainInput = () => {
     const [ textclassifier ] = useStorage('textclassifier')
     const [ textretrieval ] = useStorage('textretrieval')
     const [ textretrieval_k ] = useStorage('textretrieval_k')
-
 
 
     // ------ //
@@ -57,6 +59,22 @@ const MainInput = () => {
     // ------ //
     // events //
     // ------ //
+
+    // register as a listener of tabId results
+    useEffect(() => {
+      listener.send({
+        cmd: "register",
+        tabId: tabId
+      });
+    }, [tabId])
+
+    // whenever listener changes message, we know we got something new
+    useEffect(() => {
+      const data = listener.data;
+      if (data?.title) setTitle(data?.title);
+      if (data?.url) setUrl(data?.url);
+    }, [listener.data])
+
     const onEnterPress = async (ev) => {
       const highlightQuery = ev.target.value;
       if (!highlightQuery) resetState();
@@ -80,15 +98,6 @@ const MainInput = () => {
             statusAmend(status => [status[0], status[1] + " done"])
           })
         }
-
-        // ensure split embeddings exist
-        const mode = "sentences";
-        const newEmbeddings = await getPageEmbeddings(mode, () => {
-          statusAdd("embedding", random(MSG_EMBED))
-        }, () => {
-          statusAmend(status => [status[0], status[1] + " done"])
-        })
-        setPageEmbeddings(old => ({...old, [mode]: newEmbeddings}));
 
         setIsThinking(false)
       }
@@ -118,7 +127,7 @@ const MainInput = () => {
     // ask llm for classes
     const getQueryClasses = async (query, onLLM = () => {}, onLLMDone = () => {}) => {
       onLLM()
-      const result = await sendToBackground({ name: "llm_classify", body: {query: query, url: url, title: document.title }})
+      const result = await sendToBackground({ name: "llm_classify", body: {query: query, url: url, title: title }})
       setClassifierData(old => ({...old, classes_pos: result.classes_pos, classes_neg: result.classes_neg, thought: result.thought, scope: result.scope}))
       onLLMDone()
     }
@@ -140,6 +149,7 @@ const MainInput = () => {
     return <div className="ShadeRunner-Bar">
       <h1 className="title">ShadeRunner</h1>
       <textarea
+        disabled={!title}
         className="text-box"
         placeholder="What do you want to find here?"
         defaultValue={savedHighlightQuery}

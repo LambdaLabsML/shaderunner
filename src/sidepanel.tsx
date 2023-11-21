@@ -63,7 +63,7 @@ const Sidepanel = () => {
   );
 
   const classifierHtml = statusClassifier ? (
-    <div className="status">classifier: <CircularProgressBar size={4} progress={statusClassifier[1] || 0}/> ({statusClassifier[0]})</div>
+    <div className="status">classifier: <CircularProgressBar className="" size={4} progress={statusClassifier[1] || 0}/> ({statusClassifier[0]})</div>
   ) : (
     <div className="status">classifier: -</div>
   );
@@ -74,7 +74,7 @@ const Sidepanel = () => {
       {embeddingHtml}
       {classifierHtml}
     </div>
-    <MainInput/>
+    <MainInput tabId={tabId}/>
     <Legend></Legend>
     <div className="logoContainer">
       <img className="thinking_logo" width="30" src={Logo}/>
