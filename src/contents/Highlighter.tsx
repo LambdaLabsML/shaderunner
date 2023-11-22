@@ -16,7 +16,7 @@ type classEmbeddingType = {allclasses: string[], classStore: any};
 
 const Highlighter = () => {
     const [ tabId, setTabId ] = useState(null);
-    const [ [savedUrl], [,setScores], [,setStatusEmbeddings], [,setStatusHighlight], [setGlobalStorage] ] = useGlobalStorage(tabId, "url", "classifierScores", "status_embedding", "status_highlight");
+    const [ [savedUrl], [,setTopicCounts], [,setScores], [,setStatusEmbeddings], [,setStatusHighlight], [setGlobalStorage] ] = useGlobalStorage(tabId, "url", "topicCounts", "classifierScores", "status_embedding", "status_highlight");
     const [ url, isActive ] = useActiveState(window.location);
     const [ pageEmbeddings, setPageEmbeddings ] = useState({});
     const [ classEmbeddings, setClassEmbeddings ] = useState({});
@@ -230,11 +230,13 @@ const Highlighter = () => {
 
       // streamlined text highlighting
       currentTextNodes = textNodes;
+      const topicCounts = Object.fromEntries(allclasses.map((c) => [c, 0]))
       for(let i=0; i<toHighlight.length; i++) {
         const {texts, from_node_pos, to_node_pos, closestClass, closestScore} = toHighlight[i];
         const nonWhiteTexts = texts.filter(t => t.trim())
         const textNodesSubset = currentTextNodes.slice(from_node_pos, to_node_pos).filter(t => t.textContent.trim());
         const highlightClass = class2Id[closestClass] >= classes_pos.length ? "normaltext" : class2Id[closestClass];
+        topicCounts[closestClass] += 1
         const replacedNodes = highlightText(nonWhiteTexts, textNodesSubset, highlightClass, closestClass + " " + closestScore);
         currentTextNodes = currentTextNodes.slice(to_node_pos);
         currentTextNodes.unshift(replacedNodes.pop())
@@ -244,6 +246,7 @@ const Highlighter = () => {
       const emptyTextNodes = textNodesNotUnderHighlight(document.body);
       emptyTextNodes.forEach(node => surroundTextNode(node, "normaltext"))
 
+      setTopicCounts(topicCounts)
       setScores([scores_plus, scores_diffs])
       setStatusHighlight(["loaded", 100]);
     }
