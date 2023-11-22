@@ -13,12 +13,11 @@ const Legend = ({tabId}) => {
   const [retrievalQuery] = useSessionStorage("retrievalQuery:"+tabId, null);
   const [classifierData] = useSessionStorage("classifierData:"+tabId, {});
   const [
-    [ mode, setMode ],
     [ topicStyles, setTopicStyles ],
     [ topicCounts ],
     [ setGlobalStorage ]
-  ] = useGlobalStorage(tabId, "highlightMode", "highlightTopicStyles", "topicCounts")
-  const [ sortBy, setSortQy ] = useState(undefined)
+  ] = useGlobalStorage(tabId, "highlightTopicStyles", "topicCounts")
+  const [ sortBy, setSortBy ] = useState(undefined)
 
 
   // --------- //
@@ -26,11 +25,12 @@ const Legend = ({tabId}) => {
   // --------- //
 
   // active current, hide all others
-  const onFocusHighlight = (topic: string) => {
+  const onFocusHighlight = (ev, topic: string) => {
+    ev.stopPropagation();
     setGlobalStorage({
       highlightActiveTopic: topic,
-      highlightDefaultStyle: "dim-highlight",
-      highlightTopicStyles: Object.fromEntries(classifierData.classes_pos.map((c: string) => [c, "no-highlight"]))
+      highlightDefaultStyle: "highlight",
+      highlightTopicStyles: Object.fromEntries(classifierData.classes_pos.filter(c => c != topic).map((c: string) => [c, "no-highlight"]))
     })
   }
 
@@ -72,34 +72,39 @@ const Legend = ({tabId}) => {
     return "";
 
   function sortByCounts (c,d) { return topicCounts[d] - topicCounts[c] };
+  const numStyles = topicStyles ? Object.keys(topicStyles).length : 0;
+  const selected = numStyles == classifierData.classes_pos.length ? "none" : numStyles == 0 ? "all" : "custom"
 
   return <div className="ShadeRunner Legend">
     <div className="header">Legend</div>
     <SwitchInput
-        label=""
-        options={['highlight', "focus"]}
-        selected={mode || "highlight"}
-        onChange={(value: string) => setMode(value)}
-      />
-    <span>(Click topic to hide/show highlights)</span>
-    <span>
-       <span onClick={() => setTopicStyles({})}>all</span> / <span onClick={() => {setTopicStyles(Object.fromEntries(classifierData.classes_pos.map(c => [c, "no-highlight"])))}}>none</span>
-    </span>
-    <span>
-      <b>sort by </b>
-       <span onClick={() => setSortQy(undefined)}>id</span> / <span onClick={() => setSortQy("counts")}>finds</span>
-    </span>
-    {Array.isArray(classifierData.classes_pos) ? classifierData.classes_pos.sort(sortBy == "counts" ? sortByCounts : undefined).map(c => (
-      <span key={c} className="topic"><span style={{ backgroundColor: consistentColor(c, topicStyles && topicStyles[c] ? 0.125 : null) }} onClick={() => toggleHighlight(c)} onMouseOver={() => mouseOverHighlight(c)} onMouseLeave={() => mouseOverHighlightFinish()}>
-          <span onClick={() => onFocusHighlight(c)}>focus</span>
+      label=""
+      options={['gpt order', "sort by occurences"]}
+      selected={sortBy || 'gpt order'}
+      onChange={(value: string) => setSortBy(value)}
+    />
+    <div className="topicContainer">
+      {Array.isArray(classifierData.classes_pos) ? classifierData.classes_pos.sort(sortBy == "sort by occurences" ? sortByCounts : undefined).map(c => (
+        <div key={c} className="topic"><span style={{ backgroundColor: consistentColor(c, topicStyles && topicStyles[c] ? 0.125 : null) }} onClick={() => toggleHighlight(c)} onMouseOver={() => mouseOverHighlight(c)} onMouseLeave={() => mouseOverHighlightFinish()}>
+          <span onClick={(ev) => onFocusHighlight(ev, c)}>focus</span>
           {/*<span>prev</span>
-          <span>next</span>*/}
+              <span>next</span>*/}
           {c}
           {topicCounts ? ` (${topicCounts[c]})` : ""}
         </span>
-      </span>
-    )) : ""}
-    {retrievalQuery ? <span style={{ backgroundColor: consistentColor(retrievalQuery + " (retrieval)", topicStyles && topicStyles?._retrieval ? 0.125 : 1.0) }}>{retrievalQuery + " (retrieval)"}</span> : ""}
+        </div>
+      )) : ""}
+      {retrievalQuery ? <span style={{ backgroundColor: consistentColor(retrievalQuery + " (retrieval)", topicStyles && topicStyles?._retrieval ? 0.125 : 1.0) }}>{retrievalQuery + " (retrieval)"}</span> : ""}
+    </div>
+    <SwitchInput
+      label=""
+      options={['all', ...(selected == "custom" ? ["custom"] : []), "none"]}
+      selected={selected}
+      onChange={(value: string) => {
+        if (value == "all") setTopicStyles({})
+        if (value == "none") setTopicStyles(Object.fromEntries(classifierData.classes_pos.map(c => [c, "no-highlight"])))
+      }}
+    />
   </div>
 }
 

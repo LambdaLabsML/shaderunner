@@ -5,6 +5,7 @@ import Legend from '~components/Legend';
 import MainInput from '~components/MainInput';
 import CircularProgressBar from '~components/basic/CircularProgressBar';
 import { useGlobalStorage } from '~util/useGlobalStorage';
+import Modes from '~components/Modes';
 
 
 
@@ -49,6 +50,7 @@ const Sidepanel = () => {
     </div>
     <MainInput tabId={tabId}/>
     <Legend tabId={tabId}></Legend>
+    <Modes tabId={tabId}/>
     <div className="logoContainer">
       <img className="thinking_logo" width="30" src={Logo}/>
     </div>
