@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useGlobalStorage } from '~util/useGlobalStorage';
 import { useSessionStorage as _useSessionStorage } from '~util/misc'
 import { useStorage } from "@plasmohq/storage/hook";
@@ -13,10 +13,12 @@ const Legend = ({tabId}) => {
   const [retrievalQuery] = useSessionStorage("retrievalQuery:"+tabId, null);
   const [classifierData] = useSessionStorage("classifierData:"+tabId, {});
   const [
-    [mode, setMode],
-    [topicStyles, setTopicStyles],
+    [ mode, setMode ],
+    [ topicStyles, setTopicStyles ],
+    [ topicCounts ],
     [ setGlobalStorage ]
-  ] = useGlobalStorage(tabId, "highlightMode", "highlightTopicStyles")
+  ] = useGlobalStorage(tabId, "highlightMode", "highlightTopicStyles", "topicCounts")
+  const [ sortBy, setSortQy ] = useState(undefined)
 
 
   // --------- //
@@ -69,6 +71,8 @@ const Legend = ({tabId}) => {
   if (!Array.isArray(classifierData.classes_pos) || classifierData.classes_pos.length == 0)
     return "";
 
+  function sortByCounts (c,d) { return topicCounts[d] - topicCounts[c] };
+
   return <div className="ShadeRunner Legend">
     <div className="header">Legend</div>
     <SwitchInput
@@ -81,12 +85,17 @@ const Legend = ({tabId}) => {
     <span>
        <span onClick={() => setTopicStyles({})}>all</span> / <span onClick={() => {setTopicStyles(Object.fromEntries(classifierData.classes_pos.map(c => [c, "no-highlight"])))}}>none</span>
     </span>
-    {Array.isArray(classifierData.classes_pos) ? classifierData.classes_pos.map(c => (
+    <span>
+      <b>sort by </b>
+       <span onClick={() => setSortQy(undefined)}>id</span> / <span onClick={() => setSortQy("counts")}>finds</span>
+    </span>
+    {Array.isArray(classifierData.classes_pos) ? classifierData.classes_pos.sort(sortBy == "counts" ? sortByCounts : undefined).map(c => (
       <span key={c} className="topic"><span style={{ backgroundColor: consistentColor(c, topicStyles && topicStyles[c] ? 0.125 : null) }} onClick={() => toggleHighlight(c)} onMouseOver={() => mouseOverHighlight(c)} onMouseLeave={() => mouseOverHighlightFinish()}>
           <span onClick={() => onFocusHighlight(c)}>focus</span>
           {/*<span>prev</span>
           <span>next</span>*/}
           {c}
+          {topicCounts ? ` (${topicCounts[c]})` : ""}
         </span>
       </span>
     )) : ""}
