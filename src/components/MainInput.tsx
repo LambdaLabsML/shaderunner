@@ -12,7 +12,6 @@ import { useGlobalStorage } from '~util/useGlobalStorage';
 
 // in development mode we want to use persistent storage for debugging
 const useSessionStorage = process.env.NODE_ENV == "development" && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;
-console.log(process.env.NODE_ENV, process.env.PLASMO_PUBLIC_STORAGE)
 
 
 
