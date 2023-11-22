@@ -82,11 +82,12 @@ const Legend = ({tabId}) => {
        <span onClick={() => setTopicStyles({})}>all</span> / <span onClick={() => {setTopicStyles(Object.fromEntries(classifierData.classes_pos.map(c => [c, "no-highlight"])))}}>none</span>
     </span>
     {Array.isArray(classifierData.classes_pos) ? classifierData.classes_pos.map(c => (
-      <span key={c} style={{ backgroundColor: consistentColor(c, topicStyles && topicStyles[c] ? 0.125 : null) }} onClick={() => toggleHighlight(c)} onMouseOver={() => mouseOverHighlight(c)} onMouseLeave={() => mouseOverHighlightFinish()}>
-        <span onClick={() => onFocusHighlight(c)}>focus</span>
-        {/*<span>prev</span>
-        <span>next</span>*/}
-        {c}
+      <span key={c} className="topic"><span style={{ backgroundColor: consistentColor(c, topicStyles && topicStyles[c] ? 0.125 : null) }} onClick={() => toggleHighlight(c)} onMouseOver={() => mouseOverHighlight(c)} onMouseLeave={() => mouseOverHighlightFinish()}>
+          <span onClick={() => onFocusHighlight(c)}>focus</span>
+          {/*<span>prev</span>
+          <span>next</span>*/}
+          {c}
+        </span>
       </span>
     )) : ""}
     {retrievalQuery ? <span style={{ backgroundColor: consistentColor(retrievalQuery + " (retrieval)", topicStyles && topicStyles?._retrieval ? 0.125 : 1.0) }}>{retrievalQuery + " (retrieval)"}</span> : ""}

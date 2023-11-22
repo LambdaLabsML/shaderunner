@@ -50,7 +50,7 @@ $primary-color: #8136e2;
     textarea {
         border: none;
         font-size: 120%;
-        background: white;
+        //background: white;
         padding: 1em;
         border-radius: 4px;
         color: $primary-color;
@@ -233,11 +233,14 @@ $primary-color: #8136e2;
 // ------ //
 
 .ShadeRunner.Legend {
-
-  span {
-    padding: 0.25em 0.2em;
+  span.topic {
     border-radius: 0.4em;
-    cursor: pointer;
+    overflow: hidden;
+    & > span:first-of-type {
+      cursor: pointer;
+      padding: 0.25em 0.2em;
+      display: block;
+    }
   }
 }
 
@@ -316,4 +319,47 @@ $primary-color: #8136e2;
 }
 @keyframes rotate{
   to{ transform: rotate(360deg); }
+}
+
+
+// --------- //
+// Dark Mode //
+// --------- //
+
+@media (prefers-color-scheme: dark) {  
+  $background: rgba(53,54,58);
+  $textcolor: #bbb;
+
+  button.switch-option {
+    background: darken($background, 5%);
+    color: $textcolor;
+  }
+
+  .ShadeRunner.MainInput {
+    textarea {
+      background: darken($background, 5%);
+      color: lighten($textcolor, 20%);
+
+      &::placeholder {
+        color: darken($textcolor, 10%);
+      }
+    }
+  }
+
+  .ShadeRunner-Sidepanel {
+
+    .statusContainer {
+      color: $textcolor;
+    }
+  }
+
+  .ShadeRunner.Legend {
+    color: $textcolor;
+
+    & > span.topic {
+      color: black;
+      background: white;
+      border-radius: 0.4em;
+    }
+  }
 }

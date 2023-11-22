@@ -33,13 +33,17 @@
     "@types/react-dom": "18.2.7",
     "langchain": "^0.0.189",
     "prettier": "3.0.3",
-    "typescript": "5.2.2"
+    "sass": "^1.69.5",
+    "typescript": "5.2.2",
+    "vite-plugin-sass-dts": "^1.3.11"
   },
   "manifest": {
     "host_permissions": [
       "https://*/*"
     ],
-    "permissions": ["contextMenus"],
+    "permissions": [
+      "contextMenus"
+    ],
     "commands": {
       "_execute_action": {
         "suggested_key": {

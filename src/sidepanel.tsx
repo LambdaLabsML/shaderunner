@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import Logo from 'data-url:./assets/icon.png';
-import styleText from "data-text:./style.scss"
+import "style.scss"
 import Legend from '~components/Legend';
 import MainInput from '~components/MainInput';
 import CircularProgressBar from '~components/basic/CircularProgressBar';
@@ -29,12 +29,10 @@ const Sidepanel = () => {
   // Effects //
   // ======= //
 
-  // add shaderunner style file to sidepannel
+  // add darkmode background to sidepannel
   useEffect(() => {
     const style = document.createElement("style")
-    const styleDark = "body { background: rgba(32,33,36); }";
-    const styleLight = "";
-    style.textContent = `${styleLight} ${styleText}`
+    style.textContent = "@media (prefers-color-scheme: dark) { body { background: rgba(53,54,58); } }";
     window.document.head.appendChild(style);
   }, [])
 
