@@ -34,10 +34,13 @@ $primary-color: #8136e2;
 }
 
 
+// ---------- //
+// Main Input //
+// ---------- //
+
 .ShadeRunner.MainInput {
     display: flex;
     flex-direction: column;
-    margin: 2em 0;
 
     h1.title {
         color: $primary-color;
@@ -130,46 +133,14 @@ $primary-color: #8136e2;
     }
 }
 
-.editable-text span {
-    cursor: pointer;
-    border-bottom: 0px dashed $primary-color; /* Style to indicate it's editable */
-    padding: 2px 5px;
-    display: block;
-    min-width: 50px; /* Ensures a minimum width for shorter text */
-    font-size: 16px; /* Adjust as needed */
-  }
-  
-  .editable-text input {
-    box-shadow: none;
-    appearance: none; /* Remove default browser styling */
-    -moz-appearance: none; /* Firefox specific styling */
-    -webkit-appearance: none; /* Chrome, Safari specific styling */
-
-    font-size: 16px; /* Match font size with span */
-    border: none;
-    border-radius: 4px; /* Rounded corners for modern look */
-    padding: 5px 5px; /* Padding to match span's visual */
-    width: 100%; /* Fill the available width */
-    box-sizing: border-box; /* Include padding and border in the width */
-    outline: none; /* Remove focus outline for aesthetics */
-    background: lighten($primary-color, 10%);
-    color: white;
-
-    &:focus {
-        outline: none !important;
-        box-shadow: none;
-    }
-  }
 
   
-  /* Transition for a smooth appearance change */
-  .editable-text span, .editable-text input {
-    transition: all 0.2s ease-in-out;
-  }
-  
 
 
-// Settings.scss
+// -------- //
+// Settings //
+// -------- //
+
 .settings-container {
     display: flex;
     flex-direction: column;
@@ -227,22 +198,9 @@ $primary-color: #8136e2;
 
 
 
-
-// ------ //
-// Legend //
-// ------ //
-
-.ShadeRunner.Legend {
-  span.topic {
-    border-radius: 0.4em;
-    overflow: hidden;
-    & > span:first-of-type {
-      cursor: pointer;
-      padding: 0.25em 0.2em;
-      display: block;
-    }
-  }
-}
+// ----------- //
+// UI Elements //
+// ----------- //
 
 .switch-options {
   display: flex;
@@ -262,6 +220,69 @@ $primary-color: #8136e2;
   color: white;
 }
 
+.editable-text span {
+  cursor: pointer;
+  border-bottom: 0px dashed $primary-color; /* Style to indicate it's editable */
+  padding: 2px 5px;
+  display: block;
+  min-width: 50px; /* Ensures a minimum width for shorter text */
+  font-size: 16px; /* Adjust as needed */
+}
+
+.editable-text input {
+  box-shadow: none;
+  appearance: none; /* Remove default browser styling */
+  -moz-appearance: none; /* Firefox specific styling */
+  -webkit-appearance: none; /* Chrome, Safari specific styling */
+
+  font-size: 16px; /* Match font size with span */
+  border: none;
+  border-radius: 4px; /* Rounded corners for modern look */
+  padding: 5px 5px; /* Padding to match span's visual */
+  width: 100%; /* Fill the available width */
+  box-sizing: border-box; /* Include padding and border in the width */
+  outline: none; /* Remove focus outline for aesthetics */
+  background: lighten($primary-color, 10%);
+  color: white;
+
+  &:focus {
+      outline: none !important;
+      box-shadow: none;
+  }
+}
+
+/* Transition for a smooth appearance change */
+.editable-text span, .editable-text input {
+  transition: all 0.2s ease-in-out;
+}
+
+
+
+// ------ //
+// Legend //
+// ------ //
+
+.ShadeRunner.Legend {
+  gap: 0.5em;
+
+  div.topicContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2em;
+
+    div.topic {
+        border-radius: 0.4em;
+        overflow: hidden;
+    
+        &>span:first-of-type {
+          cursor: pointer;
+          padding: 0.25em 0.2em;
+          display: block;
+        }
+      }
+    }
+}
+
 
 
 // --------- //
@@ -271,7 +292,7 @@ $primary-color: #8136e2;
 .ShadeRunner-Sidepanel {
   display: flex;
   flex-direction: column;
-  gap: 1em;
+  gap: 3em;
 
   .statusContainer {
     display: grid;
@@ -356,7 +377,7 @@ $primary-color: #8136e2;
   .ShadeRunner.Legend {
     color: $textcolor;
 
-    & > span.topic {
+    div.topicContainer div.topic {
       color: black;
       background: white;
       border-radius: 0.4em;
