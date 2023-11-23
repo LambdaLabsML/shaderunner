@@ -278,29 +278,85 @@ $default-button-padding: 0.5rem 1rem;
 // --------- //
 
 .TopicLine {
-  display: flex;
-  background-color: white;
-  border-radius: 5px;
+  display: grid;
+  grid-template-columns: 3.5em 1fr 3em;
+  flex-direction: row;
 
-  color: black;
+  .highlight-wrapper {
+    display: flex;
+    flex-direction: row;
+    background-color: white;
+    border-radius: 5px;
+    color: black;
+  }
 
-  &.inactive {
+  .tool_buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    align-items: center;
+    gap: 0.2em;
+    flex-wrap: wrap;
+
+    .stacked {
+      display: flex;
+      flex-direction: column;
+    }
+  }
+
+  /*
+  .highlight-wrapper .tool_buttons {
+    gap: 0;
+    display: none;
+
+    &.active {
+      display: flex;
+    }
+
+    .bx {
+      border-radius: 5px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      height: 100%;
+      padding: 0 0.5em;
+
+      &:hover {
+        background: $primary-color;
+        color: white;
+      }
+    }
+  }
+  */
+
+  .tool_buttons .bx {
+    color: #888;
+    &:hover {
+      color: #ccc
+    }
+  }
+
+  &.inactive .tool_buttons .bx {
+    color: #555;
+    &:hover {
+      color: #555;
+    }
+  }
+
+  &.inactive .highlight-wrapper {
     background-color: rgba(0,0,0,1.0);
-
     &, & .bx {
       color: #fff;
     }
+  }
 
-    .left {
-      display: none;
+  &:hover .highlight-wrapper {
+    &, & .bx {
+      color: #444;
     }
   }
 
-  &:hover, &:hover .bx {
-    color: #444;
-  }
-
-  &.inactive:hover {
+  &.inactive:hover .highlight-wrapper {
     background-color: rgba(0,0,0,0.4);
     &, & .bx {
       color: #444;
@@ -308,21 +364,23 @@ $default-button-padding: 0.5rem 1rem;
   }
 
   .highlight {
+    width: 100%;
     border-radius: 5px;
     padding: $default-button-padding;
     cursor: pointer;
-    width: 100%;
-    height: 100%;
     display: flex;
     flex-direction: row;
+    align-items: center;
     
     &:hover {
       background-color: rgba(0, 0, 0, 0.4); // Adjust for hover state
     }
 
     span.right {
+      font-size: 80%;
       margin-left: auto;
     }
+
   }
 
   .bx {
@@ -447,23 +505,28 @@ $default-button-padding: 0.5rem 1rem;
   }
 
   .TopicLine {
-    background-color: rgba(255,255,255,1.0);
-    color: #333;
 
-    &.inactive, &.inactive .bx {
+    .highlight-wrapper {
+      background-color: rgba(255,255,255,1.0);
+      color: #333;
+    }
+
+    &.inactive .highlight-wrapper {
       background-color: rgba(255,255,255,0.0);
-      color: #fff;
+      &, & .bx {
+        color: #fff;
+      }
       text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
     }
   
-    &:hover {
+    &:hover .highlight-wrapper {
       background-color: rgba(255,255,255,0.6);
       &, & .bx {
         color: #000;
       }
     }
   
-    &.inactive:hover {
+    &.inactive:hover .highlight-wrapper{
       background-color: rgba(255,255,255,0.2);
       &, & .bx {
         color: #fff;

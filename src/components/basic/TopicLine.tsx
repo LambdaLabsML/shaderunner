@@ -1,44 +1,47 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Icon from './Icon';
 import { consistentColor } from '~util/DOM';
+import EditableText from './EditableText';
 
-const TopicLine = ({ topic, active, toggleHighlight, mouseOverHighlight, mouseOverHighlightFinish, onFocusHighlight, topicCounts }) => {
+const TopicLine = ({ topic, active, toggleHighlight, mouseOverHighlight, mouseOverHighlightFinish, onFocusHighlight, onTopicChange, onTopicDelete, onPrevious, onNext, extraInfo=undefined }) => {
+  const [ settingsActive, setSettingsActive ] = useState(false);
+  const [ editText, setEditText ] = useState(false);
 
-  const handleDelete = () => {
-    if (window.confirm("Are you sure you want to delete this item?")) {
-      // Add your delete logic here
-      console.log('Item deleted');
-    }
-  };
 
   return (
     <div key={topic} className={`TopicLine ${active ? '' : 'inactive'}`}>
-      <div 
-        className='highlight'
-        style={{ backgroundColor: consistentColor(topic) }} 
-        onClick={() => toggleHighlight(topic)} 
-        onMouseOver={() => mouseOverHighlight(topic)} 
-        onMouseLeave={() => mouseOverHighlightFinish()}
-      >
-        <span className="left onhover">
-          <Icon name="up-arrow" onClick={() => console.log('Left Arrow clicked')} />
-          <Icon name="down-arrow" onClick={() => console.log('Right Arrow clicked')} />
-        </span>
-        <span>
-          {topic}
-        </span>
-        <span className="right">
-          {topicCounts ? ` (${topicCounts[topic]})` : ""}
-          <span className="onhover">
-            <Icon name="cog" onClick={() => console.log('Left Arrow clicked')} />
-          </span>
-        </span>
+      <div className="tool_buttons">
+        <div className="stacked">
+          <Icon name="up-arrow" onClick={() => onPrevious(topic)} />
+          <Icon name="down-arrow" onClick={() => onNext(topic)} />
+        </div>
+        <Icon style="" name="radio-circle-marked" onClick={(ev) => onFocusHighlight(ev, topic)} />
       </div>
-      {/*<div>
-        <Icon name="edit" onClick={() => console.log('Edit clicked')} />
-        <Icon name="focus" onClick={(ev) => onFocusHighlight(ev, topic)} />
-        <Icon name="trash" onClick={handleDelete} />
-      </div>*/}
+      <div className='highlight-wrapper'>
+        <div 
+          className='highlight'
+          style={{ backgroundColor: consistentColor(topic) }} 
+          onClick={() => toggleHighlight(topic)} 
+          onMouseOver={() => mouseOverHighlight(topic)} 
+          onMouseLeave={() => mouseOverHighlightFinish()}
+        >
+          <EditableText text={topic} onSubmit={(newtopic) => {setEditText(false); onTopicChange(topic, newtopic)}} wrapped={false} editable={editText}/>
+          <span className="right">
+            {extraInfo ? ` (${extraInfo})` : ""}
+          </span>
+        </div>
+        {<div className={`tool_buttons ${settingsActive ? "active" : ""}`}>
+        </div>}
+      </div>
+      <div className="tool_buttons">
+        {settingsActive ? [
+          <Icon name="edit" onClick={() => setEditText(true)} />,
+          <Icon name="trash" onClick={() => onTopicDelete(topic)} />,
+          <Icon style="" name="x" onClick={() => setSettingsActive(!settingsActive)} />
+        ] : (
+          <Icon name="cog" onClick={() => setSettingsActive(!settingsActive)} />
+        )}
+      </div>
     </div>
   );
 };
