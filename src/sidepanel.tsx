@@ -6,6 +6,7 @@ import MainInput from '~components/MainInput';
 import CircularProgressBar from '~components/basic/CircularProgressBar';
 import { useGlobalStorage } from '~util/useGlobalStorage';
 import Modes from '~components/Modes';
+import {styleCSS} from '~components/basic/Icon';
 
 
 
@@ -33,7 +34,16 @@ const Sidepanel = () => {
   // add darkmode background to sidepannel
   useEffect(() => {
     const style = document.createElement("style")
-    style.textContent = "@media (prefers-color-scheme: dark) { body { background: rgba(53,54,58); } }";
+    style.textContent = `
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: rgba(53,54,58);
+      }
+    }";
+
+    ${styleCSS}
+    `
+
     window.document.head.appendChild(style);
   }, [])
 
