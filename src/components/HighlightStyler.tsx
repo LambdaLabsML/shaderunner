@@ -41,7 +41,7 @@ const HighlightStyler = ({tabId}) => {
 
             // use default setting unless we have a specific highlight setting given
             // i.e. if class is "active", use "strong-highlight" setting
-            const classSetting = topicStyles && c in topicStyles && activeTopic != c ? topicStyles[c] : activeTopic == c ? "strong-highlight" : defaultStyle;
+            const classSetting = topicStyles && c in topicStyles && activeTopic != c ? topicStyles[c] : activeTopic == c ? (topicStyles && topicStyles[c] == "no-highlight" ? "light-highlight" : "strong-highlight") : defaultStyle;
 
             if (mode == "focus" && classSetting == "no-highlight")
                 return `span.highlightclass-${i} {
@@ -51,6 +51,11 @@ const HighlightStyler = ({tabId}) => {
             if (classSetting == "strong-highlight")
                 return `span.highlightclass-${i} {
                             background: ${consistentColor(c)};
+                        }`
+
+            if (classSetting == "light-highlight")
+                return `span.highlightclass-${i} {
+                            background: ${consistentColor(c, 0.35)};
                         }`
 
             if (classSetting == "highlight")
