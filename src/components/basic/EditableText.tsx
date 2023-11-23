@@ -1,8 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
-const EditableText = ({ text, onSubmit }) => {
-  const [isEditing, setIsEditing] = useState(false);
+const EditableText = ({ text, onSubmit, wrapped=true, editable=undefined }) => {
+  const [isEditing, setIsEditing] = useState(editable);
   const [editedText, setEditedText] = useState(typeof text == "object" ? "" : text);
+
+  useEffect(() => {
+    if (editable !== undefined)
+      setIsEditing(editable)
+  }, [editable]);
 
   const handleTextClick = () => {
     setIsEditing(true);
@@ -17,19 +22,33 @@ const EditableText = ({ text, onSubmit }) => {
     onSubmit(editedText);
   };
 
+  const handleEnter = (ev) => {
+    if (ev.keyCode == 13 && ev.shiftKey == false) {
+      ev.preventDefault(); 
+      onSubmit(editedText);
+    }
+  };
+
+  // note: we dont want edits on the text if parent component has set edit mode themselves
+  const textHtml = isEditing ? (
+    <input
+      type="text"
+      value={editedText}
+      onKeyDown={handleEnter}
+      onChange={handleInputChange}
+      onBlur={handleBlur}
+      autoFocus
+    />
+  ) : (
+    <span onClick={editable === undefined ? handleTextClick : null}>{text}</span>
+  );
+
+  if (!wrapped)
+    return textHtml;
+
   return (
     <div className="editable-text">
-      {isEditing ? (
-        <input
-          type="text"
-          value={editedText}
-          onChange={handleInputChange}
-          onBlur={handleBlur}
-          autoFocus
-        />
-      ) : (
-        <span onClick={handleTextClick}>{text}</span>
-      )}
+      {textHtml}
     </div>
   );
 };
