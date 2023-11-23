@@ -1,6 +1,5 @@
 import React from 'react';
 import { useGlobalStorage } from '~util/useGlobalStorage';
-import { consistentColor } from '~util/DOM'
 import SwitchInput from "~components/basic/SwitchInput";
 
 
@@ -14,8 +13,7 @@ const Modes = ({tabId}) => {
   // render //
   // ------ //
 
-  return <div className="ShadeRunner Modes">
-    <div className="header">Modes</div>
+  return <div className="Modes">
     <SwitchInput
         label=""
         options={['highlight', "focus"]}

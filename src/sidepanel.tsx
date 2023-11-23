@@ -7,6 +7,7 @@ import CircularProgressBar from '~components/basic/CircularProgressBar';
 import { useGlobalStorage } from '~util/useGlobalStorage';
 import Modes from '~components/Modes';
 import {styleCSS} from '~components/basic/Icon';
+import CollapsibleBox from '~components/basic/CollapsibleBox';
 
 
 
@@ -58,12 +59,16 @@ const Sidepanel = () => {
       <StatusIndicator name="classifier" status={statusClassifier}/>
       <StatusIndicator name="highlight" status={statusHighlight}/>
     </div>
-    <MainInput tabId={tabId}/>
-    <Legend tabId={tabId}></Legend>
-    <Modes tabId={tabId}/>
-    <div className="logoContainer">
+    <CollapsibleBox title="What to Highlight">
+      <MainInput tabId={tabId}/>
+      <Modes tabId={tabId}/>
+    </CollapsibleBox>
+    <CollapsibleBox title="Interesting Topics" className="Legend">
+      <Legend tabId={tabId}></Legend>
+    </CollapsibleBox>
+    {/*<div className="logoContainer">
       <img className="thinking_logo" width="30" src={Logo}/>
-    </div>
+    </div>*/}
   </div>
 }
 

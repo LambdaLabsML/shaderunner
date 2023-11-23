@@ -107,30 +107,31 @@ const Legend = ({tabId}) => {
   const numStyles = topicStyles ? Object.keys(topicStyles).length : 0;
   const selected = numStyles == classifierData.classes_pos.length ? "hide all" : numStyles == 0 ? "show all" : "custom selection"
 
-  return <div className="ShadeRunner Legend">
-    <div className="header">Legend</div>
+  return [
     <SwitchInput
       label=""
+      key="order_selector"
       options={['gpt order', "sort by occurences"]}
       selected={sortBy || 'gpt order'}
       onChange={(value: string) => setSortBy(value)}
-    />
+    />,
     <SwitchInput
       label=""
+      key="show_selector"
       options={['show all', ...(selected == "custom selection" ? ["custom selection"] : []), "hide all"]}
       selected={selected}
       onChange={(value: string) => {
         if (value == "show all") setTopicStyles({})
         if (value == "hide all") setTopicStyles(Object.fromEntries(classifierData.classes_pos.map(c => [c, "no-highlight"])))
       }}
-    />
-    <div className="topicContainer">
+    />,
+    <div className="topicContainer" key="topic_container">
       {Array.isArray(classifierData.classes_pos) ? classifierData.classes_pos.sort(sortBy == "sort by occurences" ? sortByCounts : undefined).map(c => (
         <TopicLine topic={c} extraInfo={topicCounts ? topicCounts[c] : null} active={!topicStyles || !topicStyles[c]} {...topicLineSettings}></TopicLine>
       )) : ""}
       {/*retrievalQuery ? <span style={{ backgroundColor: consistentColor(retrievalQuery + " (retrieval)", topicStyles && topicStyles?._retrieval ? 0.125 : 1.0) }}>{retrievalQuery + " (retrieval)"}</span> : ""*/}
     </div>
-  </div>
+  ];
 }
 
 

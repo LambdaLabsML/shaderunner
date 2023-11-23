@@ -87,8 +87,7 @@ const MainInput = ({tabId}) => {
     // render //
     // ------ //
 
-    return <div className="ShadeRunner MainInput">
-      <div className="header">What to Highlight</div>
+    return <div className="MainInput">
       <textarea
         disabled={!title}
         className="text-box"
