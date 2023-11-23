@@ -14,9 +14,9 @@ ${BoxiconsCSS}
 }
 `;
 
-const Icon = ({name, onClick=(ev) => {}}) => {
+const Icon = ({name, style="s", onClick=(ev) => {}}) => {
   return (
-    <i className={`bx bxs-${name}`} onClick={onClick}></i>
+    <i className={`bx bx${style}-${name}`} onClick={onClick}></i>
   );
 };
 
