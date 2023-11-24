@@ -47,6 +47,16 @@ const HighlightStyler = ({tabId}) => {
             // i.e. if class is "active", use "strong-highlight" setting
             const classSetting = isActive ? activeStyle : topicStyles && c in topicStyles ? topicStyles[c] : isPosClass ? defaultStyle : defaultNegStyle;
 
+            if (mode == "testset helper")
+                return `span.shaderunner-highlight[splitid] {
+                    background: ${consistentColor("")};
+                }
+
+                span.shaderunner-highlight[splitid].good {
+                    background: ${consistentColor("testing")};
+                }
+                ` 
+
             if (mode == "focus" && classSetting == "no-highlight")
                 return `span.highlightclass-${i} {
                             display: none;

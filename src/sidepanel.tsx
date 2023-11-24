@@ -8,6 +8,8 @@ import { useGlobalStorage } from '~util/useGlobalStorage';
 import Modes from '~components/Modes';
 import {styleCSS} from '~components/basic/Icon';
 import CollapsibleBox from '~components/basic/CollapsibleBox';
+import Button from '~components/basic/Button';
+import TestsetHelperControls from '~components/TestsetHelperControls';
 
 
 
@@ -25,7 +27,7 @@ const StatusIndicator = ({name, status, size=4}) => {
 // mount in sidepanel
 const Sidepanel = () => {
   const tabId = new URL(window.location.href).searchParams.get("tabId")
-  const [[statusEmbedding], [statusClassifier], [statusHighlight]] = useGlobalStorage(tabId, "status_embedding", "status_classifier", "status_highlight")
+  const [[statusEmbedding], [statusClassifier], [statusHighlight], [highlightMode]] = useGlobalStorage(tabId, "status_embedding", "status_classifier", "status_highlight", "highlightMode")
 
 
   // ======= //
@@ -63,12 +65,18 @@ const Sidepanel = () => {
       <MainInput tabId={tabId}/>
       <Modes tabId={tabId}/>
     </CollapsibleBox>
-    <CollapsibleBox title="Interesting Topics" className="Legend">
-      <Legend tabId={tabId} topics="classes_pos" flipVisibility={false}></Legend>
+    {highlightMode == "testset helper" ? (
+    <CollapsibleBox title="TestsetHelper">
+      <TestsetHelperControls tabId={tabId}></TestsetHelperControls>
     </CollapsibleBox>
-    <CollapsibleBox title="Outlier Topics" className="Legend" open={false}>
-      <Legend tabId={tabId} topics="classes_neg" flipVisibility={true}></Legend>
-    </CollapsibleBox>
+    ) : [
+      <CollapsibleBox key="interesting_topics" title="Interesting Topics" className="Legend">
+        <Legend tabId={tabId} topics="classes_pos" flipVisibility={false}></Legend>
+      </CollapsibleBox>,
+      <CollapsibleBox key="outlier_topics" title="Outlier Topics" className="Legend" open={false}>
+        <Legend tabId={tabId} topics="classes_neg" flipVisibility={true}></Legend>
+      </CollapsibleBox>
+    ]}
     {/*<div className="logoContainer">
       <img className="thinking_logo" width="30" src={Logo}/>
     </div>*/}

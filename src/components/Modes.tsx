@@ -2,6 +2,7 @@ import React from 'react';
 import { useGlobalStorage } from '~util/useGlobalStorage';
 import SwitchInput from "~components/basic/SwitchInput";
 
+const DEV = process.env.NODE_ENV == "development";
 
 const Modes = ({tabId}) => {
   const [
@@ -16,7 +17,7 @@ const Modes = ({tabId}) => {
   return <div className="Modes">
     <SwitchInput
         label=""
-        options={['highlight', "focus"]}
+        options={['highlight', "focus", ...(DEV ? ["testset helper"] : [])]}
         selected={mode || "highlight"}
         onChange={(value: string) => setMode(value)}
       />

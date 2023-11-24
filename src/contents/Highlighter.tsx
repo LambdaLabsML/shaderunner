@@ -3,15 +3,16 @@ import { getMainContent, splitContent } from '~util/extractContent'
 import { textNodesUnderElem, findTextSlow, findTextFast, highlightText, resetHighlights, textNodesNotUnderHighlight, surroundTextNode } from '~util/DOM'
 import { computeEmbeddingsLocal } from '~util/embedding'
 import { sendToBackground } from "@plasmohq/messaging"
-import type { VectorStore } from "langchain/dist/vectorstores/base";
 import { useStorage } from "@plasmohq/storage/hook";
 import { useSessionStorage as _useSessionStorage, arraysAreEqual } from '~util/misc'
 import { useActiveState } from '~util/activeStatus'
 import HighlightStyler from '~components/HighlightStyler';
 import { useGlobalStorage } from '~util/useGlobalStorage';
-import { assert } from 'console';
 import Scroller from '~components/Scroller';
-const useSessionStorage = process.env.NODE_ENV == "development" && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;
+import TestsetHelper from '~components/TestsetHelper';
+
+const DEV = process.env.NODE_ENV == "development";
+const useSessionStorage = DEV && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;
 type classEmbeddingType = {allclasses: string[], classStore: any};
 
 
@@ -89,7 +90,7 @@ const Highlighter = () => {
             highlightUsingClasses()
           }
           if (textretrieval) {
-            highlightUsingRetrieval(retrievalQuery)
+            //highlightUsingRetrieval(retrievalQuery)
           }
         } catch (error) {
           console.error('Error in applyHighlight:', error);
@@ -240,6 +241,8 @@ const Highlighter = () => {
         const replacedNodes = highlightText(nonWhiteTexts, textNodesSubset, highlightClass, (span) => {
           span.title = closestClass + " " + closestScore
           span.setAttribute("splitid", topicCounts[closestClass])
+          if (DEV)
+            span.setAttribute("splitid_total", i);
         });
         topicCounts[closestClass] += 1
         currentTextNodes = currentTextNodes.slice(to_node_pos);
@@ -249,6 +252,10 @@ const Highlighter = () => {
       // finally, let's highlight all textnodes that are not highlighted
       const emptyTextNodes = textNodesNotUnderHighlight(document.body);
       emptyTextNodes.forEach(node => surroundTextNode(node, "normaltext"))
+
+      // in DEV mode, we also save the all the data
+      if (DEV)
+        setGlobalStorage({ DEV_highlighterData: { url, classifierData, splits }});
 
       setTopicCounts(topicCounts)
       setScores([scores_plus, scores_diffs])
@@ -290,6 +297,7 @@ const Highlighter = () => {
     return [
       <HighlightStyler key="styler" tabId={tabId}/>,
       <Scroller key="scroller" tabId={tabId}/>,
+      DEV ? <TestsetHelper key="testsethelper" tabId={tabId}/> : "",
     ]
 };
 
