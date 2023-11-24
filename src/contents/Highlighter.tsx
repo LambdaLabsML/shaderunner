@@ -214,7 +214,7 @@ const Highlighter = () => {
           if (texts.length == 0) {
             [texts, from_node_pos, to_node_pos] = findTextSlow(currentTextNodes, split);
             if (texts.length == 0) {
-              if (verbose) console.log("ERROR: text not found", split)
+              console.log("ERROR: text not found:", split)
             }
           }
           if (to_node_pos >= 0) {
