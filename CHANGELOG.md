@@ -2,6 +2,31 @@
 
 
 
+## ShadeRunner Version 0.4.0
+
+**Features**:
+- complete reimplementation / restructure of project (files, methods & functionality)
+- complete redesign (with dark-mode!)
+- plugin sidepanel instead of embedded controls
+- batch-wise embedding
+- improved speed of highlighting
+- next/prev highlight buttons
+
+**Minor**:
+- added ui for outlier topics
+- showing dynamic status of computations
+- show number of finds per class
+- caching of class embeddings
+- simple testset helper added
+
+**Code**:
+- many ts type mismatches fixed
+- detached messaging from position of code using useGlobalStorage
+- added boxicons icons
+
+
+-------
+
 
 ## ShadeRunner Version 0.3.0
 
