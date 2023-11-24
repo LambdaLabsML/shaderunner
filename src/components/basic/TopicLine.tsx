@@ -3,7 +3,7 @@ import Icon from './Icon';
 import { consistentColor } from '~util/DOM';
 import EditableText from './EditableText';
 
-const TopicLine = ({ topic, active, toggleHighlight, mouseOverHighlight, mouseOverHighlightFinish, onFocusHighlight, onTopicChange, onTopicDelete, onPrevious, onNext, extraInfo=undefined }) => {
+const TopicLine = ({ topic, active, toggleHighlight, mouseOverHighlight, mouseOverHighlightFinish, onFocusHighlight, onTopicChange, onTopicDelete, onNextPrev, extraInfo=undefined }) => {
   const [ settingsActive, setSettingsActive ] = useState(false);
   const [ editText, setEditText ] = useState(false);
 
@@ -12,8 +12,8 @@ const TopicLine = ({ topic, active, toggleHighlight, mouseOverHighlight, mouseOv
     <div key={topic} className={`TopicLine ${active ? '' : 'inactive'}`}>
       <div className="tool_buttons">
         <div className="stacked">
-          <Icon name="up-arrow" onClick={() => onPrevious(topic)} />
-          <Icon name="down-arrow" onClick={() => onNext(topic)} />
+          <Icon name="up-arrow" onClick={() => onNextPrev(topic, false)} />
+          <Icon name="down-arrow" onClick={() => onNextPrev(topic, true)} />
         </div>
         <Icon style="" name="radio-circle-marked" onClick={(ev) => onFocusHighlight(ev, topic)} />
       </div>

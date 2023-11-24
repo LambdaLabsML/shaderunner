@@ -44,6 +44,7 @@ const Legend = ({tabId, topics, flipVisibility}) => {
   // active current, hide all others
   const onFocusHighlight = (ev, topic: string) => {
     ev.stopPropagation();
+    setScrollerCommand(null)
     setGlobalStorage({
       highlightActiveTopic: topic,
       highlightActiveStyle: "highlight",
@@ -54,6 +55,7 @@ const Legend = ({tabId, topics, flipVisibility}) => {
 
   // active current, dim all others
   const mouseOverHighlight = (topic: string) => {
+    setScrollerCommand(null)
     setGlobalStorage({
       highlightActiveTopic: topic,
       highlightDefaultStyle: flipVisibility ? null : "dim-highlight",
@@ -64,6 +66,7 @@ const Legend = ({tabId, topics, flipVisibility}) => {
 
   // restore state before mouseOver
   const mouseOverHighlightFinish = () => {
+    setScrollerCommand(null)
     setGlobalStorage({
       highlightActiveTopic: null,
       highlightDefaultStyle: null,
@@ -73,6 +76,7 @@ const Legend = ({tabId, topics, flipVisibility}) => {
 
   // hide topic
   const toggleHighlight = (topic: string) => {
+    setScrollerCommand(null)
     let newTopicStyles = {};
     if (topicStyles && topicStyles[topic]) {
       let { [topic]: removed, ..._newTopicStyles } = topicStyles;

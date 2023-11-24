@@ -10,6 +10,7 @@ import { useActiveState } from '~util/activeStatus'
 import HighlightStyler from '~components/HighlightStyler';
 import { useGlobalStorage } from '~util/useGlobalStorage';
 import { assert } from 'console';
+import Scroller from '~components/Scroller';
 const useSessionStorage = process.env.NODE_ENV == "development" && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;
 type classEmbeddingType = {allclasses: string[], classStore: any};
 
@@ -236,8 +237,11 @@ const Highlighter = () => {
         const nonWhiteTexts = texts.filter(t => t.trim())
         const textNodesSubset = currentTextNodes.slice(from_node_pos, to_node_pos).filter(t => t.textContent.trim());
         const highlightClass = class2Id[closestClass];
+        const replacedNodes = highlightText(nonWhiteTexts, textNodesSubset, highlightClass, (span) => {
+          span.title = closestClass + " " + closestScore
+          span.setAttribute("splitid", topicCounts[closestClass])
+        });
         topicCounts[closestClass] += 1
-        const replacedNodes = highlightText(nonWhiteTexts, textNodesSubset, highlightClass, closestClass + " " + closestScore);
         currentTextNodes = currentTextNodes.slice(to_node_pos);
         currentTextNodes.unshift(replacedNodes.pop())
       }
@@ -253,6 +257,7 @@ const Highlighter = () => {
 
 
     // mark sentences based on retrieval
+    /*
     const highlightUsingRetrieval = async (query, mode = "sentences") => {
       if (!query) return;
 
@@ -280,8 +285,12 @@ const Highlighter = () => {
         highlightText(texts, nodes, "retrieval", 1.0);
       }
     }
+    */
 
-    return <HighlightStyler tabId={tabId}/>
+    return [
+      <HighlightStyler key="styler" tabId={tabId}/>,
+      <Scroller key="scroller" tabId={tabId}/>,
+    ]
 };
 
 export default Highlighter;

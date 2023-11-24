@@ -178,7 +178,7 @@ function findTextFast(textNodes, sentence_str): [string[], number, number] {
 
 const defaultHighlightClass = 'shaderunner-highlight'
 
-function highlightText(texts, nodes, highlightClass, title=null, markingClass = defaultHighlightClass) {
+function highlightText(texts, nodes, highlightClass, transform=(el) => {}, markingClass = defaultHighlightClass) {
   if (nodes.length !== texts.length) {
     throw new Error('The length of nodes and texts should be the same.');
   }
@@ -206,8 +206,7 @@ function highlightText(texts, nodes, highlightClass, title=null, markingClass = 
         span.textContent = text;
         span.classList.add(markingClass); // Add a specific class for easy identification
         span.classList.add(`highlightclass-${highlightClass}`); // Add a specific class for easy identification
-        if (title)
-          span.title = title
+        transform(span)
         node.parentNode.insertBefore(span, node);
         newNodes.push(span.childNodes[0]);
         

@@ -76,7 +76,7 @@ const HighlightStyler = ({tabId}) => {
         }).join("\n")
 
         // focus mode: disable all non-header normal text
-        const focusStyle = (mode != "focus") ? "" : `
+        const focusModeStyle = (mode != "focus") ? "" : `
             h1 span.highlightclass-normaltext, h2 span.highlightclass-normaltext, h3 span.highlightclass-normaltext, h4 span.highlightclass-normaltext, h5 span.highlightclass-normaltext, h6 span.highlightclass-normaltext {
                 display: inline;
             }
@@ -86,8 +86,14 @@ const HighlightStyler = ({tabId}) => {
             }
         `
 
+        const scrollFocusStyle = `
+            span.shaderunner-highlight.focused {
+                text-shadow: 0 0 10px yellow;
+            }
+        ` 
+
         // apply styles
-        styleEl.textContent = focusStyle + colorStyle
+        styleEl.textContent = focusModeStyle + colorStyle + scrollFocusStyle
     }, [classifierData.classes_pos, styleEl, highlightMode, highlightDefaultStyle, activeTopic, topicStyles])
 
 
