@@ -152,19 +152,20 @@ const Legend = ({tabId, topics, flipVisibility}) => {
       options={['show all', 'hide all']}
       selected={selected}
       onChange={(value: string) => {
+        const _topicStyles = topicStyles || {}
         const overwriteStyles = Object.fromEntries(classifierData[topics].map(c => [c, flipVisibility ? "highlight" : "no-highlight"]))
-        const filteredTopicStyles = Object.fromEntries(Object.entries(topicStyles).filter(([c]) => !classifierData[topics].includes(c)))
+        const filteredTopicStyles = Object.fromEntries(Object.entries(_topicStyles).filter(([c]) => !classifierData[topics].includes(c)))
         if (flipVisibility) {
-          if (value == "show all") setTopicStyles({...topicStyles, ...overwriteStyles})
+          if (value == "show all") setTopicStyles({..._topicStyles, ...overwriteStyles})
           if (value == "hide all") setTopicStyles(filteredTopicStyles)
         } else {
           if (value == "show all") setTopicStyles(filteredTopicStyles)
-          if (value == "hide all") setTopicStyles({...topicStyles, ...overwriteStyles})
+          if (value == "hide all") setTopicStyles({..._topicStyles, ...overwriteStyles})
         }
       }}
     />,
     <div className="topicContainer" key={topics+"topic_container"}>
-      {Array.isArray(classifierData[topics]) ? classifierData[topics].sort(sortBy == "sort by occurences" ? sortByCounts : undefined).map(c => (
+      {Array.isArray(classifierData[topics]) ? classifierData[topics].filter(c => c).sort(sortBy == "sort by occurences" ? sortByCounts : undefined).map(c => (
         <TopicLine key={c} topic={c} extraInfo={topicCounts ? topicCounts[c] : null} active={topicIsActive(c, topicStyles) || c == activeTopic} {...topicLineSettings}></TopicLine>
       )) : ""}
       {/*retrievalQuery ? <span style={{ backgroundColor: consistentColor(retrievalQuery + " (retrieval)", topicStyles && topicStyles?._retrieval ? 0.125 : 1.0) }}>{retrievalQuery + " (retrieval)"}</span> : ""*/}
