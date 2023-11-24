@@ -23,7 +23,6 @@ const tabUpdated = tabId => {
         const url = new URL(tab.url).hostname; // Normalize URL
         activeURLs[url] = isActive;
         await setIconBadge(isActive)
-        const tabId = tab.id;
         await chrome.sidePanel.setOptions({
             tabId,
             path: 'sidepanel.html?tabId='+tab.id
@@ -32,13 +31,7 @@ const tabUpdated = tabId => {
 }
 chrome.tabs.onActivated.addListener(activeInfo => tabUpdated(activeInfo.tabId))
 chrome.tabs.onUpdated.addListener(tabUpdated)
-chrome.tabs.onRemoved.addListener((tabId) => {
-    chrome.tabs.get(tabId, async function(tab) {
-        const url = new URL(tab.url).hostname; // Normalize URL
-        if (url in activeURLs)
-            delete activeURLs[url];
-    })
-})
+
 
 // listen for change of activeURLs to register the activeTab as well
 // note: to be deleted once the bug has been resolved
