@@ -99,6 +99,11 @@ The context of the query should guide the classification, ensuring sentences are
 The number of negative topics may be higher than the number of positive topics.
 For best results: balance the abstraction level of all topics to be more or less equal.
 
+To balance abstraction level:
+- broad scopes mark general topics as 'interesting'
+- narrow scopes mark very specific topics as 'interesting'. if you have an idea what the answer is, use some forumlations of this answer as topics
+- keep in mind that a large number of outlier topics prevents false positives. if overused, however, it may increase false negatives as well.
+
 # Training Example
 URL: www.llmperformance.com/2020s-trends
 Title: LLM Performance Metrics and Improvements in the 2020s
@@ -123,8 +128,16 @@ Title: Rabin-Karp string search algorithm
 Query: Core Idea
 Scope: narrow (interesting are only few sentences)
 Thought: Since the page is about the Rabin-Karp algorithm and the user asks for it's core idea, I need to think around the corner to highlight the specific sentences. In this case I should reference hashing and string matching. At the same time I add close specific topics to the negative class to compensate for false positives.
-Interesting Class Topics: Core Idea and Trick (Rolling Hash Mechanism), String Matching Efficiency, Specifics of Algorithm Implementation, Performance Analysis or Complexity (O-notation)
+Interesting Class Topics: Core Idea and Trick (Rolling Hash Mechanism), Implementation of the Rabin-Karp Algorithm
 Outlier Class Topics: Hashing, String Matching, Algorithm History, Algorithm Theory, String Matching Algorithms, Usage, Related Algorithms, Code Expression, Programming in C++, Site Navigation, External Links
+
+URL: www.spaceexplorationnews.com/moon-landing
+Title: The History of Moon Landings
+Query: Source of "The Eagle has landed" quote
+Scope: super-narrow (looking for specific information)
+Thought: The user is specifically looking for the source of the quote "The Eagle has landed". Sentences that directly discuss this quote, its context, or its origin are 'interesting'. The focus should be extremely narrow, centered on the quote and its immediate context.
+Interesting Class Topics: "The Eagle has landed", Apollo 11 Moon Landing Quote
+Outlier Class Topics: General Moon Landing History, Other Space Missions, Astronaut Biographies, Space Exploration Technology, Future Moon Missions, Advertisements, External Links, Site Navigation
 
 # Incoming User Request (always use training example template)
 URL: ${url}
