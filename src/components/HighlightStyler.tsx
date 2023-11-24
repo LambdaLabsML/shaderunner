@@ -9,7 +9,7 @@ const useSessionStorage = process.env.NODE_ENV == "development" && process.env.P
 
 
 const HighlightStyler = ({tabId}) => {
-    const [ [highlightMode], [highlightDefaultStyle], [highlightActiveStyle], [activeTopic], [topicStyles] ] = useGlobalStorage(tabId, "highlightMode", "highlightDefaultStyle", "highlightActiveStyle", "highlightActiveTopic", "highlightTopicStyles")
+    const [ [highlightMode], [highlightDefaultStyle], [highlightDefaultNegStyle], [highlightActiveStyle], [activeTopic], [topicStyles] ] = useGlobalStorage(tabId, "highlightMode", "highlightDefaultStyle", "highlightDefaultNegStyle", "highlightActiveStyle", "highlightActiveTopic", "highlightTopicStyles")
     const [ classifierData ] = useSessionStorage("classifierData:"+tabId, {});
     const [ styleEl, setStyleEl ] = useState(null);
 
@@ -34,6 +34,7 @@ const HighlightStyler = ({tabId}) => {
 
         // default / fallback style
         const defaultStyle = highlightDefaultStyle || "highlight";
+        const defaultNegStyle = highlightDefaultNegStyle || "no-highlight";
         const activeStyle = highlightActiveStyle || "highlight";
 
         // create class for each pos-class
@@ -44,7 +45,7 @@ const HighlightStyler = ({tabId}) => {
 
             // use default setting unless we have a specific highlight setting given
             // i.e. if class is "active", use "strong-highlight" setting
-            const classSetting = isActive ? activeStyle : topicStyles && c in topicStyles ? topicStyles[c] : isPosClass ? defaultStyle : "no-highlight";
+            const classSetting = isActive ? activeStyle : topicStyles && c in topicStyles ? topicStyles[c] : isPosClass ? defaultStyle : defaultNegStyle;
 
             if (mode == "focus" && classSetting == "no-highlight")
                 return `span.highlightclass-${i} {

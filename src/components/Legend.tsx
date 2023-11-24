@@ -19,9 +19,11 @@ const Legend = ({tabId, topics, flipVisibility}) => {
     [ defaultStyle ],
     [ activeTopicStyle  ],
     [ topicCounts ],
+    [ , setScrollerCommand ],
     [ setGlobalStorage ]
-  ] = useGlobalStorage(tabId, "highlightTopicStyles", "highlightActiveTopic", "highlightActiveStyle", "highlightDefaultStyle", "topicCounts")
+  ] = useGlobalStorage(tabId, "highlightTopicStyles", "highlightActiveTopic", "highlightActiveStyle", "highlightDefaultStyle", "topicCounts", "ScrollerCommand")
   const [ sortBy, setSortBy ] = useState(undefined)
+  const allclasses = classifierData && classifierData.classes_pos ? [...classifierData.classes_pos, ...classifierData.classes_neg] : [];
 
 
 
@@ -30,7 +32,7 @@ const Legend = ({tabId, topics, flipVisibility}) => {
   // ------ //
   const topicIsActive = (topic: string, _topicStyles: any) => {
     if (flipVisibility)
-      return !_topicStyles || (topic in _topicStyles) && _topicStyles[topic] != "no-highlight"
+      return _topicStyles && topic in _topicStyles && _topicStyles[topic] != "no-highlight"
     else
       return !_topicStyles || !(topic in _topicStyles && defaultStyle != "no-highlight") || _topicStyles[topic] == "highlight"
   }
@@ -54,7 +56,8 @@ const Legend = ({tabId, topics, flipVisibility}) => {
   const mouseOverHighlight = (topic: string) => {
     setGlobalStorage({
       highlightActiveTopic: topic,
-      highlightDefaultStyle: "dim-highlight",
+      highlightDefaultStyle: flipVisibility ? null : "dim-highlight",
+      highlightDefaultNegStyle: flipVisibility ? "dim-highlight" : null,
       highlightActiveStyle: topicIsActive(topic, topicStyles) ? "strong-highlight" : "light-highlight",
     })
   }
@@ -64,6 +67,7 @@ const Legend = ({tabId, topics, flipVisibility}) => {
     setGlobalStorage({
       highlightActiveTopic: null,
       highlightDefaultStyle: null,
+      highlightDefaultNegStyle: null,
     })
   }
 
@@ -105,15 +109,14 @@ const Legend = ({tabId, topics, flipVisibility}) => {
     setClassifierData(classifierData);
   }
 
-  // jump to next topic occurence
-  const onNext = (topic) => {
+  // jump to next/previous topic occurence
+  const onNextPrev = (topic: string, next: boolean) => {
+    const id = allclasses.indexOf(topic)
+    setGlobalStorage({highlightDefaultStyle: "dim-highlight"})
+    setScrollerCommand({"selector": "span.shaderunner-highlight.highlightclass-"+id, "cmd": next ? "next" : "previous"})
   }
 
-  // jump to previous topic occurence
-  const onPrevious = (topic) => {
-  }
-
-  const topicLineSettings = {toggleHighlight, onFocusHighlight, mouseOverHighlight, mouseOverHighlightFinish, onTopicChange, onTopicDelete, onPrevious, onNext}
+  const topicLineSettings = {toggleHighlight, onFocusHighlight, mouseOverHighlight, mouseOverHighlightFinish, onTopicChange, onTopicDelete, onNextPrev}
 
 
   // ------ //
