@@ -10,16 +10,30 @@ import TopicLine from './basic/TopicLine';
 const useSessionStorage = process.env.NODE_ENV == "development" && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;
 
 
-const Legend = ({tabId}) => {
+const Legend = ({tabId, topics, flipVisibility}) => {
   const [retrievalQuery] = useSessionStorage("retrievalQuery:"+tabId, null);
   const [classifierData, setClassifierData] = useSessionStorage("classifierData:"+tabId, {});
   const [
     [ topicStyles, setTopicStyles ],
+    [ activeTopic ],
+    [ defaultStyle ],
+    [ activeTopicStyle  ],
     [ topicCounts ],
     [ setGlobalStorage ]
-  ] = useGlobalStorage(tabId, "highlightTopicStyles", "topicCounts")
+  ] = useGlobalStorage(tabId, "highlightTopicStyles", "highlightActiveTopic", "highlightActiveStyle", "highlightDefaultStyle", "topicCounts")
   const [ sortBy, setSortBy ] = useState(undefined)
 
+
+
+  // ------ //
+  // helper //
+  // ------ //
+  const topicIsActive = (topic: string, _topicStyles: any) => {
+    if (flipVisibility)
+      return !_topicStyles || (topic in _topicStyles) && _topicStyles[topic] != "no-highlight"
+    else
+      return !_topicStyles || !(topic in _topicStyles && defaultStyle != "no-highlight") || _topicStyles[topic] == "highlight"
+  }
 
   // --------- //
   // functions //
@@ -30,8 +44,9 @@ const Legend = ({tabId}) => {
     ev.stopPropagation();
     setGlobalStorage({
       highlightActiveTopic: topic,
-      highlightDefaultStyle: "highlight",
-      highlightTopicStyles: Object.fromEntries(classifierData.classes_pos.filter(c => c != topic).map((c: string) => [c, "no-highlight"]))
+      highlightActiveStyle: "highlight",
+      highlightDefaultStyle: "no-highlight",
+      highlightTopicStyles: {...Object.fromEntries(classifierData.classes_pos.map(c => [c, "no-highlight"])), ...{[topic]: "highlight"}}
     })
   }
 
@@ -39,7 +54,8 @@ const Legend = ({tabId}) => {
   const mouseOverHighlight = (topic: string) => {
     setGlobalStorage({
       highlightActiveTopic: topic,
-      highlightDefaultStyle: "dim-highlight"
+      highlightDefaultStyle: "dim-highlight",
+      highlightActiveStyle: topicIsActive(topic, topicStyles) ? "strong-highlight" : "light-highlight",
     })
   }
 
@@ -47,19 +63,23 @@ const Legend = ({tabId}) => {
   const mouseOverHighlightFinish = () => {
     setGlobalStorage({
       highlightActiveTopic: null,
-      highlightDefaultStyle: null
+      highlightDefaultStyle: null,
     })
   }
 
   // hide topic
   const toggleHighlight = (topic: string) => {
-    setTopicStyles(old => {
-      if (old.hasOwnProperty(topic)) {
-        const { [topic]: removed, ...newObject } = old;
-        return newObject;
-      } else {
-        return { ...old, [topic]: "no-highlight" };
-      }
+    let newTopicStyles = {};
+    if (topicStyles && topicStyles[topic]) {
+      let { [topic]: removed, ..._newTopicStyles } = topicStyles;
+      newTopicStyles = _newTopicStyles;
+    } else {
+      newTopicStyles = { ...topicStyles, [topic]: flipVisibility ? "highlight" : "no-highlight" };
+    }
+
+    setGlobalStorage({
+        highlightActiveStyle: topicIsActive(topic, newTopicStyles) ? "strong-highlight" : "light-highlight",
+        highlightTopicStyles: newTopicStyles
     })
   }
 
@@ -100,34 +120,45 @@ const Legend = ({tabId}) => {
   // render //
   // ------ //
 
-  if (!Array.isArray(classifierData.classes_pos) || classifierData.classes_pos.length == 0)
+  if (!Array.isArray(classifierData[topics]) || classifierData[topics].length == 0)
     return "";
 
-  function sortByCounts (c,d) { return topicCounts[d] - topicCounts[c] };
-  const numStyles = topicStyles ? Object.keys(topicStyles).length : 0;
-  const selected = numStyles == classifierData.classes_pos.length ? "hide all" : numStyles == 0 ? "show all" : "custom selection"
+  function sortByCounts (c: string,d: string) { return topicCounts[d] - topicCounts[c] };
+  const numStyles = topicStyles ? classifierData[topics].filter(t => t in topicStyles).length : 0;
+  let selected : string;
+    if(flipVisibility)
+      selected = numStyles == classifierData[topics].length ? "show all" : numStyles == 0 ? "hide all" : "custom selection"
+    else
+      selected = numStyles == classifierData[topics].length ? "hide all" : numStyles == 0 ? "show all" : "custom selection"
 
   return [
     <SwitchInput
       label=""
-      key="order_selector"
+      key={topics+"order_selector"}
       options={['gpt order', "sort by occurences"]}
       selected={sortBy || 'gpt order'}
       onChange={(value: string) => setSortBy(value)}
     />,
     <SwitchInput
       label=""
-      key="show_selector"
-      options={['show all', ...(selected == "custom selection" ? ["custom selection"] : []), "hide all"]}
+      key={topics+"show_selector"}
+      options={['show all', 'hide all']}
       selected={selected}
       onChange={(value: string) => {
-        if (value == "show all") setTopicStyles({})
-        if (value == "hide all") setTopicStyles(Object.fromEntries(classifierData.classes_pos.map(c => [c, "no-highlight"])))
+        const overwriteStyles = Object.fromEntries(classifierData[topics].map(c => [c, flipVisibility ? "highlight" : "no-highlight"]))
+        const filteredTopicStyles = Object.fromEntries(Object.entries(topicStyles).filter(([c]) => !classifierData[topics].includes(c)))
+        if (flipVisibility) {
+          if (value == "show all") setTopicStyles({...topicStyles, ...overwriteStyles})
+          if (value == "hide all") setTopicStyles(filteredTopicStyles)
+        } else {
+          if (value == "show all") setTopicStyles(filteredTopicStyles)
+          if (value == "hide all") setTopicStyles({...topicStyles, ...overwriteStyles})
+        }
       }}
     />,
-    <div className="topicContainer" key="topic_container">
-      {Array.isArray(classifierData.classes_pos) ? classifierData.classes_pos.sort(sortBy == "sort by occurences" ? sortByCounts : undefined).map(c => (
-        <TopicLine topic={c} extraInfo={topicCounts ? topicCounts[c] : null} active={!topicStyles || !topicStyles[c]} {...topicLineSettings}></TopicLine>
+    <div className="topicContainer" key={topics+"topic_container"}>
+      {Array.isArray(classifierData[topics]) ? classifierData[topics].sort(sortBy == "sort by occurences" ? sortByCounts : undefined).map(c => (
+        <TopicLine key={c} topic={c} extraInfo={topicCounts ? topicCounts[c] : null} active={topicIsActive(c, topicStyles) || c == activeTopic} {...topicLineSettings}></TopicLine>
       )) : ""}
       {/*retrievalQuery ? <span style={{ backgroundColor: consistentColor(retrievalQuery + " (retrieval)", topicStyles && topicStyles?._retrieval ? 0.125 : 1.0) }}>{retrievalQuery + " (retrieval)"}</span> : ""*/}
     </div>

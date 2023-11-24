@@ -235,7 +235,7 @@ const Highlighter = () => {
         const {texts, from_node_pos, to_node_pos, closestClass, closestScore} = toHighlight[i];
         const nonWhiteTexts = texts.filter(t => t.trim())
         const textNodesSubset = currentTextNodes.slice(from_node_pos, to_node_pos).filter(t => t.textContent.trim());
-        const highlightClass = class2Id[closestClass] >= classes_pos.length ? "normaltext" : class2Id[closestClass];
+        const highlightClass = class2Id[closestClass];
         topicCounts[closestClass] += 1
         const replacedNodes = highlightText(nonWhiteTexts, textNodesSubset, highlightClass, closestClass + " " + closestScore);
         currentTextNodes = currentTextNodes.slice(to_node_pos);

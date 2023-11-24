@@ -9,10 +9,9 @@ const useSessionStorage = process.env.NODE_ENV == "development" && process.env.P
 
 
 const HighlightStyler = ({tabId}) => {
-    const [ [highlightMode], [highlightDefaultStyle], [activeTopic], [topicStyles] ] = useGlobalStorage(tabId, "highlightMode", "highlightDefaultStyle", "highlightActiveTopic", "highlightTopicStyles")
+    const [ [highlightMode], [highlightDefaultStyle], [highlightActiveStyle], [activeTopic], [topicStyles] ] = useGlobalStorage(tabId, "highlightMode", "highlightDefaultStyle", "highlightActiveStyle", "highlightActiveTopic", "highlightTopicStyles")
     const [ classifierData ] = useSessionStorage("classifierData:"+tabId, {});
     const [ styleEl, setStyleEl ] = useState(null);
-
 
     // ------- //
     // Effects //
@@ -35,13 +34,17 @@ const HighlightStyler = ({tabId}) => {
 
         // default / fallback style
         const defaultStyle = highlightDefaultStyle || "highlight";
+        const activeStyle = highlightActiveStyle || "highlight";
 
         // create class for each pos-class
-        const colorStyle = classifierData.classes_pos.map((c, i) => {
+        const allclasses = [...classifierData.classes_pos, ...classifierData.classes_neg];
+        const colorStyle = allclasses.map((c, i) => {
+            const isPosClass = i < classifierData.classes_pos.length;
+            const isActive = activeTopic == c
 
             // use default setting unless we have a specific highlight setting given
             // i.e. if class is "active", use "strong-highlight" setting
-            const classSetting = topicStyles && c in topicStyles && activeTopic != c ? topicStyles[c] : activeTopic == c ? (topicStyles && topicStyles[c] == "no-highlight" ? "light-highlight" : "strong-highlight") : defaultStyle;
+            const classSetting = isActive ? activeStyle : topicStyles && c in topicStyles ? topicStyles[c] : isPosClass ? defaultStyle : "no-highlight";
 
             if (mode == "focus" && classSetting == "no-highlight")
                 return `span.highlightclass-${i} {
