@@ -21,7 +21,6 @@ $default-button-padding: 0.5rem 1rem;
     border-radius: 4px;
     background: $primary-color;
     font-weight: bold;
-    //color: $primary-color;
     color: white;
     top: 0;
     left: 0;
@@ -32,6 +31,11 @@ $default-button-padding: 0.5rem 1rem;
     text-transform: uppercase;
     margin-top: -0.5em;
     margin-bottom: 0em;
+  }
+
+  .ShadeRunner div.header {
+    background: transparent;
+    border: 2px solid $primary-color;
   }
 }
 
