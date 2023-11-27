@@ -3,6 +3,7 @@ import { toggleActive, getActiveStatus, setActiveStatus } from "~util/activeStat
 import { Storage } from "@plasmohq/storage"
 const storage = new Storage()
 
+const DEV = process.env.NODE_ENV == "development";
 
 // set plugin icon status badge
 const setIconBadge = async (active) => {
@@ -115,11 +116,17 @@ chrome.runtime.onInstalled.addListener(async (details) => {
 });
 
 
-// add context menu "open side pannel"
+// add context menu "open side panel" / "open testing page"
 chrome.runtime.onInstalled.addListener(() => {
     chrome.contextMenus.create({
         id: 'openSidePanel',
         title: 'Open side panel',
+        contexts: ['all']
+    });
+    if (DEV)
+    chrome.contextMenus.create({
+        id: 'openTestingPage',
+        title: 'Open testing page',
         contexts: ['all']
     });
 });
@@ -129,5 +136,15 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     if (info.menuItemId === 'openSidePanel') {
         chrome.sidePanel.open({ windowId: tab.windowId });
         await setActiveStatus(tab.url, true);
+    }
+});
+
+// open side panel when context menu is clicked
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+    if (info.menuItemId === 'openTestingPage') {
+        const url = chrome.runtime.getURL("/tabs/testing.html")
+        chrome.tabs.create({
+            url: url
+       });
     }
 });
