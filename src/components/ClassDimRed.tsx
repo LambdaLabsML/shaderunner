@@ -18,7 +18,6 @@ const ClassDimRed = ({ tabId }) => {
   const [ settings, setSettings ]= useState(null);
   const maxTicks = 300;
 
-  console.log(classEmbeddings)
 
   useEffect(() => {
     if (!classEmbeddings) return;
@@ -32,6 +31,7 @@ const ClassDimRed = ({ tabId }) => {
 
 
         const similarities = [];
+        let [min, max] = [Infinity, 0];
         for(let i=0; i<allclasses.length; i++) {
             const similarities_c = new Array(embeddings.length).fill(0);
             const closest = await classStore.similaritySearchVectorWithScore(embeddings[i], embeddings.length);
@@ -39,12 +39,16 @@ const ClassDimRed = ({ tabId }) => {
                 const cname = c[0].pageContent;
                 const cscore = c[1];
                 //similarities_c[class2Id[cname]] = -Math.log(cscore)*3;
-                similarities_c[class2Id[cname]] = cscore * 100;
+                similarities_c[class2Id[cname]] = cscore;
+                if (cscore < min)
+                    min = cscore;
+                if (cscore > max)
+                    max = cscore;
             })
             similarities.push(similarities_c)
         }
 
-        setSettings([similarities, allclasses]);
+        setSettings([similarities, allclasses, min, max]);
     }
     init();
   }, [classEmbeddings])
@@ -54,24 +58,18 @@ const ClassDimRed = ({ tabId }) => {
     if (!settings) return;
 
     console.log(settings);
-    const labels = settings[1];
+    const names = settings[1];
     const similarities = settings[0];
-    const nodes = labels.map(label => ({ id: label }));
+    const min = settings[2];
+    const max = settings[3];
+    const nodes = names.map(label => ({ id: label }));
     const links = similarityScoresToLinks(similarities, nodes);
     const pos_classes = classifierData.classes_pos;
 
-    let linkedByIndex = {};
-    links.forEach(d => {
-        linkedByIndex[`${d.source.id},${d.target.id}`] = true;
-    });
-
-    function isConnected(a, b) {
-        return linkedByIndex[`${a.id},${b.id}`] || linkedByIndex[`${b.id},${a.id}`] || a.id === b.id;
-    }
-
     const simulation = d3.forceSimulation(nodes)
         .force("link", d3.forceLink(links).id(d => d.id)
-            .distance(d => d.strength ))
+            //.distance(d => -Math.log(1-d.strength)*50))
+            .distance(d => (d.strength-min)/(max-min) * 250 ))
         //.force("charge", d3.forceManyBody().strength(-0))
         .force("center", d3.forceCenter(100, 100));
 
@@ -81,67 +79,70 @@ const ClassDimRed = ({ tabId }) => {
       .join("line")
       .classed("link", true)
 
-    const node = svg.selectAll(".node")
+    const labels = svg.selectAll(".node-label")
       .data(nodes)
-      .join("circle")
-      .classed("node", true)
-      .attr("r", 5)
-      .attr("fill", d => consistentColor(d["id"], pos_classes.includes(d["id"]) ? 1.0 : 0.2))
-      .on("mouseover", function(event, d) {
-        // Display ID of the hovered node
-        svg.append("text")
-          .attr("x", d.x + 8)
-          .attr("y", d.y + 3)
-          .text(d.id)
-          .attr("class", "node-label")
-          .attr("fill", consistentColor(d["id"], pos_classes.includes(d["id"]) ? 1.0 : 0.2));
+      .join("text")
+      .classed("node-label", true)
+      .attr("x", d => d.x + 8)
+      .attr("y", d => d.y + 3)
+      .text(d => d.id)
+      .attr("fill", d => consistentColor(d["id"], pos_classes.includes(d["id"]) ? 1.0 : 0.2));
     
-        // Display connected node IDs and similarities
-        links.forEach(link => {
-          if (link.source.id === d.id || link.target.id === d.id) {
-            const targetNode = link.source.id === d.id ? link.target : link.source;
-            svg.append("text")
-              .attr("x", targetNode.x + 8)
-              .attr("y", targetNode.y + 3)
-              //.text(`${targetNode.id} (${link.strength.toFixed(2)})`)
-              .text(`${link.strength.toFixed(2)}`)
-              .attr("class", "node-label")
-              .attr("fill", consistentColor(targetNode["id"], pos_classes.includes(targetNode["id"]) ? 1.0 : 0.2));
-          }
-        });
-      })
-      .on("mouseout", function() {
-        svg.selectAll(".node-label").remove();
-      });
+
+      // Node definition
+      const node = svg.selectAll(".node")
+          .data(nodes)
+          .join("circle")
+          .classed("node", true)
+          .attr("r", 5)
+          .attr("fill", d => consistentColor(d["id"], pos_classes.includes(d["id"]) ? 1.0 : 0.2))
+          .on("mouseover", function (event, d) {
+              // Add labels for similarity scores
+              links.forEach(link => {
+                  if (link.source.id === d.id || link.target.id === d.id) {
+                      const targetNode = link.source.id === d.id ? link.target : link.source;
+                      svg.append("text")
+                          .attr("x", targetNode.x + 8)
+                          .attr("y", targetNode.y + 3)
+                          .text(`${link.strength.toFixed(2)}`)
+                          .attr("class", "similarity-label")
+                          .attr("fill", consistentColor(targetNode["id"], pos_classes.includes(targetNode["id"]) ? 1.0 : 0.2));
+                  }
+              });
+
+              labels.style("opacity", label => label.id === d.id ? 1 : 0);
+          })
+          .on("mouseout", function () {
+              svg.selectAll(".similarity-label").remove();
+              labels.style("opacity", 1);
+          });
 
 
-    // Manually run the simulation for a fixed number of steps
-    for (let i = 0; i < maxTicks; i++) {
-        console.log("sim")
-        simulation.tick();
-        }
     
-        // Update positions after simulation has run for fixed steps
-        node.attr("cx", d => d.x)
-            .attr("cy", d => d.y);
+
+
+      // Manually run the simulation for a fixed number of steps
+      for (let i = 0; i < maxTicks; i++) {
+          simulation.tick();
+
+          // Update positions of nodes, links, and labels
+          node.attr("cx", d => d.x)
+              .attr("cy", d => d.y);
+
+          link.attr("x1", d => d.source.x)
+              .attr("y1", d => d.source.y)
+              .attr("x2", d => d.target.x)
+              .attr("y2", d => d.target.y);
+
+          labels.attr("x", d => d.x + 8)
+              .attr("y", d => d.y + 3);
+      }
     
-        link.attr("x1", d => d.source.x)
-            .attr("y1", d => d.source.y)
-            .attr("x2", d => d.target.x)
-            .attr("y2", d => d.target.y);
-    
-        // Stop the simulation
-        simulation.stop();
+      // Stop the simulation
+      simulation.stop();
   }, [settings]);
 
-  return (
-    <>
-      <svg ref={svgRef} width={600} height={600} />
-      <div id="tooltip" style={{ position: 'absolute', opacity: 0, backgroundColor: "white", border: "1px solid black", padding: "5px" }}>
-        {/* Tooltip content will go here */}
-      </div>
-    </>
-  );
+  return <svg ref={svgRef} width={"100%"} height={300} />;
 };
 
 
