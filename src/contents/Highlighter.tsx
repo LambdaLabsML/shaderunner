@@ -19,7 +19,7 @@ type classEmbeddingType = {allclasses: string[], classStore: any};
 
 const Highlighter = () => {
     const [ tabId, setTabId ] = useState(null);
-    const [ [savedUrl], [,setTopicCounts], [,setScores], [,setStatusEmbeddings], [,setStatusHighlight], [classEmbeddings, setClassEmbeddings], [setGlobalStorage] ] = useGlobalStorage(tabId, "url", "topicCounts", "classifierScores", "status_embedding", "status_highlight", "classEmbeddings");
+    const [ [savedUrl], [,setTopicCounts], [,setScores], [,setStatusEmbeddings], [,setStatusHighlight], [classEmbeddings, setClassEmbeddings], [setGlobalStorage, connected] ] = useGlobalStorage(tabId, "url", "topicCounts", "classifierScores", "status_embedding", "status_highlight", "classEmbeddings");
     const [ url, isActive ] = useActiveState(window.location);
     const [ pageEmbeddings, setPageEmbeddings ] = useState({});
     const [ classifierData ] = useSessionStorage("classifierData:"+tabId, {});
@@ -82,7 +82,7 @@ const Highlighter = () => {
     // on every classifier change, recompute highlights
     useEffect(() => {
       resetHighlights()
-      if(!tabId || !isActive || !classifierData.thought) return;
+      if(!tabId || !isActive || !connected || !classifierData.thought) return;
 
       const applyHighlight = () => {
         try {
@@ -97,7 +97,7 @@ const Highlighter = () => {
         }
       }
       applyHighlight()
-    }, [classifierData, isActive, textclassifier, textretrieval, retrievalQuery])
+    }, [connected, classifierData, isActive, textclassifier, textretrieval, retrievalQuery])
 
 
     // --------- //

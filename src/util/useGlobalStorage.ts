@@ -3,10 +3,13 @@ import { useEffect, useState } from "react";
 import { generateRandomHash } from "./misc";
 
 
+
+
 const useGlobalStorage = (_tabId: Number | string, ...names: string[]) => {
     const listener = usePort("listener")
     const controller = usePort("controller")
     const [_who] = useState(generateRandomHash(32))
+    const [storageSynced, setStatus] = useState(false)
 
     // register as a listener of tabId results
     useEffect(() => {
@@ -26,6 +29,7 @@ const useGlobalStorage = (_tabId: Number | string, ...names: string[]) => {
     // whenever listener changes message, we know we got something new
     useEffect(() => {
         const data = listener.data;
+        if (data !== undefined) setStatus(true);
         if (!data) return;
         if (data._who == _who) return;
         stateVarsReact.forEach(([_, setName, name]) => {
@@ -50,7 +54,7 @@ const useGlobalStorage = (_tabId: Number | string, ...names: string[]) => {
         controller.send({ _tabId, ...obj })
     }
 
-    return [...stateVars, [setGlobalStorage]];
+    return [...stateVars, [setGlobalStorage, storageSynced]];
 }
 
 
