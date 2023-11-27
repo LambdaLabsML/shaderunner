@@ -224,7 +224,11 @@ const Highlighter = () => {
             currentTextNodes = currentTextNodes.slice(to_node_pos-1);
             const closestClass = closest[0][0].pageContent;
             const closestScore = closest[0][1]
-            toHighlight.push({texts, from_node_pos, to_node_pos, closestClass, closestScore})
+            const otherclassmod = class2Id[closestClass] < classifierData.classes_pos.length ? -1 : 1;
+            const otherclassmatches = closest.filter(([doc, score]) => class2Id[doc.pageContent] * otherclassmod < classifierData.classes_pos.length * otherclassmod)
+            const otherClass = otherclassmatches[0][0].pageContent;
+            const otherClassScore = otherclassmatches[0][1];
+            toHighlight.push({texts, from_node_pos, to_node_pos, closestClass, closestScore, otherClass, otherClassScore, otherclassmod})
           }
         }
 
@@ -235,12 +239,12 @@ const Highlighter = () => {
       currentTextNodes = textNodes;
       const topicCounts = Object.fromEntries(allclasses.map((c) => [c, 0]))
       for(let i=0; i<toHighlight.length; i++) {
-        const {texts, from_node_pos, to_node_pos, closestClass, closestScore} = toHighlight[i];
+        const {texts, from_node_pos, to_node_pos, closestClass, closestScore, otherClass, otherClassScore, otherclassmod} = toHighlight[i];
         const nonWhiteTexts = texts.filter(t => t.trim())
         const textNodesSubset = currentTextNodes.slice(from_node_pos, to_node_pos).filter(t => t.textContent.trim());
         const highlightClass = class2Id[closestClass];
         const replacedNodes = highlightText(nonWhiteTexts, textNodesSubset, highlightClass, (span) => {
-          span.title = closestClass + " " + closestScore
+          span.title = `[${otherclassmod < 0 ? "✓" : "✗"}] ${closestScore.toFixed(2)}: ${closestClass}\n[${otherclassmod < 0 ? "✗" : "✓"}] ${otherClassScore.toFixed(2)}: ${otherClass}`;
           span.setAttribute("splitid", topicCounts[closestClass])
           if (DEV)
             span.setAttribute("splitid_total", i);
