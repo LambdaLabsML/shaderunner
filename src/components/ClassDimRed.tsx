@@ -88,19 +88,31 @@ const ClassDimRed = ({ tabId }) => {
       .attr("r", 5)
       .attr("fill", d => consistentColor(d["id"], pos_classes.includes(d["id"]) ? 1.0 : 0.2))
       .on("mouseover", function(event, d) {
-        d3.select("#tooltip")
-          .style("opacity", 1)
-          .style("left", (event.pageX + 10) + "px")
-          .style("top", (event.pageY - 10) + "px")
-          .html(d.id);
+        // Display ID of the hovered node
+        svg.append("text")
+          .attr("x", d.x + 8)
+          .attr("y", d.y + 3)
+          .text(d.id)
+          .attr("class", "node-label")
+          .attr("fill", consistentColor(d["id"], pos_classes.includes(d["id"]) ? 1.0 : 0.2));
+    
+        // Display connected node IDs and similarities
+        links.forEach(link => {
+          if (link.source.id === d.id || link.target.id === d.id) {
+            const targetNode = link.source.id === d.id ? link.target : link.source;
+            svg.append("text")
+              .attr("x", targetNode.x + 8)
+              .attr("y", targetNode.y + 3)
+              //.text(`${targetNode.id} (${link.strength.toFixed(2)})`)
+              .text(`${link.strength.toFixed(2)}`)
+              .attr("class", "node-label")
+              .attr("fill", consistentColor(targetNode["id"], pos_classes.includes(targetNode["id"]) ? 1.0 : 0.2));
+          }
+        });
       })
       .on("mouseout", function() {
-        d3.select("#tooltip").style("opacity", 0);
-      })
-      /*
-      .append("title")
-      .text(d => d.id); // Assuming d.id is the label you want to display
-      */
+        svg.selectAll(".node-label").remove();
+      });
 
 
     // Manually run the simulation for a fixed number of steps
