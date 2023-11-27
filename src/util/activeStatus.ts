@@ -22,8 +22,12 @@ const toggleActive = async (_url) => {
 // check active status for a url
 const getActiveStatus = async (_url) => {
     const activeURLs = await storage.get("activeURLs") || {};
-    const url = new URL(_url).hostname; // Normalize URL
-    return url in activeURLs;
+    try {
+        const url = new URL(_url).hostname; // Normalize URL
+        return url in activeURLs;
+    } catch(e) {
+        return false;
+    }
 }
 
 // check active status for a url
