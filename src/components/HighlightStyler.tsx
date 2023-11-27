@@ -100,6 +100,26 @@ const HighlightStyler = ({tabId}) => {
             span.shaderunner-highlight.focused {
                 text-shadow: 0 0 10px yellow;
             }
+
+            span.shaderunner-highlight {
+                position: relative;
+                cursor: pointer;
+            }
+
+            span.shaderunner-highlight[data-title]:hover::before {
+                content: attr(data-title);
+                position: absolute;
+                bottom: 100%;
+                left: 50%;
+                transform: translateX(-50%);
+                white-space: nowrap;
+                background-color: #f8f9fa;
+                color: #333;
+                padding: 5px 10px;
+                border-radius: 5px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                z-index: 1;
+              }
         ` 
 
         // apply styles

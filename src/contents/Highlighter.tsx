@@ -244,7 +244,7 @@ const Highlighter = () => {
         const textNodesSubset = currentTextNodes.slice(from_node_pos, to_node_pos).filter(t => t.textContent.trim());
         const highlightClass = class2Id[closestClass];
         const replacedNodes = highlightText(nonWhiteTexts, textNodesSubset, highlightClass, (span) => {
-          span.title = `[${otherclassmod < 0 ? "✓" : "✗"}] ${closestScore.toFixed(2)}: ${closestClass}\n[${otherclassmod < 0 ? "✗" : "✓"}] ${otherClassScore.toFixed(2)}: ${otherClass}`;
+          span.setAttribute("data-title", `[${otherclassmod < 0 ? "✓" : "✗"}] ${closestScore.toFixed(2)}: ${closestClass} | [${otherclassmod < 0 ? "✗" : "✓"}] ${otherClassScore.toFixed(2)}: ${otherClass}`);
           span.setAttribute("splitid", topicCounts[closestClass])
           if (DEV)
             span.setAttribute("splitid_total", i);
