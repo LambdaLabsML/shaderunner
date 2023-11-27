@@ -21,7 +21,7 @@ let activeURLs = {}
 const tabUpdated = tabId => {
     chrome.tabs.get(tabId, async function(tab) {
         const isActive = await getActiveStatus(tab.url)
-        console.log(tab.url)
+        if(!tab.url) return;
         const url = new URL(tab.url).hostname; // Normalize URL
         activeURLs[url] = isActive;
         await setIconBadge(isActive)
