@@ -10,6 +10,7 @@ import HighlightStyler from '~components/HighlightStyler';
 import { useGlobalStorage } from '~util/useGlobalStorage';
 import Scroller from '~components/Scroller';
 import TestsetHelper from '~components/TestsetHelper';
+import { MemoryVectorStore } from 'langchain/vectorstores/memory';
 
 const DEV = process.env.NODE_ENV == "development";
 const useSessionStorage = DEV && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;
@@ -18,10 +19,9 @@ type classEmbeddingType = {allclasses: string[], classStore: any};
 
 const Highlighter = () => {
     const [ tabId, setTabId ] = useState(null);
-    const [ [savedUrl], [,setTopicCounts], [,setScores], [,setStatusEmbeddings], [,setStatusHighlight], [setGlobalStorage] ] = useGlobalStorage(tabId, "url", "topicCounts", "classifierScores", "status_embedding", "status_highlight");
+    const [ [savedUrl], [,setTopicCounts], [,setScores], [,setStatusEmbeddings], [,setStatusHighlight], [classEmbeddings, setClassEmbeddings], [setGlobalStorage] ] = useGlobalStorage(tabId, "url", "topicCounts", "classifierScores", "status_embedding", "status_highlight", "classEmbeddings");
     const [ url, isActive ] = useActiveState(window.location);
     const [ pageEmbeddings, setPageEmbeddings ] = useState({});
-    const [ classEmbeddings, setClassEmbeddings ] = useState({});
     const [ classifierData ] = useSessionStorage("classifierData:"+tabId, {});
     const [ retrievalQuery ] = useSessionStorage("retrievalQuery:"+tabId, null);
 
@@ -155,14 +155,15 @@ const Highlighter = () => {
       const splitEmbeddings = pageEmbeddings[mode].embeddings;
 
       // use cached / compute embeddings of classes
-      let classStore;
-      if ((classEmbeddings as classEmbeddingType)?.allclasses && arraysAreEqual((classEmbeddings as classEmbeddingType).allclasses, allclasses)) {
+      let classStore, embeddings;
+      if (classEmbeddings && (classEmbeddings as classEmbeddingType)?.allclasses && arraysAreEqual((classEmbeddings as classEmbeddingType).allclasses, allclasses)) {
         setStatusHighlight(["checking", 0, "found cache"]);
-        classStore = (classEmbeddings as classEmbeddingType).classStore;
+        classStore = new MemoryVectorStore(classEmbeddings.embeddings);
+        classStore.memoryVectors = Object.values(classEmbeddings.embeddings);
       } else {
         setStatusHighlight(["checking", 0, "embedding classes"]);
-        [ classStore ] = await computeEmbeddingsLocal(allclasses, []);
-        setClassEmbeddings({allclasses, classStore})
+        [ classStore, embeddings ] = await computeEmbeddingsLocal(allclasses, []);
+        setClassEmbeddings({allclasses, embeddings})
       }
 
       // get all text nodes
