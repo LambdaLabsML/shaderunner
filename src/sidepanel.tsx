@@ -11,6 +11,7 @@ import CollapsibleBox from '~components/basic/CollapsibleBox';
 import Button from '~components/basic/Button';
 import TestsetHelperControls from '~components/TestsetHelperControls';
 import ThoughtInfo from '~components/ThoughtInfo';
+import ClassDimRed from '~components/ClassDimRed';
 
 
 
@@ -78,9 +79,12 @@ const Sidepanel = () => {
         <Legend tabId={tabId} topics="classes_neg" flipVisibility={true}></Legend>
       </CollapsibleBox>
     ]}
-    <CollapsibleBox key="advanced" title="Advanced" className="Legend" open={true}>
-      <CollapsibleBox key="advanced" title="ThoughtInfo" className="Legend" open={false}>
+    <CollapsibleBox key="advanced" title="Advanced" open={true}>
+      <CollapsibleBox key="thought_info" title="Thought Info" open={false}>
         <ThoughtInfo tabId={tabId}/>
+      </CollapsibleBox>
+      <CollapsibleBox key="class_similarities" title="Class Similarities" open={true}>
+        <ClassDimRed tabId={tabId}/>
       </CollapsibleBox>
     </CollapsibleBox>
     {/*<div className="logoContainer">
