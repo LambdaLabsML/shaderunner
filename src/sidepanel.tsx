@@ -10,6 +10,7 @@ import {styleCSS} from '~components/basic/Icon';
 import CollapsibleBox from '~components/basic/CollapsibleBox';
 import Button from '~components/basic/Button';
 import TestsetHelperControls from '~components/TestsetHelperControls';
+import ThoughtInfo from '~components/ThoughtInfo';
 
 
 
@@ -77,6 +78,11 @@ const Sidepanel = () => {
         <Legend tabId={tabId} topics="classes_neg" flipVisibility={true}></Legend>
       </CollapsibleBox>
     ]}
+    <CollapsibleBox key="advanced" title="Advanced" className="Legend" open={true}>
+      <CollapsibleBox key="advanced" title="ThoughtInfo" className="Legend" open={false}>
+        <ThoughtInfo tabId={tabId}/>
+      </CollapsibleBox>
+    </CollapsibleBox>
     {/*<div className="logoContainer">
       <img className="thinking_logo" width="30" src={Logo}/>
     </div>*/}
