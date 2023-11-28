@@ -78,8 +78,8 @@ const Sidepanel = () => {
         <Legend tabId={tabId} topics="classes_neg" flipVisibility={true}></Legend>
       </CollapsibleBox>
     ]}
-    <CollapsibleBox key="advanced" title="Advanced" open={true}>
-      <CollapsibleBox key="amount_highlighted" title="Amount Highlighted" open={true}>
+    <CollapsibleBox key="advanced" title="Advanced" open={false}>
+      <CollapsibleBox key="amount_highlighted" title="Amount Highlighted" open={false}>
         <AmountHighlighted tabId={tabId}/>
       </CollapsibleBox>
       <CollapsibleBox key="thought_info" title="Thought Info" open={false}>
