@@ -11,17 +11,15 @@ const useSessionStorage = process.env.NODE_ENV == "development" && process.env.P
 
 
 const Legend = ({tabId, topics, flipVisibility}) => {
-  const [retrievalQuery] = useSessionStorage("retrievalQuery:"+tabId, null);
+  //const [retrievalQuery] = useSessionStorage("retrievalQuery:"+tabId, null);
   const [classifierData, setClassifierData] = useSessionStorage("classifierData:"+tabId, {});
   const [
     [ topicStyles, setTopicStyles ],
     [ activeTopic ],
-    [ defaultStyle ],
-    [ activeTopicStyle  ],
     [ topicCounts ],
     [ , setScrollerCommand ],
     [ setGlobalStorage ]
-  ] = useGlobalStorage(tabId, "highlightTopicStyles", "highlightActiveTopic", "highlightActiveStyle", "highlightDefaultStyle", "topicCounts", "ScrollerCommand")
+  ] = useGlobalStorage(tabId, "highlightTopicStyles", "highlightActiveTopic", "topicCounts", "ScrollerCommand")
   const [ sortBy, setSortBy ] = useState(undefined)
   const allclasses = classifierData && classifierData.classes_pos ? [...classifierData.classes_pos, ...classifierData.classes_neg] : [];
 
@@ -34,7 +32,7 @@ const Legend = ({tabId, topics, flipVisibility}) => {
     if (flipVisibility)
       return _topicStyles && topic in _topicStyles && _topicStyles[topic] != "no-highlight"
     else
-      return !_topicStyles || !(topic in _topicStyles && defaultStyle != "no-highlight") || _topicStyles[topic] == "highlight"
+      return !_topicStyles || !(topic in _topicStyles) || _topicStyles[topic] == "highlight"
   }
 
   // --------- //
