@@ -19,7 +19,16 @@ type classEmbeddingType = {allclasses: string[], classStore: any};
 
 const Highlighter = () => {
     const [ tabId, setTabId ] = useState(null);
-    const [ [savedUrl], [,setTopicCounts], [,setScores], [,setStatusEmbeddings], [,setStatusHighlight], [classEmbeddings, setClassEmbeddings], [highlightAmount], [setGlobalStorage, connected] ] = useGlobalStorage(tabId, "url", "topicCounts", "classifierScores", "status_embedding", "status_highlight", "classEmbeddings", "highlightAmount");
+    const [
+      [savedUrl],
+      [,setTopicCounts],
+      [,setScores],
+      [,setStatusEmbeddings],
+      [,setStatusHighlight],
+      [classEmbeddings, setClassEmbeddings],
+      [highlightAmount],
+      [setGlobalStorage, connected]
+    ] = useGlobalStorage(tabId, "url", "topicCounts", "classifierScores", "status_embedding", "status_highlight", "classEmbeddings", "highlightAmount");
     const [ url, isActive ] = useActiveState(window.location);
     const [ pageEmbeddings, setPageEmbeddings ] = useState({});
     const [ classifierData ] = useSessionStorage("classifierData:"+tabId, {});
@@ -274,10 +283,10 @@ const Highlighter = () => {
       // in DEV mode, we also save the all the data
       const devOpts = DEV ? { DEV_highlighterData: { url, classifierData, splits }} : {};
 
+      setStatusHighlight(["loaded", 100]) // bug: needs to be outside due to concurrency conflict of this variable
       setGlobalStorage({
         topicCounts: topicCounts,
         classifierScores: [scores_plus, scores_diffs],
-        status_highlight: ["loaded", 100],
         ...devOpts
       })
     }
