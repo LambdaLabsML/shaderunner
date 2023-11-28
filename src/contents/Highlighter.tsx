@@ -19,7 +19,7 @@ type classEmbeddingType = {allclasses: string[], classStore: any};
 
 const Highlighter = () => {
     const [ tabId, setTabId ] = useState(null);
-    const [ [savedUrl], [,setTopicCounts], [,setScores], [,setStatusEmbeddings], [,setStatusHighlight], [classEmbeddings, setClassEmbeddings], [setGlobalStorage, connected] ] = useGlobalStorage(tabId, "url", "topicCounts", "classifierScores", "status_embedding", "status_highlight", "classEmbeddings");
+    const [ [savedUrl], [,setTopicCounts], [,setScores], [,setStatusEmbeddings], [,setStatusHighlight], [classEmbeddings, setClassEmbeddings], [highlightAmount], [setGlobalStorage, connected] ] = useGlobalStorage(tabId, "url", "topicCounts", "classifierScores", "status_embedding", "status_highlight", "classEmbeddings", "highlightAmount");
     const [ url, isActive ] = useActiveState(window.location);
     const [ pageEmbeddings, setPageEmbeddings ] = useState({});
     const [ classifierData ] = useSessionStorage("classifierData:"+tabId, {});
@@ -97,7 +97,7 @@ const Highlighter = () => {
         }
       }
       applyHighlight()
-    }, [connected, classifierData, isActive, textclassifier, textretrieval, retrievalQuery])
+    }, [connected, classifierData, isActive, textclassifier, textretrieval, retrievalQuery, highlightAmount])
 
 
     // --------- //
@@ -169,7 +169,7 @@ const Highlighter = () => {
       // get all text nodes
       const textNodes = textNodesUnderElem(document.body);
       let currentTextNodes = textNodes;
-      const toHighlight = [];
+      let toHighlight = [];
 
       // mark sentences based on similarity
       let scores_diffs = [];
@@ -228,28 +228,41 @@ const Highlighter = () => {
             const otherclassmatches = closest.filter(([doc, score]) => class2Id[doc.pageContent] * otherclassmod < classifierData.classes_pos.length * otherclassmod)
             const otherClass = otherclassmatches[0][0].pageContent;
             const otherClassScore = otherclassmatches[0][1];
-            toHighlight.push({texts, from_node_pos, to_node_pos, closestClass, closestScore, otherClass, otherClassScore, otherclassmod})
+            const index = toHighlight.length;
+            const show = true;
+            toHighlight.push({index, texts, from_node_pos, to_node_pos, closestClass, closestScore, otherClass, otherClassScore, otherclassmod, show})
           }
         }
 
         setStatusHighlight(["computing", 100 * Number(i) / splits.length]);
       }
 
+      // filter out amount to highlight
+      if (highlightAmount !== null && highlightAmount < 1.0) {
+        toHighlight.sort((a,b) => b.closestScore - a.closestScore)
+        toHighlight.slice(Math.ceil(toHighlight.length * highlightAmount)).forEach((h) => {
+          h.show = false
+        })
+        toHighlight.sort((a,b) => a.index - b.index)
+      }
+
       // streamlined text highlighting
       currentTextNodes = textNodes;
       const topicCounts = Object.fromEntries(allclasses.map((c) => [c, 0]))
       for(let i=0; i<toHighlight.length; i++) {
-        const {texts, from_node_pos, to_node_pos, closestClass, closestScore, otherClass, otherClassScore, otherclassmod} = toHighlight[i];
+        const {texts, from_node_pos, to_node_pos, closestClass, closestScore, otherClass, otherClassScore, otherclassmod, show} = toHighlight[i];
         const nonWhiteTexts = texts.filter(t => t.trim())
         const textNodesSubset = currentTextNodes.slice(from_node_pos, to_node_pos).filter(t => t.textContent.trim());
         const highlightClass = class2Id[closestClass];
         const replacedNodes = highlightText(nonWhiteTexts, textNodesSubset, highlightClass, (span) => {
           span.setAttribute("data-title", `[${otherclassmod < 0 ? "✓" : "✗"}] ${closestScore.toFixed(2)}: ${closestClass} | [${otherclassmod < 0 ? "✗" : "✓"}] ${otherClassScore.toFixed(2)}: ${otherClass}`);
           span.setAttribute("splitid", topicCounts[closestClass])
+          if (!show)
+            span.classList.add("transparent")
           if (DEV)
             span.setAttribute("splitid_total", i);
         });
-        topicCounts[closestClass] += 1
+        topicCounts[closestClass] += show ? 1 : 0;
         currentTextNodes = currentTextNodes.slice(to_node_pos);
         currentTextNodes.unshift(replacedNodes.pop())
       }
@@ -259,12 +272,14 @@ const Highlighter = () => {
       emptyTextNodes.forEach(node => surroundTextNode(node, "normaltext"))
 
       // in DEV mode, we also save the all the data
-      if (DEV)
-        setGlobalStorage({ DEV_highlighterData: { url, classifierData, splits }});
+      const devOpts = DEV ? { DEV_highlighterData: { url, classifierData, splits }} : {};
 
-      setTopicCounts(topicCounts)
-      setScores([scores_plus, scores_diffs])
-      setStatusHighlight(["loaded", 100]);
+      setGlobalStorage({
+        topicCounts: topicCounts,
+        classifierScores: [scores_plus, scores_diffs],
+        status_highlight: ["loaded", 100],
+        ...devOpts
+      })
     }
 
 
