@@ -121,14 +121,16 @@ function findTextFast(textNodes, sentence_str): [string[], number, number] {
   let texts = []; // the actual strings contained in each text node
   let from_node_pos = -1;
   let to_node_pos = -1;
+  let last_word_index = -1;
+
   textNodeLoop:
-  for (let i = 0; i < textNodes.length && pos_sentence < sentence.length; i++) {
+  for (let i = 0; i < textNodes.length && pos_sentence < sentence.length;) {
     const node = textNodes[i];
     const textContent = splitIntoWords(node.textContent);
 
     // get index of first word
     const word = sentence[pos_sentence];
-    const wordIndex = textContent.indexOf(word);
+    const wordIndex = textContent.indexOf(word, last_word_index + 1);
 
     // if starting word not found in same node, we haven't found the actual sentence
     // i.e. restart search with next node
@@ -137,8 +139,13 @@ function findTextFast(textNodes, sentence_str): [string[], number, number] {
       texts = [];
       from_node_pos = -1;
       to_node_pos = -1;
+      last_word_index = -1;
+      i++;
       continue textNodeLoop;
     }
+
+    // in the next loop, we will ignore the starting position in the sentence
+    last_word_index = wordIndex;
 
     // we found already one word from the sentence
     texts.push(word)
@@ -170,6 +177,10 @@ function findTextFast(textNodes, sentence_str): [string[], number, number] {
       texts[texts.length-1] += word_node
       pos_sentence += 1;
     }
+
+    // next node because all succeeeding words were equal
+    last_word_index = -1;
+    i++;
   }
 
   return [texts, from_node_pos, to_node_pos >= 0 ? to_node_pos + 1 : -1];
