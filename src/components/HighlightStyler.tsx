@@ -97,6 +97,10 @@ const HighlightStyler = ({tabId}) => {
         `
 
         const scrollFocusStyle = `
+            span.shaderunner-highlight.transparent {
+                background: transparent;
+            }
+
             span.shaderunner-highlight.focused {
                 text-shadow: 0 0 10px yellow;
             }
