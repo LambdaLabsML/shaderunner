@@ -4,7 +4,7 @@ import { useSessionStorage as _useSessionStorage } from '~util/misc'
 import { useStorage } from "@plasmohq/storage/hook";
 import { consistentColor } from '~util/DOM'
 import SwitchInput from "~components/basic/SwitchInput";
-import TopicLine from './basic/TopicLine';
+import TopicLine from '../basic/TopicLine';
 
 // in development mode we want to use persistent storage for debugging
 const useSessionStorage = process.env.NODE_ENV == "development" && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;

@@ -1,17 +1,17 @@
 import React, { useEffect } from 'react';
 import Logo from 'data-url:./assets/icon.png';
 import "style.scss"
-import Legend from '~components/Legend';
-import MainInput from '~components/MainInput';
+import Legend from '~components/modules/Legend';
+import MainInput from '~components/modules/MainInput';
 import CircularProgressBar from '~components/basic/CircularProgressBar';
 import { useGlobalStorage } from '~util/useGlobalStorage';
-import Modes from '~components/Modes';
+import Modes from '~components/modules/Modes';
 import {styleCSS} from '~components/basic/Icon';
 import CollapsibleBox from '~components/basic/CollapsibleBox';
 import Button from '~components/basic/Button';
-import TestsetHelperControls from '~components/TestsetHelperControls';
-import ThoughtInfo from '~components/ThoughtInfo';
-import ClassDimRed from '~components/ClassDimRed';
+import TestsetHelperControls from '~components/modules/TestsetHelperControls';
+import ThoughtInfo from '~components/modules/ThoughtInfo';
+import ClassDimRed from '~components/modules/ClassDimRed';
 
 
 

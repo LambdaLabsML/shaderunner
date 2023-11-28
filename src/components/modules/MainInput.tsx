@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useSessionStorage as _useSessionStorage, random } from '~util/misc'
 import { useActiveState } from '~util/activeStatus'
 import { useStorage } from "@plasmohq/storage/hook";
-import { MSG_CONTENT, MSG_EMBED, MSG_QUERY2CLASS } from "../util/messages";
+import { MSG_CONTENT, MSG_EMBED, MSG_QUERY2CLASS } from "../../util/messages";
 import Histogram from "~components/basic/Histogram";
 import CollapsibleBox from "~components/basic/Collapsible";
-import ClassModifierList from "./basic/ClassModifierList";
+import ClassModifierList from "../basic/ClassModifierList";
 import { sendToBackground } from '@plasmohq/messaging';
 import { usePort } from '@plasmohq/messaging/hook';
 import { useGlobalStorage } from '~util/useGlobalStorage';

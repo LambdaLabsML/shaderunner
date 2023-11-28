@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import Button from './basic/Button';
+import Button from '../basic/Button';
 import { sendToBackground } from '@plasmohq/messaging';
 import { useGlobalStorage } from '~util/useGlobalStorage';
 
