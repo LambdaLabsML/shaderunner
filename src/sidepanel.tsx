@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import Logo from 'data-url:./assets/icon.png';
 import "style.scss"
 import Legend from '~components/modules/Legend';
 import MainInput from '~components/modules/MainInput';
@@ -8,10 +7,10 @@ import { useGlobalStorage } from '~util/useGlobalStorage';
 import Modes from '~components/modules/Modes';
 import {styleCSS} from '~components/basic/Icon';
 import CollapsibleBox from '~components/basic/CollapsibleBox';
-import Button from '~components/basic/Button';
 import TestsetHelperControls from '~components/modules/TestsetHelperControls';
 import ThoughtInfo from '~components/modules/ThoughtInfo';
 import ClassDimRed from '~components/modules/ClassDimRed';
+import AmountHighlighted from '~components/modules/AmountHighlighted';
 
 
 
@@ -80,10 +79,13 @@ const Sidepanel = () => {
       </CollapsibleBox>
     ]}
     <CollapsibleBox key="advanced" title="Advanced" open={true}>
+      <CollapsibleBox key="amount_highlighted" title="Amount Highlighted" open={true}>
+        <AmountHighlighted tabId={tabId}/>
+      </CollapsibleBox>
       <CollapsibleBox key="thought_info" title="Thought Info" open={false}>
         <ThoughtInfo tabId={tabId}/>
       </CollapsibleBox>
-      <CollapsibleBox key="class_similarities" title="Class Similarities" open={true}>
+      <CollapsibleBox key="class_similarities" title="Class Similarities" open={false}>
         <ClassDimRed tabId={tabId}/>
       </CollapsibleBox>
     </CollapsibleBox>
