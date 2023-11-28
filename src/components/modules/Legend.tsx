@@ -111,11 +111,13 @@ const Legend = ({tabId, topics, flipVisibility}) => {
   const onTopicDelete = (topic) => {
     const index = classifierData.classes_pos.indexOf(topic);
     if (index >= 0)
-      delete classifierData.classes_pos[index];
+      classifierData.classes_pos.splice(index, 1);
     const index2 = classifierData.classes_neg.indexOf(topic);
     if (index2 >= 0)
-      delete classifierData.classes_neg[index2];
+      classifierData.classes_neg.splice(index2, 1);
     setClassifierData(classifierData);
+    const newTopicStyles = Object.fromEntries(Object.entries(topicStyles).filter(([t, h]) => t != topic))
+    setTopicStyles(newTopicStyles || {})
   }
 
   // jump to next/previous topic occurence
