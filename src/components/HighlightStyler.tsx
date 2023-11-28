@@ -91,7 +91,7 @@ const HighlightStyler = ({tabId}) => {
                 display: inline;
             }
 
-            span.highlightclass-normaltext {
+            span.highlightclass-normaltext, span.shaderunner-highlight.transparent {
                 display: none;
             }
         `
@@ -127,7 +127,7 @@ const HighlightStyler = ({tabId}) => {
         ` 
 
         // apply styles
-        styleEl.textContent = focusModeStyle + colorStyle + scrollFocusStyle
+        styleEl.textContent = focusModeStyle + colorStyle + scrollFocusStyle;
     }, [classifierData.classes_pos, styleEl, highlightMode, highlightDefaultStyle, activeTopic, topicStyles])
 
 
