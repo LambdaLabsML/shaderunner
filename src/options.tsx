@@ -33,7 +33,7 @@ const Settings = () => {
       { gptversion.startsWith("gpt-") ?
         ( <StringInput
           label="OPENAI_API_KEY"
-          value={openaikey}
+          value={openaikey.replace(/./g, "*")}
           onChange={(value) => setopenaikey(value)}
         /> ) : ( <StringInput
           label="OPENCHAT_API_BASE"
