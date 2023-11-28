@@ -127,8 +127,8 @@ const Highlighter = () => {
         onStatus(["computing", 0, "found database"])
 
       // extract main content & generate splits
-      const mainEl = getMainContent(true);
-      const [splits, metadata] = splitContent(mainEl.textContent, mode, url as string)
+      const full_text = getMainContent(true);
+      const [splits, metadata] = splitContent(full_text, mode, url as string)
 
       // retrieve embedding (either all at once or batch-wise)
       let splitEmbeddings = [];

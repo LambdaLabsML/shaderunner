@@ -1,5 +1,3 @@
-import { Readability } from '@mozilla/readability';
-
 import nlp from 'compromise'
 import plg from 'compromise-paragraphs'
 nlp.plugin(plg)
@@ -13,9 +11,8 @@ type Metadata = {
 
 // get main content parent element of page
 const getMainContent = (clone = true) => {
-  const reader = new Readability(clone ? document.cloneNode(true) as Document : document);
-  const article = reader.parse()
-  return article || document.body;
+  const mainElement = document.body;
+  return mainElement.innerText;
 }
 
 
