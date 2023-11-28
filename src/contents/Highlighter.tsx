@@ -224,10 +224,10 @@ const Highlighter = () => {
         if (true || highlight) {
           let [texts, from_node_pos, to_node_pos] = findTextFast(currentTextNodes, split);
           if (texts.length == 0) {
-            [texts, from_node_pos, to_node_pos] = findTextSlow(currentTextNodes, split);
-            if (texts.length == 0) {
+            //[texts, from_node_pos, to_node_pos] = findTextSlow(currentTextNodes, split);
+            //if (texts.length == 0) {
               console.log("ERROR: text not found:", split)
-            }
+            //}
           }
           if (to_node_pos >= 0) {
             currentTextNodes = currentTextNodes.slice(to_node_pos-1);
