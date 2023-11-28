@@ -164,7 +164,7 @@ const Legend = ({tabId, topics, flipVisibility}) => {
     />,
     <div className="topicContainer" key={topics+"topic_container"}>
       {Array.isArray(classifierData[topics]) ? classifierData[topics].filter(c => c).sort(sortBy == "sort by occurences" ? sortByCounts : undefined).map(c => (
-        <TopicLine key={c} topic={c} extraInfo={topicCounts ? topicCounts[c] : null} active={topicIsActive(c, topicStyles) || c == activeTopic} {...topicLineSettings}></TopicLine>
+        <TopicLine key={c} topic={c} extraInfo={topicCounts ? topicCounts[c] : null} active={(!topicCounts || topicCounts[c] > 0) && (topicIsActive(c, topicStyles) || c == activeTopic)} {...topicLineSettings}></TopicLine>
       )) : ""}
       {/*retrievalQuery ? <span style={{ backgroundColor: consistentColor(retrievalQuery + " (retrieval)", topicStyles && topicStyles?._retrieval ? 0.125 : 1.0) }}>{retrievalQuery + " (retrieval)"}</span> : ""*/}
     </div>
