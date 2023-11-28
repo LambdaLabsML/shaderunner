@@ -283,7 +283,20 @@ $default-button-padding: 0.5rem 1rem;
     display: flex;
     flex-direction: column;
     gap: 0.2em;
+
+    div.textLine {
+      width: 100%;
+      text-align: center;
+      opacity: 0.75;
+      line-height: 200%;
+      cursor: pointer;
+
+      &:hover {
+        opacity: 1;
+      }
+    }
   }
+
 }
 
 

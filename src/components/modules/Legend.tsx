@@ -5,6 +5,8 @@ import { useStorage } from "@plasmohq/storage/hook";
 import { consistentColor } from '~util/DOM'
 import SwitchInput from "~components/basic/SwitchInput";
 import TopicLine from '../basic/TopicLine';
+import Icon from '~components/basic/Icon';
+import { sendToBackground } from '@plasmohq/messaging';
 
 // in development mode we want to use persistent storage for debugging
 const useSessionStorage = process.env.NODE_ENV == "development" && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;
@@ -14,12 +16,13 @@ const Legend = ({tabId, topics, flipVisibility}) => {
   //const [retrievalQuery] = useSessionStorage("retrievalQuery:"+tabId, null);
   const [classifierData, setClassifierData] = useSessionStorage("classifierData:"+tabId, {});
   const [
+    [ url ],
     [ topicStyles, setTopicStyles ],
     [ activeTopic ],
     [ topicCounts ],
     [ , setScrollerCommand ],
     [ setGlobalStorage ]
-  ] = useGlobalStorage(tabId, "highlightTopicStyles", "highlightActiveTopic", "topicCounts", "ScrollerCommand")
+  ] = useGlobalStorage(tabId, "url", "highlightTopicStyles", "highlightActiveTopic", "topicCounts", "ScrollerCommand")
   const [ sortBy, setSortBy ] = useState(undefined)
   const allclasses = classifierData && classifierData.classes_pos ? [...classifierData.classes_pos, ...classifierData.classes_neg] : [];
 
@@ -34,6 +37,10 @@ const Legend = ({tabId, topics, flipVisibility}) => {
     else
       return !_topicStyles || !(topic in _topicStyles) || _topicStyles[topic] == "highlight"
   }
+
+  const interesting = classifierData[topics];
+  const uninteresting = classifierData[topics == "classes_pos" ? "classes_neg" : "classes_pos"]
+  const suggestNewTopic = async () => (await sendToBackground({ name: "llm_newtopic", body: {url, interesting, uninteresting}}))
 
   // --------- //
   // functions //
@@ -136,6 +143,10 @@ const Legend = ({tabId, topics, flipVisibility}) => {
     else
       selected = numStyles == classifierData[topics].length ? "hide all" : numStyles == 0 ? "show all" : "custom selection"
 
+  const topicList = Array.isArray(classifierData[topics]) ? classifierData[topics].filter((c: string) => c) : [];
+  if (sortBy == "sort by occurences")
+    topicList.sort(sortByCounts)
+
   return [
     <SwitchInput
       label=""
@@ -163,9 +174,10 @@ const Legend = ({tabId, topics, flipVisibility}) => {
       }}
     />,
     <div className="topicContainer" key={topics+"topic_container"}>
-      {Array.isArray(classifierData[topics]) ? classifierData[topics].filter(c => c).sort(sortBy == "sort by occurences" ? sortByCounts : undefined).map(c => (
+      {topicList.map(c => (
         <TopicLine key={c} topic={c} extraInfo={topicCounts ? topicCounts[c] : null} active={(!topicCounts || topicCounts[c] > 0) && (topicIsActive(c, topicStyles) || c == activeTopic)} {...topicLineSettings}></TopicLine>
-      )) : ""}
+      ))}
+      <div className="textLine" onClick={async () => setClassifierData({...classifierData, [topics]: [...classifierData[topics], await suggestNewTopic()]})}><Icon name="add-to-queue"/> Suggest missing topic.</div>
       {/*retrievalQuery ? <span style={{ backgroundColor: consistentColor(retrievalQuery + " (retrieval)", topicStyles && topicStyles?._retrieval ? 0.125 : 1.0) }}>{retrievalQuery + " (retrieval)"}</span> : ""*/}
     </div>
   ];
