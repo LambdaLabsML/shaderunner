@@ -1,6 +1,38 @@
 
 
 
+## ShadeRunner Version 0.5.0
+
+**Features**:
+- **Advanced/Amount Highlighted added**: steer percentage of top highlights to highlight
+- **Advanced/ThoughtInfo added**: shows thought process of llm (scope & reasoning)
+- **Advanced/Class Similarities added**: force-spring plot to show similarities of classes on mouse-hover
+- **Suggest missing topic**-buttton added to legend
+
+**Minor**:
+- **Mouseover on highlights**: now shows closest interesting and closest uninteresting class
+- **Options**: obfuscate openai api key
+- **Legend**: inactivate topics without any matches
+- **Sidebar**: Adapted style of collapsible boxes + nested collapsible boxes
+- **Testing**: started working on testing tab
+- **More Stable Highlighting**: more sentences found by using `innerText` on `document.body`
+
+**Bugfixes**:
+- Highlighter:
+    - fixed caching of class embeddings (on sidebar reopen, on page refresh)
+    - fixed status indicator not updating for highlights
+    - fixed highlight reset not resetting all highlights
+    - fixed text finding when sentence starts later in a text node
+- Background service worker:
+    - fixed "invalid URL" errors in various cases
+- Legend:
+    - filterSelector not working
+    - fixed removal of topics not updating immediately
+
+
+
+-------
+
 
 ## ShadeRunner Version 0.4.0
 
