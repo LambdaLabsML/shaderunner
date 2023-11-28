@@ -11,8 +11,6 @@ def merge_json_files(directory_pattern):
     for file_name in glob.glob(directory_pattern):
         with open(file_name, 'r') as file:
             data = json.load(file)
-            if "cmd" in data:
-                del data["cmd"]
             data["file_name"] = file_name
             all_data.append(data)
 
@@ -31,6 +29,23 @@ except:
 
 async def handle(request):
     data = await request.json()
+
+    # remove save command
+    if "cmd" in data:
+        del data["cmd"]
+
+    # remove classifier data (not needed)
+    data["query"] = data["classifierData"]["query"]
+    del data["classifierData"]
+
+    # merge splits and classifier data for easier json manipulation
+    splits = data["splits"]
+    classification = data["classification"]
+    data["labeled_splits"] = [(c,s) for (c,s) in zip(classification, splits)]
+    del data["splits"]
+    del data["classification"]
+
+
     date_str = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     file_name = f"./testing/testset/{date_str}.json"
     with open(file_name, 'w') as file:
