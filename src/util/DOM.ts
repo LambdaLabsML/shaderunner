@@ -240,10 +240,13 @@ function surroundTextNode(node, highlightClass) {
 
 
 function resetHighlights(markingClass = defaultHighlightClass) {
-  const markedElements = document.querySelectorAll(`span.${markingClass}`);
-  markedElements.forEach(element => {
-    element.replaceWith(document.createTextNode(element.textContent));
-  });
+  let markedElements = document.querySelectorAll(`span.${markingClass}`);
+  while (markedElements.length) {
+    markedElements.forEach(element => {
+      element.replaceWith(document.createTextNode(element.textContent));
+    });
+    markedElements = document.querySelectorAll(`span.${markingClass}`);
+  }
 }
 
 
