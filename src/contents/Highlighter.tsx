@@ -265,7 +265,7 @@ const Highlighter = () => {
         const highlightClass = class2Id[closestClass];
         const replacedNodes = highlightText(nonWhiteTexts, textNodesSubset, highlightClass, (span) => {
           span.setAttribute("data-title", `[${otherclassmod < 0 ? "✓" : "✗"}] ${closestScore.toFixed(2)}: ${closestClass} | [${otherclassmod < 0 ? "✗" : "✓"}] ${otherClassScore.toFixed(2)}: ${otherClass}`);
-          span.setAttribute("splitid", topicCounts[closestClass])
+          span.setAttribute("splitid_class", topicCounts[closestClass])
           if (!show)
             span.classList.add("transparent")
           if (DEV)

@@ -36,6 +36,7 @@ async def handle(request):
 
     # remove classifier data (not needed)
     data["query"] = data["classifierData"]["query"]
+    data["scope"] = data["classifierData"]["scope"]
     del data["classifierData"]
 
     # merge splits and classifier data for easier json manipulation

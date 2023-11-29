@@ -7,13 +7,13 @@ const TestsetHelper = ({tabId}) => {
 
     // zapp through elements / scroll to focused element
     useEffect(() => {
-        const spans = document.querySelectorAll("span.shaderunner-highlight[splitid_total]");
+        const spans = document.querySelectorAll("span.shaderunner-highlight[splitid]");
         function handleClick(event) {
             if (mode != "testset helper") return;
             const span = event.currentTarget;
-            const splitid = span.getAttribute("splitid_total")
+            const splitid = span.getAttribute("splitid")
             console.log("splitid", splitid)
-            const els = document.querySelectorAll(`span.shaderunner-highlight[splitid_total="${splitid}"]`);
+            const els = document.querySelectorAll(`span.shaderunner-highlight[splitid="${splitid}"]`);
             els.forEach(el => {
                 el.classList.toggle("good")
             })
@@ -22,7 +22,7 @@ const TestsetHelper = ({tabId}) => {
         // replace event listener with newest version
         spans.forEach(span => span.addEventListener('click', handleClick));
         return () => spans.forEach(span => span.removeEventListener('click', handleClick));
-    }, [mode]);
+    }, [mode, highlighterData]);
 
     // save-button
     useEffect(() => {
@@ -31,7 +31,8 @@ const TestsetHelper = ({tabId}) => {
         async function send() {
             console.log("sending")
             const classification = highlighterData.splits.map((s, i) => {
-                const elements = document.querySelectorAll(`span.shaderunner-highlight[splitid_total="${i}"]`);
+                console.log(s, i)
+                const elements = document.querySelectorAll(`span.shaderunner-highlight[splitid="${i}"]`);
                 return Array.from(elements).some(element => element.classList.contains('good'));
             });
             const result = await sendToBackground({name: "testsethelper", body: {cmd: "write", ...highlighterData, classification: classification}})

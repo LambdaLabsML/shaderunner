@@ -20,7 +20,7 @@ const Scroller = ({tabId}) => {
         if (!command) return;
         const highlighted = document.querySelectorAll(command.selector)
         if (!highlighted || highlighted.length == 0) return;
-        const max_split_num = parseInt(highlighted[highlighted.length - 1].getAttribute("splitid"))
+        const max_split_num = parseInt(highlighted[highlighted.length - 1].getAttribute("splitid_class"))
 
         // adapt index of selector
         if (!currentSelector || currentSelector[0] != command.selector)
@@ -29,7 +29,7 @@ const Scroller = ({tabId}) => {
         currentSelector = [currentSelector[0], newIndex]
 
         // focus chosen highlight
-        const highlights = document.querySelectorAll(command.selector+`[splitid="${newIndex}"]`);
+        const highlights = document.querySelectorAll(command.selector+`[splitid_class="${newIndex}"]`);
         highlights.forEach(span => {
             span.classList.add("focused")
         });
