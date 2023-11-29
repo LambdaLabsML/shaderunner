@@ -42,7 +42,7 @@ function splitIntoWords(str) {
 
 
 
-function longestMatchingSubstring(str1, str2) {
+function longestMatchingSubstringStart(str1, str2) {
 
   // Heuristic check
   if (str1.startsWith(str2)) return str2;
@@ -59,183 +59,87 @@ function longestMatchingSubstring(str1, str2) {
   }
 
   // Extract the matching substring
-  return str1.substring(0, maxLength);
+  return [0, str1.substring(0, maxLength)];
 }
 
 
-// given a list of textnodes, find the subset of textnodes that contain a string
-function findTextSlow(textNodes, sentence): [string[], number, number] {
-  let pos_sentence = 0; // Current position in the sentence
-  let texts = []; // The actual strings contained in each text node
-  let from_node_pos = -1;
-  let to_node_pos = -1;
+function longestMatchingSubstringAnywhere(str1, str2) {
 
-  textNodeLoop:
-  for (let i = 0; i < textNodes.length && pos_sentence < sentence.length; i++) {
-    // Reset for each new starting node
-    let temp_pos_sentence = pos_sentence;
-    let temp_texts = [];
+  // Heuristic checks
+  if (str1 === str2) return [0, str1];
+  if (str1.startsWith(str2)) return [0, str2];
 
-    for (let j = i; j < textNodes.length && temp_pos_sentence < sentence.length; j++) {
-      const node = textNodes[j];
-      const textContent = node.textContent.trim();
-      if (textContent.length == 0) continue;
-      const sentence_substr = sentence.substr(temp_pos_sentence)
-      const sentence_substr_trimmed = sentence_substr.trim()
+  let maxLength = 0;
+  let maxSubstring = "";
 
-      // Get longest string match from the current position of the sentence
-      const longestMatch = longestMatchingSubstring(textContent, sentence_substr.trim());
-
-      // If no match or partial match without continuation, restart search with next node
-      if (longestMatch.length === 0) {//} || (longestMatch.length < textContent.length && !sentence.startsWith(longestMatch, temp_pos_sentence))) {
-        from_node_pos = -1;
-        continue textNodeLoop;
-      }
-
-      // Update temporary lists
-      if (from_node_pos < 0)
-        from_node_pos = j;
-      const len_whitespace = sentence_substr.length - sentence_substr_trimmed.length;
-      temp_texts.push(longestMatch);
-      temp_pos_sentence += longestMatch.length + len_whitespace;
-
-      // If the whole sentence is found, update the final lists
-      if (temp_pos_sentence === sentence.length) {
-        texts = temp_texts;
-        to_node_pos = j;
-        break textNodeLoop;
-      }
-    }
-  }
-
-  return [texts, from_node_pos, to_node_pos >= 0 ? to_node_pos + 1 : -1];
-}
-
-
-// given a list of textnodes, find the subset of textnodes that contain a string
-function findTextFast(textNodes, sentence_str): [string[], number, number] {
-  const sentence = splitIntoWords(sentence_str)
-
-  // find textNode-interval that contains the sentence
-  let pos_sentence = 0;
-  let texts = []; // the actual strings contained in each text node
-  let from_node_pos = -1;
-  let to_node_pos = -1;
-  let last_word_index = -1;
-
-  textNodeLoop:
-  for (let i = 0; i < textNodes.length && pos_sentence < sentence.length;) {
-    const node = textNodes[i];
-    const textContent = splitIntoWords(node.textContent);
-
-    // get index of first word
-    const word = sentence[pos_sentence];
-    const wordIndex = textContent.indexOf(word, last_word_index + 1);
-
-    // if starting word not found in same node, we haven't found the actual sentence
-    // i.e. restart search with next node
-    if (wordIndex < 0) {
-      pos_sentence = 0;
-      texts = [];
-      from_node_pos = -1;
-      to_node_pos = -1;
-      last_word_index = -1;
-      i++;
-      continue textNodeLoop;
-    }
-
-    // in the next loop, we will ignore the starting position in the sentence
-    last_word_index = wordIndex;
-
-    // we found already one word from the sentence
-    texts.push(word)
-    if (from_node_pos < 0)
-      from_node_pos = i;
-    pos_sentence += 1;
-    to_node_pos = i;
-
-    // otherwise check equalness of all succeeding words
-    for (let j = 1; pos_sentence < sentence.length && wordIndex + j < textContent.length; j++) {
-      const word_sentence = sentence[pos_sentence]
-      const word_node = textContent[wordIndex + j]
-
-      // if the next word of the node differs from the sentence, we haven't found the actual sentence
-      // i.e. restart search with next node
-      // (also, if we would skip because of a whitespace, just skip it)
-      if (word_sentence != word_node && !(word_sentence == "-" && word_node == "—")) {
-        if (word_node.trim().length > 0) {
-          pos_sentence = 0;
-          texts = [];
-          from_node_pos = -1;
-          continue textNodeLoop;
+  // Iterate over each position in str1
+  let start;
+  for (start = 0; start <= str1.length; start++) {
+    let length = 0;
+    for (let i = 0; i < str2.length; i++) {
+      if (str1[start + i] == str2[i]) {
+        length++;
+        if (length > maxLength) {
+          maxLength = length;
+          maxSubstring = str1.substring(start, start + length);
         }
-        continue;
+      } else {
+        break;
       }
-
-      // we found a word from the sentence
-      //nodes.push(node)
-      texts[texts.length-1] += word_node
-      pos_sentence += 1;
     }
-
-    // next node because all succeeeding words were equal
-    last_word_index = -1;
-    i++;
   }
 
-  return [texts, from_node_pos, to_node_pos >= 0 ? to_node_pos + 1 : -1];
+  return [start, maxSubstring];
 }
+
 
 
 const defaultHighlightClass = 'shaderunner-highlight'
 
-function highlightText(texts, nodes, highlightClass, transform=(el) => {}, markingClass = defaultHighlightClass) {
-  if (nodes.length !== texts.length) {
+function highlightText(details: { from_text_node_char_start: any; to_text_node_char_end: any; from_text_node: any; to_text_node: any; }, nodes: Text[], highlightClass: any, transform=(el) => {}, markingClass = defaultHighlightClass) {
+  if ((1 + details.to_text_node - details.from_text_node) !== nodes.length) {
     throw new Error('The length of nodes and texts should be the same.');
   }
 
-  const newNodes = [];
+  const replacedNodes = [] as Text[];
+  let nextTextOffset = 0;
   nodes.forEach((node, i) => {
-    const text = texts[i];
-    
-    if (node.nodeType === Node.TEXT_NODE) {
-      const textContent = node.textContent;
-      const index = textContent.indexOf(text);
-      
-      if (index !== -1) {
-        const beforeText = textContent.substring(0, index);
-        const afterText = textContent.substring(index + text.length);
-        
-        if (beforeText) {
-          const beforeSpan = document.createElement('span');
-          beforeSpan.textContent = beforeText;
-          node.parentNode.insertBefore(beforeSpan, node);
-          newNodes.push(beforeSpan.childNodes[0]);
-        }
-        
-        const span = document.createElement('span');
-        span.textContent = text;
-        span.classList.add(markingClass); // Add a specific class for easy identification
-        span.classList.add(`highlightclass-${highlightClass}`); // Add a specific class for easy identification
-        transform(span)
-        node.parentNode.insertBefore(span, node);
-        newNodes.push(span.childNodes[0]);
-        
-        if (afterText) {
-          const afterSpan = document.createElement('span');
-          afterSpan.textContent = afterText;
-          node.parentNode.insertBefore(afterSpan, node.nextSibling);
-          newNodes.push(afterSpan.childNodes[0]);
-        }
-        
-        node.parentNode.removeChild(node);
-      } else
-        newNodes.push(node);
-    } else {
-      throw new Error(`Node at position ${i} is not a text node.`);
+    if (!node || node.nodeType !== Node.TEXT_NODE) return;
+
+    const textContent = node.textContent;
+    const beforeText = textContent.substring(0, i == details.from_text_node ? details.from_text_node_char_start : 0);
+    const afterText = textContent.substring(i == details.to_text_node ? details.to_text_node_char_end : textContent.length);
+    const text = textContent.substring(beforeText.length, textContent.length - afterText.length);
+
+    if (beforeText) {
+      const beforeSpan = document.createElement('span');
+      beforeSpan.textContent = beforeText;
+      nextTextOffset += beforeText.length;
+      node.parentNode.insertBefore(beforeSpan, node);
+      if (beforeSpan.childNodes && beforeSpan.childNodes.length > 0)
+        replacedNodes.push(beforeSpan.childNodes[0] as Text);
     }
+
+    const span = document.createElement('span');
+    span.textContent = text;
+    span.classList.add(markingClass); // Add a specific class for easy identification
+    span.classList.add(`highlightclass-${highlightClass}`); // Add a specific class for easy identification
+    transform(span)
+    node.parentNode.insertBefore(span, node);
+    replacedNodes.push(span.childNodes[0] as Text);
+    nextTextOffset += text.length;
+
+    if (afterText) {
+      const afterSpan = document.createElement('span');
+      afterSpan.textContent = afterText;
+      node.parentNode.insertBefore(afterSpan, node.nextSibling);
+      if (afterSpan.childNodes && afterSpan.childNodes.length > 0)
+        replacedNodes.push(afterSpan.childNodes[0] as Text);
+    }
+
+    node.parentNode.removeChild(node);
   });
-  return newNodes;
+  return {replacedNodes, nextTextOffset};
 }
 
 

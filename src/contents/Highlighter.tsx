@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getMainContent, splitContent } from '~util/extractContent'
-import { textNodesUnderElem, findTextSlow, findTextFast, highlightText, resetHighlights, textNodesNotUnderHighlight, surroundTextNode } from '~util/DOM'
+import { highlightText, resetHighlights, textNodesNotUnderHighlight, surroundTextNode } from '~util/DOM'
 import { computeEmbeddingsLocal } from '~util/embedding'
 import { sendToBackground } from "@plasmohq/messaging"
 import { useStorage } from "@plasmohq/storage/hook";
@@ -15,7 +15,7 @@ import { MemoryVectorStore } from 'langchain/vectorstores/memory';
 const DEV = process.env.NODE_ENV == "development";
 const useSessionStorage = DEV && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;
 type classEmbeddingType = {allclasses: string[], classStore: any};
-
+type Metadata = { "data-type": string, "url": string };
 
 const Highlighter = () => {
     const [ tabId, setTabId ] = useState(null);
@@ -127,22 +127,26 @@ const Highlighter = () => {
         onStatus(["computing", 0, "found database"])
 
       // extract main content & generate splits
-      const full_text = getMainContent(true);
-      const [splits, metadata] = splitContent(full_text, mode, url as string)
+      const mainel = getMainContent();
+      const {splits, splitDetails, textNodes} = splitContent(mainel, mode)
+      const splitMetadata = new Array(splits.length).fill({
+          "data-type": mode,
+          "url": url
+      })
 
       // retrieve embedding (either all at once or batch-wise)
       let splitEmbeddings = [];
       if (exists)
-        splitEmbeddings = await sendToBackground({ name: "embedding_compute", body: { collectionName: url, splits: splits, metadata: metadata } })
+        splitEmbeddings = await sendToBackground({ name: "embedding_compute", body: { collectionName: url, splits: splits, metadata: splitMetadata } })
       else {
         const batchSize = 64;
         for(let i = 0; i < splits.length; i+= batchSize) {
-          const splitEmbeddingsBatch = await sendToBackground({ name: "embedding_compute", body: { collectionName: url, splits: splits.slice(i, i+batchSize), metadata: metadata.slice(i, i+batchSize) } })
+          const splitEmbeddingsBatch = await sendToBackground({ name: "embedding_compute", body: { collectionName: url, splits: splits.slice(i, i+batchSize), metadata: splitMetadata.slice(i, i+batchSize) } })
           splitEmbeddings = splitEmbeddings.concat(splitEmbeddingsBatch);
           onStatus(["computing", Math.floor(i / splits.length * 100)])
         }
       }
-      const _pageEmbeddings = { [mode]: { splits: splits, metadata: metadata, embeddings: splitEmbeddings } }
+      const _pageEmbeddings = { [mode]: { splits, splitDetails, splitMetadata, splitEmbeddings, textNodes } }
       onStatus(["loaded", 100])
       return _pageEmbeddings;
     }
@@ -160,8 +164,7 @@ const Highlighter = () => {
 
       // ensure we have embedded the page contents
       const pageEmbeddings = await getPageEmbeddings(mode)
-      const splits = pageEmbeddings[mode].splits;
-      const splitEmbeddings = pageEmbeddings[mode].embeddings;
+      const { splits, splitDetails, splitEmbeddings, textNodes } = pageEmbeddings[mode];
 
       // use cached / compute embeddings of classes
       let classStore, embeddings;
@@ -175,16 +178,16 @@ const Highlighter = () => {
         setClassEmbeddings({allclasses, embeddings})
       }
 
-      // get all text nodes
-      const textNodes = textNodesUnderElem(document.body);
-      let currentTextNodes = textNodes;
-      let toHighlight = [];
-
       // mark sentences based on similarity
+      let toHighlight = [];
       let scores_diffs = [];
       let scores_plus = [];
       for (const i in splits) {
         const split = splits[i];
+        const details = splitDetails[i];
+
+        // if no details given, we omit this split
+        if (!details) continue;
 
         // using precomputed embeddings
         const embedding = splitEmbeddings[split];
@@ -222,25 +225,13 @@ const Highlighter = () => {
 
         // remember to mark split for highlighting later streamlined
         if (true || highlight) {
-          let [texts, from_node_pos, to_node_pos] = findTextFast(currentTextNodes, split);
-          if (texts.length == 0) {
-            //[texts, from_node_pos, to_node_pos] = findTextSlow(currentTextNodes, split);
-            //if (texts.length == 0) {
-              console.log("ERROR: text not found:", split)
-            //}
-          }
-          if (to_node_pos >= 0) {
-            currentTextNodes = currentTextNodes.slice(to_node_pos-1);
-            const closestClass = closest[0][0].pageContent;
-            const closestScore = closest[0][1]
-            const otherclassmod = class2Id[closestClass] < classifierData.classes_pos.length ? -1 : 1;
-            const otherclassmatches = closest.filter(([doc, score]) => class2Id[doc.pageContent] * otherclassmod < classifierData.classes_pos.length * otherclassmod)
-            const otherClass = otherclassmatches[0][0].pageContent;
-            const otherClassScore = otherclassmatches[0][1];
-            const index = i;
-            const show = true;
-            toHighlight.push({index, texts, from_node_pos, to_node_pos, closestClass, closestScore, otherClass, otherClassScore, otherclassmod, show})
-          }
+          const closestClass = closest[0];
+          const otherclassmod = class2Id[closestClass] < classifierData.classes_pos.length ? -1 : 1;
+          const otherclassmatches = closest.filter(([doc, score]) => class2Id[doc.pageContent] * otherclassmod < classifierData.classes_pos.length * otherclassmod)
+          const closestOtherClass = otherclassmatches[0];
+          const index = i;
+          const show = true;
+          toHighlight.push({ index, closestClass, closestOtherClass, otherclassmod, show })
         }
 
         setStatusHighlight(["computing", 100 * Number(i) / splits.length]);
@@ -256,15 +247,33 @@ const Highlighter = () => {
       }
 
       // streamlined text highlighting
-      currentTextNodes = textNodes;
+      let currentTextNodes = textNodes.slice();
+      let node_offset = 0;
+      let textoffset = 0;
+      let textoffset_node = -1;
       const topicCounts = Object.fromEntries(allclasses.map((c) => [c, 0]))
       for(let i=0; i<toHighlight.length; i++) {
-        const {index, texts, from_node_pos, to_node_pos, closestClass, closestScore, otherClass, otherClassScore, otherclassmod, show} = toHighlight[i];
-        const nonWhiteTexts = texts.filter(t => t.trim())
-        const textNodesSubset = currentTextNodes.slice(from_node_pos, to_node_pos).filter(t => t.textContent.trim());
-        const highlightClass = class2Id[closestClass];
-        const replacedNodes = highlightText(nonWhiteTexts, textNodesSubset, highlightClass, (span) => {
-          span.setAttribute("data-title", `[${otherclassmod < 0 ? "✓" : "✗"}] ${closestScore.toFixed(2)}: ${closestClass} | [${otherclassmod < 0 ? "✗" : "✓"}] ${otherClassScore.toFixed(2)}: ${otherClass}`);
+        const {index, closestClass, closestOtherClass, otherclassmod, show} = toHighlight[i];
+        const className = closestClass[0].pageContent;
+        const classScore = closestClass[1];
+        const otherClassName = closestOtherClass[0].pageContent;
+        const otherClassScore = closestOtherClass[1];
+        const details = splitDetails[index];
+        let true_from_node_pos = details.from_text_node + node_offset;
+        let true_to_node_pos = details.to_text_node + node_offset;
+        const num_textnodes = 1 + details.to_text_node - details.from_text_node
+        const textNodesSubset = currentTextNodes.slice(true_from_node_pos, true_to_node_pos + 1);
+        const highlightClass = class2Id[className];
+        const start_text_offset = details.from_text_node == textoffset_node ? textoffset : 0
+        const end_text_offset = details.to_text_node == textoffset_node ? textoffset : 0
+        const relative_details = {
+          from_text_node_char_start: details.from_text_node_char_start - start_text_offset,
+          to_text_node_char_end: details.to_text_node_char_end - end_text_offset,
+          from_text_node: 0,
+          to_text_node: details.to_text_node - details.from_text_node
+        }
+        const { replacedNodes, nextTextOffset } = highlightText(relative_details, textNodesSubset, highlightClass, (span) => {
+          span.setAttribute("data-title", `[${otherclassmod < 0 ? "✓" : "✗"}] ${classScore.toFixed(2)}: ${className} | [${otherclassmod < 0 ? "✗" : "✓"}] ${otherClassScore.toFixed(2)}: ${otherClassName}`);
           span.setAttribute("splitid_class", topicCounts[closestClass])
           if (!show)
             span.classList.add("transparent")
@@ -272,8 +281,15 @@ const Highlighter = () => {
             span.setAttribute("splitid", index);
         });
         topicCounts[closestClass] += show ? 1 : 0;
-        currentTextNodes = currentTextNodes.slice(to_node_pos);
-        currentTextNodes.unshift(replacedNodes.pop())
+        currentTextNodes.splice(true_from_node_pos, num_textnodes, ...replacedNodes);
+        node_offset += replacedNodes.length - num_textnodes 
+        if (nextTextOffset > 0) {
+          textoffset = nextTextOffset + (textoffset_node == details.from_text_node ? textoffset : 0);
+          textoffset_node = details.to_text_node;
+        } else {
+          textoffset = 0;
+          textoffset_node = -1;
+        }
       }
 
       // finally, let's highlight all textnodes that are not highlighted
