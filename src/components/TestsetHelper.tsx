@@ -5,7 +5,6 @@ import { useGlobalStorage } from "~util/useGlobalStorage";
 const TestsetHelper = ({tabId}) => {
     const [ [ mode ], [ controlSend ], [ highlighterData ] ] = useGlobalStorage(tabId, "highlightMode", "testsethelperControlSend", "DEV_highlighterData")
 
-    // zapp through elements / scroll to focused element
     useEffect(() => {
         const spans = document.querySelectorAll("span.shaderunner-highlight[splitid]");
         function handleClick(event) {
@@ -17,7 +16,18 @@ const TestsetHelper = ({tabId}) => {
             els.forEach(el => {
                 el.classList.toggle("good")
             })
+            event.preventDefault();
+            event.stopPropagation();
         }
+
+        // Add an event listener to the whole document
+        document.addEventListener('click', function (event) {
+            if (!event.target.closest('.shaderunner-highlight')) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        }, true); // Use capture to ensure the event is captured in the capturing phase
+
 
         // replace event listener with newest version
         spans.forEach(span => span.addEventListener('click', handleClick));
@@ -26,6 +36,7 @@ const TestsetHelper = ({tabId}) => {
 
     // save-button
     useEffect(() => {
+        console.log("send!", controlSend, highlighterData)
         if(!controlSend || !highlighterData) return;
 
         async function send() {
