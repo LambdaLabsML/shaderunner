@@ -106,6 +106,7 @@ function highlightText(details: { from_text_node_char_start: any; to_text_node_c
   nodes.forEach((node, i) => {
     if (!node || node.nodeType !== Node.TEXT_NODE) return;
 
+    nextTextOffset = 0;
     const textContent = node.textContent;
     const beforeText = textContent.substring(0, i == details.from_text_node ? details.from_text_node_char_start : 0);
     const afterText = textContent.substring(i == details.to_text_node ? details.to_text_node_char_end : textContent.length);

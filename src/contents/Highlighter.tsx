@@ -164,7 +164,9 @@ const Highlighter = () => {
 
       // ensure we have embedded the page contents
       const pageEmbeddings = await getPageEmbeddings(mode)
-      const { splits, splitDetails, splitEmbeddings, textNodes } = pageEmbeddings[mode];
+      let { splits, splitDetails, splitEmbeddings, textNodes } = pageEmbeddings[mode];
+      splits = splits.filter((s,i) => splitDetails[i])
+      splitDetails = splitDetails.filter((s,i) => splitDetails[i])
 
       // use cached / compute embeddings of classes
       let classStore, embeddings;
@@ -182,12 +184,8 @@ const Highlighter = () => {
       let toHighlight = [];
       let scores_diffs = [];
       let scores_plus = [];
-      for (const i in splits) {
+      for (let i=0; i<splits.length; i++) {
         const split = splits[i];
-        const details = splitDetails[i];
-
-        // if no details given, we omit this split
-        if (!details) continue;
 
         // using precomputed embeddings
         const embedding = splitEmbeddings[split];
@@ -250,10 +248,10 @@ const Highlighter = () => {
       let currentTextNodes = textNodes.slice();
       let node_offset = 0;
       let textoffset = 0;
-      let textoffset_node = -1;
       const topicCounts = Object.fromEntries(allclasses.map((c) => [c, 0]))
       for(let i=0; i<toHighlight.length; i++) {
         const {index, closestClass, closestOtherClass, otherclassmod, show} = toHighlight[i];
+        const split = splits[index];
         const className = closestClass[0].pageContent;
         const classScore = closestClass[1];
         const otherClassName = closestOtherClass[0].pageContent;
@@ -264,11 +262,9 @@ const Highlighter = () => {
         const num_textnodes = 1 + details.to_text_node - details.from_text_node
         const textNodesSubset = currentTextNodes.slice(true_from_node_pos, true_to_node_pos + 1);
         const highlightClass = class2Id[className];
-        const start_text_offset = details.from_text_node == textoffset_node ? textoffset : 0
-        const end_text_offset = details.to_text_node == textoffset_node ? textoffset : 0
         const relative_details = {
-          from_text_node_char_start: details.from_text_node_char_start - start_text_offset,
-          to_text_node_char_end: details.to_text_node_char_end - end_text_offset,
+          from_text_node_char_start: details.from_text_node_char_start - textoffset,
+          to_text_node_char_end: details.to_text_node_char_end - (details.from_text_node == details.to_text_node ? textoffset : 0),
           from_text_node: 0,
           to_text_node: details.to_text_node - details.from_text_node
         }
@@ -283,12 +279,11 @@ const Highlighter = () => {
         topicCounts[closestClass] += show ? 1 : 0;
         currentTextNodes.splice(true_from_node_pos, num_textnodes, ...replacedNodes);
         node_offset += replacedNodes.length - num_textnodes 
-        if (nextTextOffset > 0) {
-          textoffset = nextTextOffset + (textoffset_node == details.from_text_node ? textoffset : 0);
-          textoffset_node = details.to_text_node;
+        if (index < splits.length - 1 && splitDetails[index+1].from_text_node == details.to_text_node && nextTextOffset > 0) {
+          textoffset = nextTextOffset + (details.to_text_node == details.from_text_node ? textoffset : 0);
+          //textoffset += nextTextOffset;
         } else {
           textoffset = 0;
-          textoffset_node = -1;
         }
       }
 
