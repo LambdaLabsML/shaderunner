@@ -237,7 +237,7 @@ const Highlighter = () => {
             const otherclassmatches = closest.filter(([doc, score]) => class2Id[doc.pageContent] * otherclassmod < classifierData.classes_pos.length * otherclassmod)
             const otherClass = otherclassmatches[0][0].pageContent;
             const otherClassScore = otherclassmatches[0][1];
-            const index = toHighlight.length;
+            const index = i;
             const show = true;
             toHighlight.push({index, texts, from_node_pos, to_node_pos, closestClass, closestScore, otherClass, otherClassScore, otherclassmod, show})
           }
@@ -259,7 +259,7 @@ const Highlighter = () => {
       currentTextNodes = textNodes;
       const topicCounts = Object.fromEntries(allclasses.map((c) => [c, 0]))
       for(let i=0; i<toHighlight.length; i++) {
-        const {texts, from_node_pos, to_node_pos, closestClass, closestScore, otherClass, otherClassScore, otherclassmod, show} = toHighlight[i];
+        const {index, texts, from_node_pos, to_node_pos, closestClass, closestScore, otherClass, otherClassScore, otherclassmod, show} = toHighlight[i];
         const nonWhiteTexts = texts.filter(t => t.trim())
         const textNodesSubset = currentTextNodes.slice(from_node_pos, to_node_pos).filter(t => t.textContent.trim());
         const highlightClass = class2Id[closestClass];
@@ -269,7 +269,7 @@ const Highlighter = () => {
           if (!show)
             span.classList.add("transparent")
           if (DEV)
-            span.setAttribute("splitid_total", i);
+            span.setAttribute("splitid", index);
         });
         topicCounts[closestClass] += show ? 1 : 0;
         currentTextNodes = currentTextNodes.slice(to_node_pos);
