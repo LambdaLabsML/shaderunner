@@ -101,7 +101,33 @@ const Highlighter = () => {
         }
       }
       applyHighlight()
-    }, [pageEmbeddings, connected, classifierData, isActive, textclassifier, textretrieval, retrievalQuery, highlightAmount])
+    }, [pageEmbeddings, connected, classifierData, isActive, textclassifier, textretrieval, retrievalQuery, highlightAmount, classEmbeddings])
+
+
+    // on every classifier change, recompute class embeddings
+    useEffect(() => {
+      if(!tabId || !isActive || !connected || !classifierData.thought) return;
+
+      async function computeClassEmbeddings() {
+        const classes_pos = classifierData.classes_pos;
+        const classes_neg = classifierData.classes_neg;
+        if (!classes_pos || !classes_neg)
+          return;
+
+        const allclasses = [...classes_pos, ...classes_neg]
+        // embeddings of classes (use cached / compute)
+        const classCollection = url + "|classes"
+        if (classEmbeddings && allclasses.every(a => a in classEmbeddings)) {
+          setStatusHighlight(["checking", 0, "using cache"]);
+        } else {
+          setStatusHighlight(["checking", 0, "embedding classes"]);
+          const class2Embedding = await computeEmbeddingsCached(classCollection, allclasses, "shaderunner-classes");
+          setClassEmbeddings(class2Embedding)
+        }
+      }
+      computeClassEmbeddings()
+    }, [isActive, connected, classifierData, isActive])
+
 
 
     // --------- //
@@ -144,22 +170,12 @@ const Highlighter = () => {
       const classes_neg = classifierData.classes_neg;
       if (!classes_pos || !classes_neg)
         return;
+      if (!classEmbeddings) return;
 
       setStatusHighlight(["checking", 0]);
       const allclasses = [...classes_pos, ...classes_neg]
       const class2Id = Object.fromEntries(allclasses.map((c, i) => [c, i]))
-
-      // embeddings of classes (use cached / compute)
-      const classCollection = url+"|classes"
-      let class2Embedding = classEmbeddings;
-      if (class2Embedding && allclasses.every(a => a in class2Embedding)) {
-        setStatusHighlight(["checking", 0, "using cache"]);
-      } else {
-        setStatusHighlight(["checking", 0, "embedding classes"]);
-        class2Embedding = await computeEmbeddingsCached(classCollection, allclasses, "shaderunner-classes");
-        setClassEmbeddings(class2Embedding)
-      }
-      const classStore = VectorStore_fromClass2Embedding(class2Embedding)
+      const classStore = VectorStore_fromClass2Embedding(classEmbeddings)
 
       // ensure we have embedded the page contents
       let { splits, splitEmbeddings, mode } = pageEmbeddings;
