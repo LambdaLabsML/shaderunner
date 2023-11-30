@@ -16,19 +16,18 @@ const useSessionStorage = DEV && process.env.PLASMO_PUBLIC_STORAGE == "persisten
 
 const Highlighter = () => {
     const [ tabId, setTabId ] = useState(null);
-    const [ initialized, setInitialized ] = useState(false);
     const [
       [savedUrl],
       [,setTopicCounts],
       [,setScores],
       [,setStatusEmbeddings],
       [,setStatusHighlight],
-      [,setClassEmbeddings],
+      [classEmbeddings, setClassEmbeddings],
       [highlightAmount],
       [setGlobalStorage, connected]
     ] = useGlobalStorage(tabId, "url", "topicCounts", "classifierScores", "status_embedding", "status_highlight", "classEmbeddings", "highlightAmount");
     const [ url, isActive ] = useActiveState(window.location);
-    const [ pageEmbeddings, setPageEmbeddings ] = useState({});
+    const [ pageEmbeddings, setPageEmbeddings ] = useState({mode: "sentences", splits: [], splitEmbeddings: {}});
     const [ classifierData ] = useSessionStorage("classifierData:"+tabId, {});
     const [ retrievalQuery ] = useSessionStorage("retrievalQuery:"+tabId, null);
 
@@ -79,9 +78,7 @@ const Highlighter = () => {
       // start directly by getting page embeddings
       async function init() {
         const mode = "sentences";
-        const newEmbeddings = await getPageEmbeddings(mode, setStatusEmbeddings);
-        setPageEmbeddings(old => ({ ...old, [mode]: newEmbeddings }));
-        setInitialized(true);
+        await getPageEmbeddings(mode, setStatusEmbeddings);
       }
       init();
     }, [isActive, tabId])
@@ -89,8 +86,7 @@ const Highlighter = () => {
 
     // on every classifier change, recompute highlights
     useEffect(() => {
-      resetHighlights()
-      if(!tabId || !isActive || !connected || !initialized || !classifierData.thought) return;
+      if(!tabId || !isActive || !connected || !classifierData.thought) return;
 
       const applyHighlight = () => {
         try {
@@ -105,7 +101,7 @@ const Highlighter = () => {
         }
       }
       applyHighlight()
-    }, [initialized, connected, classifierData, isActive, textclassifier, textretrieval, retrievalQuery, highlightAmount])
+    }, [pageEmbeddings, connected, classifierData, isActive, textclassifier, textretrieval, retrievalQuery, highlightAmount])
 
 
     // --------- //
@@ -116,7 +112,7 @@ const Highlighter = () => {
     const getPageEmbeddings = async (mode = "sentences", onStatus = (status: [string, Number, string?]) => {}) => {
 
       // use cache if already computed
-      if (pageEmbeddings[mode]) return pageEmbeddings[mode];
+      if (pageEmbeddings.mode == mode && pageEmbeddings.finished) return pageEmbeddings;
 
       // if not in cache, check if database has embeddings
       const exists = await embeddingExists(url as string)
@@ -137,14 +133,13 @@ const Highlighter = () => {
         splitEmbeddings = {...splitEmbeddings, ...splitEmbeddingsBatch};
         if (!exists)
           onStatus(["computing", Math.floor(i / splits.length * 100)])
+        setPageEmbeddings({ splits: splits.slice(0, i+batchSize), splitEmbeddings, mode });
       }
-      const _pageEmbeddings = { [mode]: { splits, splitEmbeddings } }
       onStatus(["loaded", 100])
-      return _pageEmbeddings;
     }
 
 
-    const highlightUsingClasses = async (mode = "sentences") => {
+    const highlightUsingClasses = async () => {
       const classes_pos = classifierData.classes_pos;
       const classes_neg = classifierData.classes_neg;
       if (!classes_pos || !classes_neg)
@@ -154,26 +149,26 @@ const Highlighter = () => {
       const allclasses = [...classes_pos, ...classes_neg]
       const class2Id = Object.fromEntries(allclasses.map((c, i) => [c, i]))
 
+      // embeddings of classes (use cached / compute)
+      const classCollection = url+"|classes"
+      let class2Embedding = classEmbeddings;
+      if (class2Embedding && allclasses.every(a => a in class2Embedding)) {
+        setStatusHighlight(["checking", 0, "using cache"]);
+      } else {
+        setStatusHighlight(["checking", 0, "embedding classes"]);
+        class2Embedding = await computeEmbeddingsCached(classCollection, allclasses, "shaderunner-classes");
+        setClassEmbeddings(class2Embedding)
+      }
+      const classStore = VectorStore_fromClass2Embedding(class2Embedding)
+
       // ensure we have embedded the page contents
-      const pageEmbeddings = await getPageEmbeddings(mode)
-      let { splits, splitEmbeddings } = pageEmbeddings[mode];
+      let { splits, splitEmbeddings, mode } = pageEmbeddings;
+      if (splits.length == 0) return;
       const mainel = getMainContent();
+      resetHighlights()
       let {splitDetails, textNodes} = mapSplitsToTextnodes(splits, mainel, mode)
       splits = splits.filter((s,i) => splitDetails[i])
       splitDetails = splitDetails.filter((s,i) => splitDetails[i])
-
-      // embeddings of classes (use cached / compute)
-      const classCollection = url+"|classes"
-      if (await embeddingExists(classCollection)) {
-        setStatusHighlight(["checking", 0, "found cache"]);
-      } else {
-        setStatusHighlight(["checking", 0, "embedding classes"]);
-      }
-      const class2embedding = await computeEmbeddingsCached(url+"classes", allclasses);
-      setClassEmbeddings(class2embedding)
-      const classStore = VectorStore_fromClass2Embedding(class2embedding)
-      console.log(splitEmbeddings);
-      console.log(classStore);
 
       // mark sentences based on similarity
       let toHighlight = [];
@@ -280,6 +275,7 @@ const Highlighter = () => {
         } else {
           textoffset = 0;
         }
+        //setStatusHighlight(["computing", i / toHighlight.length * 100]) // bug: needs to be outside due to concurrency conflict of this variable
       }
 
       // finally, let's highlight all textnodes that are not highlighted

@@ -123,21 +123,21 @@ async function embeddingExists(collectionName: string) {
       return storeExists;
     } 
     catch (error) {
-      return {storeExists: false, dbVersion: -1};
+      return false;
     }
 }
 
 
 // given a list of sentences & metadata compute embeddings, retrieve / store them
-async function computeEmbeddingsCached(collectionName: string, splits: string[]) {
+async function computeEmbeddingsCached(collectionName: string, splits: string[], dbname=DBNAME) {
   const api_key = await storage.get("OPENAI_API_KEY");
   const openaiembedding = new OpenAIEmbeddings({ openAIApiKey: api_key, modelName: modelName })
 
   // first try to get an existing collection
-  let { storeExists, dbVersion } = await collection_exists(DBNAME, collectionName)
+  let { storeExists, dbVersion } = await collection_exists(dbname, collectionName)
 
   // embeddings we want to have
-  const split2embedding = storeExists ? await retrieveMultipleData(DBNAME, collectionName, splits) : Object.fromEntries(splits.map((s, i) => [s, null]));
+  const split2embedding = storeExists ? await retrieveMultipleData(dbname, collectionName, splits) : Object.fromEntries(splits.map((s, i) => [s, null]));
 
   // check which sentences are not embedded, yet
   let missingsplits = Object.entries(split2embedding).filter(([s, embedding]) => embedding == null || embedding == undefined).map(([split, e]) => split);
@@ -150,7 +150,7 @@ async function computeEmbeddingsCached(collectionName: string, splits: string[])
   if (missingsplits.length) {
     const missingdocs = missingsplits.map((split, i) => new Document({ pageContent: split }))
     const missingembeddings = await openaiembedding.embedDocuments(missingsplits);
-    const db = await openDatabase(DBNAME, collectionName, dbVersion + (storeExists ? 0 : 1));
+    const db = await openDatabase(dbname, collectionName, dbVersion + (storeExists ? 0 : 1));
     const new_split2embedding = [];
     for (let i = 0; i < missingdocs.length; i++) {
       const split = missingdocs[i].pageContent;
