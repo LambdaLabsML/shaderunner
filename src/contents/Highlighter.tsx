@@ -253,7 +253,6 @@ const Highlighter = () => {
       const topicCounts = Object.fromEntries(allclasses.map((c) => [c, 0]))
       for(let i=0; i<toHighlight.length; i++) {
         const {index, closestClass, closestOtherClass, otherclassmod, show} = toHighlight[i];
-        const split = splits[index];
         const className = closestClass[0].pageContent;
         const classScore = closestClass[1];
         const otherClassName = closestOtherClass[0].pageContent;
@@ -272,13 +271,13 @@ const Highlighter = () => {
         }
         const { replacedNodes, nextTextOffset } = highlightText(relative_details, textNodesSubset, highlightClass, (span) => {
           span.setAttribute("data-title", `[${otherclassmod < 0 ? "✓" : "✗"}] ${classScore.toFixed(2)}: ${className} | [${otherclassmod < 0 ? "✗" : "✓"}] ${otherClassScore.toFixed(2)}: ${otherClassName}`);
-          span.setAttribute("splitid_class", topicCounts[closestClass])
+          span.setAttribute("splitid_class", topicCounts[className])
           if (!show)
             span.classList.add("transparent")
           if (DEV)
             span.setAttribute("splitid", index);
         });
-        topicCounts[closestClass] += show ? 1 : 0;
+        topicCounts[className] += show ? 1 : 0;
         currentTextNodes.splice(true_from_node_pos, num_textnodes, ...replacedNodes);
         node_offset += replacedNodes.length - num_textnodes 
         if (index < splits.length - 1 && splitDetails[index+1].from_text_node == details.to_text_node && nextTextOffset > 0) {
