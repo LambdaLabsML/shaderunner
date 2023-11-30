@@ -2,7 +2,7 @@ import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { Storage } from "@plasmohq/storage"
 import { Document } from "langchain/document";
-import type { Embeddings } from "langchain/dist/embeddings/base";
+import type { Embeddings, EmbeddingsParams } from "langchain/dist/embeddings/base";
 const storage = new Storage()
 const modelName = 'text-embedding-ada-002'
 // TODO: turn off anonymized_telemetry here
@@ -14,104 +14,115 @@ const DBNAME = "shaderunner";
 
 
 
-async function db_exists(dbName, storeName) {
+async function collection_exists(dbName, storeName) {
   return new Promise((resolve, reject) => {
-      const request = indexedDB.open(dbName);
+    const request = indexedDB.open(dbName);
 
-      request.onsuccess = function(event) {
-          const db = event.target.result;
-          const storeExists = db.objectStoreNames.contains(storeName);
-          const dbVersion = db.version;
-          console.log("db_exists, exists?", storeExists, ", version:", dbVersion);
-          resolve({ storeExists, dbVersion });
-      };
+    request.onsuccess = function (event) {
+      const db = event.target.result;
+      const storeExists = db.objectStoreNames.contains(storeName);
+      const dbVersion = db.version || 0;
+      resolve({ storeExists, dbVersion });
+    };
 
-      request.onerror = function(event) {
-          console.error("Error opening database:", event.target.error);
-          reject(new Error("Error opening database"));
-      };
+    request.onerror = function (event) {
+      console.error("Error opening database:", event.target.error);
+      reject(new Error("Error opening database"));
+    };
   });
 }
 
 
-function openDatabase(dbName, storeName, dbVersion=undefined) {
+function openDatabase(dbName, storeName, dbVersion = undefined) {
   return new Promise((resolve, reject) => {
-      const request = indexedDB.open(dbName, dbVersion);
+    const request = indexedDB.open(dbName, dbVersion);
 
-      request.onupgradeneeded = function(event) {
-        console.log("upgrade!", storeName)
-          const db = event.target.result;
-          if (!db.objectStoreNames.contains(storeName)) {
-              db.createObjectStore(storeName);
-          }
-      };
+    request.onupgradeneeded = function (event) {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains(storeName)) {
+        db.createObjectStore(storeName);
+      }
+    };
 
-      request.onsuccess = function(event) {
-        console.log("found!", storeName)
-          resolve(event.target.result);
-      };
+    request.onsuccess = function (event) {
+      resolve(event.target.result);
+    };
 
-      request.onerror = function(event) {
-          reject(new Error("IndexedDB error: " + event.target.error));
-      };
+    request.onerror = function (event) {
+      reject(new Error("IndexedDB error: " + event.target.error));
+    };
   });
 }
 
 
-async function saveData(dbName, storeName, key, data, newDBVersion) {
-  const db = await openDatabase(dbName, storeName, newDBVersion);
+async function saveData(db, storeName, key, data) {
   return new Promise((resolve, reject) => {
-      const transaction = db.transaction([storeName], 'readwrite');
-      const store = transaction.objectStore(storeName);
-      const request = store.put(data, key);
+    const transaction = db.transaction([storeName], 'readwrite');
+    const store = transaction.objectStore(storeName);
+    const request = store.put(data, key);
 
-      request.onsuccess = function() {
-          resolve();
-      };
+    request.onsuccess = function () {
+      resolve();
+    };
 
-      request.onerror = function(event) {
-          reject(new Error("Error writing data: " + event.target.errorCode));
-      };
+    request.onerror = function (event) {
+      reject(new Error("Error writing data: " + event.target.errorCode));
+    };
   });
 }
 
 
-async function retrieveData(dbName, storeName, key) {
-  const db = await openDatabase(dbName, storeName);
-  return new Promise((resolve, reject) => {
+async function retrieveMultipleData(dbName, storeName, keys) {
+  try {
+      // Open the database
+      const db = await openDatabase(dbName, storeName);
+      // Start a new transaction
       const transaction = db.transaction([storeName], 'readonly');
+      // Get the object store
       const store = transaction.objectStore(storeName);
-      const request = store.get(key);
 
-      request.onsuccess = function(event) {
-          resolve(event.target.result);
-      };
+      // Use a map to store the results
+      const results = {};
 
-      request.onerror = function(event) {
-          reject(new Error("Error reading data: " + event.target.errorCode));
-      };
-  });
+      // Await the completion of all get requests
+      await Promise.all(keys.map(key => 
+          new Promise(resolve => {
+              const request = store.get(key);
+              request.onsuccess = () => {
+                  // If key doesn't exist, set value to null or undefined
+                  results[key] = request.result;
+                  resolve();
+              };
+              request.onerror = () => {
+                  // Handle errors, e.g., by setting the value to null
+                  results[key] = null;
+                  resolve();
+              };
+          })
+      ));
+
+      return results;
+  } catch (error) {
+      console.error('Error retrieving data:', error);
+      throw error; // Rethrow the error for caller to handle
+  }
 }
 
 
-async function getStoreFromDB(collectionName: string, embeddingfn) {
-  const embeddings = await retrieveData(DBNAME, collectionName, "embeddings")
+/*async function getStoreFromDB(collectionName: string, splits: string[], embeddingfn) {
+  const embeddings = await retrieveData(DBNAME, collectionName, splits)
   const classStore = new MemoryVectorStore(embeddings as Embeddings)
   classStore.memoryVectors = Object.values(embeddings);
   return classStore
 }
-
-
-async function saveStoreToDB(collectionName: string, store: MemoryVectorStore, newDBVersion: Number) {
-  return await saveData(DBNAME, collectionName, "embeddings", store.memoryVectors, newDBVersion)
-}
-
+*/
 
 
 // check if embedding exists
 async function embeddingExists(collectionName: string) {
     try {
-      return (await db_exists(DBNAME, collectionName));
+      const {storeExists} = (await collection_exists(DBNAME, collectionName));
+      return storeExists;
     } 
     catch (error) {
       return {storeExists: false, dbVersion: -1};
@@ -120,101 +131,52 @@ async function embeddingExists(collectionName: string) {
 
 
 // given a list of sentences & metadata compute embeddings, retrieve / store them
-async function computeEmbeddingsCached(collectionName: string, splits: string[], metadata_template: Metadata, method_data: { method: string; k?: number; query?: string; }) {
-    const api_key = await storage.get("OPENAI_API_KEY");
-    const openaiembedding = new OpenAIEmbeddings({openAIApiKey:api_key, modelName:modelName})
-
-    // embeddings we want to have
-    let split2embedding = Object.fromEntries(splits.map((s, i) => [s, null]));
-
-    // first try to get an existing collection
-    let vectorStore;
-    let isNew = false;
-
-    let {storeExists, dbVersion} = await embeddingExists(collectionName)
-    if (storeExists)
-      vectorStore = await getStoreFromDB(collectionName, openaiembedding)
-    
-    // if that collection hasn't been filled, we fill it now
-    else {
-      console.log("compute & save embeddings for: ", collectionName)
-
-      // create documents
-      const docs = splits.map((split, i) => new Document({ metadata: metadata_template, pageContent: split}))
-    
-      // Compute embeddings
-      vectorStore = await MemoryVectorStore.fromDocuments(
-        docs,
-        openaiembedding
-      );
-      await saveStoreToDB(collectionName, vectorStore, ++dbVersion);
-      isNew = true;
-
-      // method 1: retrieval
-      if (method_data.method == "retrieval")
-          return await vectorStore.similaritySearchWithScore(method_data.query, method_data.k)
-
-    }
-
-    // fill the mapping
-    for (let i=0; i<vectorStore.embeddings.length; i++) {
-      const embeddingObj = vectorStore.embeddings[i]
-      if(!(embeddingObj.content in split2embedding)) continue;
-      split2embedding[embeddingObj.content] = embeddingObj.embedding;
-    }
-
-    // check which sentences are not embedded, yet
-    let missingsplits = isNew ? [] : Object.entries(split2embedding).filter(([split, embedding]) => embedding == null).map(([split, embedding]) => split);
-
-    // if nothing is missing, we can directly return
-    if (!missingsplits.length && method_data.method == "get_embeddings" )
-        return split2embedding;
-
-    if (method_data.method == "get_embeddings")
-      console.log(missingsplits.length, "splits are missing. will compute & save embeddings for these now.")
-
-    // else embed missing docs
-    if (missingsplits.length) {
-      const missingdocs = missingsplits.map((split, i) => new Document({ metadata: metadata_template, pageContent: split}))
-      const missingembeddings = await openaiembedding.embedDocuments(missingsplits);
-      vectorStore.addVectors(missingembeddings, missingdocs);
-      for(let i=0; i<missingdocs.length; i++) {
-        split2embedding[missingdocs[i].pageContent] = missingembeddings;
-      }
-      console.log("save missing")
-      await saveStoreToDB(collectionName, vectorStore, ++dbVersion);
-      console.log("saved missing")
-    }
-
-    // method 1: retrieval
-    if (method_data.method == "retrieval")
-        return await vectorStore.similaritySearchWithScore(method_data.query, method_data.k)
-
-    // method 2: get all embeddings
-    return split2embedding;
-  }
-
-
-
-
-
-// given a list of sentences & metadata compute embeddings, retrieve / store them
-async function computeEmbeddingsLocal(sentences: string[], metadata: Metadata[]) {
+async function computeEmbeddingsCached(collectionName: string, splits: string[]) {
   const api_key = await storage.get("OPENAI_API_KEY");
+  const openaiembedding = new OpenAIEmbeddings({ openAIApiKey: api_key, modelName: modelName })
 
-  // Compute embeddings
-  const vectorStore = await MemoryVectorStore.fromTexts(
-    sentences,
-    metadata,
-    new OpenAIEmbeddings({openAIApiKey:api_key, modelName:modelName})
-  );
-  const embeddings = {};
-  for (let obj of vectorStore.memoryVectors) {
-    embeddings[obj.content] = obj
+  // first try to get an existing collection
+  let { storeExists, dbVersion } = await collection_exists(DBNAME, collectionName)
+
+  // embeddings we want to have
+  const split2embedding = storeExists ? await retrieveMultipleData(DBNAME, collectionName, splits) : Object.fromEntries(splits.map((s, i) => [s, null]));
+
+  // check which sentences are not embedded, yet
+  let missingsplits = Object.entries(split2embedding).filter(([s, embedding]) => embedding == null || embedding == undefined).map(([split, e]) => split);
+  console.log("test", storeExists, missingsplits.length, splits)
+
+  // if nothing is missing, we can directly return
+  if (!missingsplits.length)
+    return split2embedding;
+
+  // else embed missing docs
+  if (missingsplits.length) {
+    const missingdocs = missingsplits.map((split, i) => new Document({ pageContent: split }))
+    const missingembeddings = await openaiembedding.embedDocuments(missingsplits);
+    console.log(collectionName, storeExists, dbVersion)
+    const db = await openDatabase(DBNAME, collectionName, dbVersion + 1);
+    for (let i = 0; i < missingdocs.length; i++) {
+      const split = missingdocs[i].pageContent;
+      const embedding = missingembeddings[i];
+      split2embedding[split] = embedding;
+      await saveData(db, collectionName, split, embedding);
+    }
   }
 
-  return [ vectorStore, embeddings ];
+  return split2embedding;
 }
 
 
-export { computeEmbeddingsLocal, embeddingExists, computeEmbeddingsCached };
+
+function VectorStore_fromClass2Embedding(class2Embedding: { [s: string]: Number[]; } | ArrayLike<unknown>) {
+  const embeddings = Object.entries(class2Embedding).map(([content, embedding]) => ({content, embedding}))
+  const classStore = new MemoryVectorStore(embeddings);
+  classStore.memoryVectors = Object.values(embeddings);
+  return classStore;
+}
+
+// method: retrieval
+// return await vectorStore.similaritySearchWithScore(method_data.query, method_data.k)
+
+
+export { embeddingExists, computeEmbeddingsCached, VectorStore_fromClass2Embedding };

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { getMainContent, extractSplits, mapSplitsToTextnodes } from '~util/extractContent'
 import { highlightText, resetHighlights, textNodesNotUnderHighlight, surroundTextNode } from '~util/DOM'
-import { computeEmbeddingsCached, computeEmbeddingsLocal, embeddingExists, type Metadata } from '~util/embedding'
+import { computeEmbeddingsCached, computeEmbeddingsLocal, embeddingExists, VectorStore_fromClass2Embedding, type Metadata } from '~util/embedding'
 import { useStorage } from "@plasmohq/storage/hook";
 import { useSessionStorage as _useSessionStorage, arraysAreEqual } from '~util/misc'
 import { useActiveState } from '~util/activeStatus'
@@ -13,17 +13,17 @@ import { MemoryVectorStore } from 'langchain/vectorstores/memory';
 
 const DEV = process.env.NODE_ENV == "development";
 const useSessionStorage = DEV && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;
-type classEmbeddingType = {allclasses: string[], classStore: any};
 
 const Highlighter = () => {
     const [ tabId, setTabId ] = useState(null);
+    const [ initialized, setInitialized ] = useState(false);
     const [
       [savedUrl],
       [,setTopicCounts],
       [,setScores],
       [,setStatusEmbeddings],
       [,setStatusHighlight],
-      [classEmbeddings, setClassEmbeddings],
+      [,setClassEmbeddings],
       [highlightAmount],
       [setGlobalStorage, connected]
     ] = useGlobalStorage(tabId, "url", "topicCounts", "classifierScores", "status_embedding", "status_highlight", "classEmbeddings", "highlightAmount");
@@ -81,6 +81,7 @@ const Highlighter = () => {
         const mode = "sentences";
         const newEmbeddings = await getPageEmbeddings(mode, setStatusEmbeddings);
         setPageEmbeddings(old => ({ ...old, [mode]: newEmbeddings }));
+        setInitialized(true);
       }
       init();
     }, [isActive, tabId])
@@ -89,7 +90,7 @@ const Highlighter = () => {
     // on every classifier change, recompute highlights
     useEffect(() => {
       resetHighlights()
-      if(!tabId || !isActive || !connected || !classifierData.thought) return;
+      if(!tabId || !isActive || !connected || !initialized || !classifierData.thought) return;
 
       const applyHighlight = () => {
         try {
@@ -104,7 +105,7 @@ const Highlighter = () => {
         }
       }
       applyHighlight()
-    }, [connected, classifierData, isActive, textclassifier, textretrieval, retrievalQuery, highlightAmount])
+    }, [initialized, connected, classifierData, isActive, textclassifier, textretrieval, retrievalQuery, highlightAmount])
 
 
     // --------- //
@@ -127,24 +128,14 @@ const Highlighter = () => {
       // extract main content & generate splits
       const mainel = getMainContent();
       const splits = extractSplits(mode, mainel)
-      const metadata_template = {
-          "data-type": mode,
-          "url": url
-      }
 
       // retrieve embedding (either all at once or batch-wise)
       let splitEmbeddings = {};
-      if (false && exists)
-        splitEmbeddings = await computeEmbeddingsCached(url as string, splits, metadata_template as Metadata, {"method": "get_embeddings"})
-      else {
-        const batchSize = 64;
-        for(let i = 0; i < splits.length; i+= batchSize) {
-          console.log("start batch", i, splits.length, batchSize)
-          const splitEmbeddingsBatch = await computeEmbeddingsCached(url as string, splits.slice(i, i+batchSize), metadata_template as Metadata, {"method": "get_embeddings"})
-          splitEmbeddings = {...splitEmbeddings, ...splitEmbeddingsBatch};
-          console.log("end batch", i)
-          onStatus(["computing", Math.floor(i / splits.length * 100)])
-        }
+      const batchSize = 32;
+      for(let i = 0; i < splits.length; i+= batchSize) {
+        const splitEmbeddingsBatch = await computeEmbeddingsCached(url as string, splits.slice(i, i+batchSize))
+        splitEmbeddings = {...splitEmbeddings, ...splitEmbeddingsBatch};
+        onStatus(["computing", Math.floor(i / splits.length * 100)])
       }
       const _pageEmbeddings = { [mode]: { splits, splitEmbeddings } }
       onStatus(["loaded", 100])
@@ -170,17 +161,18 @@ const Highlighter = () => {
       splits = splits.filter((s,i) => splitDetails[i])
       splitDetails = splitDetails.filter((s,i) => splitDetails[i])
 
-      // use cached / compute embeddings of classes
-      let classStore, embeddings;
-      if (classEmbeddings && (classEmbeddings as classEmbeddingType)?.allclasses && arraysAreEqual((classEmbeddings as classEmbeddingType).allclasses, allclasses)) {
+      // embeddings of classes (use cached / compute)
+      const classCollection = url+"|classes"
+      if (await embeddingExists(classCollection)) {
         setStatusHighlight(["checking", 0, "found cache"]);
-        classStore = new MemoryVectorStore(classEmbeddings.embeddings);
-        classStore.memoryVectors = Object.values(classEmbeddings.embeddings);
       } else {
         setStatusHighlight(["checking", 0, "embedding classes"]);
-        [ classStore, embeddings ] = await computeEmbeddingsLocal(allclasses, []);
-        setClassEmbeddings({allclasses, embeddings})
       }
+      const class2embedding = await computeEmbeddingsCached(url+"classes", allclasses);
+      setClassEmbeddings(class2embedding)
+      const classStore = VectorStore_fromClass2Embedding(class2embedding)
+      console.log(splitEmbeddings);
+      console.log(classStore);
 
       // mark sentences based on similarity
       let toHighlight = [];
