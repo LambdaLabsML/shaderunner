@@ -219,7 +219,8 @@ const Highlighter = () => {
         // remember to mark split for highlighting later streamlined
         if (true || highlight) {
           const closestClass = closest[0];
-          const otherclassmod = class2Id[closestClass] < classifierData.classes_pos.length ? -1 : 1;
+          const closestClassName = closestClass[0].pageContent
+          const otherclassmod = class2Id[closestClassName] < classifierData.classes_pos.length ? -1 : 1;
           const otherclassmatches = closest.filter(([doc, score]) => class2Id[doc.pageContent] * otherclassmod < classifierData.classes_pos.length * otherclassmod)
           const closestOtherClass = otherclassmatches[0];
           const index = i;
