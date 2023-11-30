@@ -14,27 +14,23 @@ const DBNAME = "shaderunner";
 
 
 
+// Utilize async/await syntax for cleaner code
 async function collection_exists(dbName, storeName) {
-  return new Promise((resolve, reject) => {
+  try {
     const request = indexedDB.open(dbName);
-
-    request.onsuccess = function (event) {
-      const db = event.target.result;
-      const storeExists = db.objectStoreNames.contains(storeName);
-      const dbVersion = db.version || 0;
-      resolve({ storeExists, dbVersion });
-    };
-
-    request.onerror = function (event) {
-      console.error("Error opening database:", event.target.error);
-      reject(new Error("Error opening database"));
-    };
-  });
+    const event = await promisifyRequest(request);
+    const db = event.target.result;
+    const storeExists = db.objectStoreNames.contains(storeName);
+    const dbVersion = db.version || 0;
+    return { storeExists, dbVersion };
+  } catch (error) {
+    console.error("Error opening database:", error);
+    throw error; // Rethrow the error
+  }
 }
 
-
-function openDatabase(dbName, storeName, dbVersion = undefined) {
-  return new Promise((resolve, reject) => {
+async function openDatabase(dbName, storeName, dbVersion = undefined) {
+  try {
     const request = indexedDB.open(dbName, dbVersion);
 
     request.onupgradeneeded = function (event) {
@@ -44,68 +40,70 @@ function openDatabase(dbName, storeName, dbVersion = undefined) {
       }
     };
 
-    request.onsuccess = function (event) {
-      resolve(event.target.result);
-    };
-
-    request.onerror = function (event) {
-      reject(new Error("IndexedDB error: " + event.target.error));
-    };
-  });
+    const event = await promisifyRequest(request);
+    return event.target.result;
+  } catch (error) {
+    console.error("IndexedDB error:", error);
+    throw error;
+  }
 }
 
-
-async function saveData(db, storeName, key, data) {
-  return new Promise((resolve, reject) => {
+async function saveBulkData(db, storeName, keyValuePairs) {
+  try {
     const transaction = db.transaction([storeName], 'readwrite');
     const store = transaction.objectStore(storeName);
-    const request = store.put(data, key);
+    const promises = [];
 
-    request.onsuccess = function () {
-      resolve();
-    };
+    for (const [key, data] of keyValuePairs) {
+      promises.push(promisifyRequest(store.put(data, key)));
+    }
 
-    request.onerror = function (event) {
-      reject(new Error("Error writing data: " + event.target.errorCode));
-    };
-  });
+    await Promise.all(promises);
+  } catch (error) {
+    console.error("Error writing bulk data:", error);
+    throw error;
+  }
 }
-
 
 async function retrieveMultipleData(dbName, storeName, keys) {
   try {
-      // Open the database
-      const db = await openDatabase(dbName, storeName);
-      // Start a new transaction
-      const transaction = db.transaction([storeName], 'readonly');
-      // Get the object store
-      const store = transaction.objectStore(storeName);
+    const db = await openDatabase(dbName, storeName);
+    const transaction = db.transaction([storeName], 'readonly');
+    const store = transaction.objectStore(storeName);
 
-      // Use a map to store the results
-      const results = {};
+    const results = {};
 
-      // Await the completion of all get requests
-      await Promise.all(keys.map(key => 
-          new Promise(resolve => {
-              const request = store.get(key);
-              request.onsuccess = () => {
-                  // If key doesn't exist, set value to null or undefined
-                  results[key] = request.result;
-                  resolve();
-              };
-              request.onerror = () => {
-                  // Handle errors, e.g., by setting the value to null
-                  results[key] = null;
-                  resolve();
-              };
-          })
-      ));
+    // Wait for all get requests to complete
+    await Promise.all(keys.map(key => 
+      new Promise((resolve, reject) => {
+        const request = store.get(key);
+        request.onsuccess = () => {
+          // Assign the result to the key. If key doesn't exist, value will be undefined
+          results[key] = request.result;
+          resolve();
+        };
+        request.onerror = () => {
+          // Handle individual request errors, e.g., by setting the value to null
+          results[key] = null;
+          resolve(); // resolve even in case of error to allow other operations to continue
+        };
+      })
+    ));
 
-      return results;
+    return results;
   } catch (error) {
-      console.error('Error retrieving data:', error);
-      throw error; // Rethrow the error for caller to handle
+    console.error('Error retrieving data:', error);
+    throw error; // Rethrow the error for the caller to handle
   }
+}
+
+
+// Helper function to convert IndexedDB requests to Promises
+function promisifyRequest(request) {
+  return new Promise((resolve, reject) => {
+    request.onsuccess = resolve;
+    request.onerror = () => reject(request.error);
+  });
 }
 
 
@@ -143,7 +141,6 @@ async function computeEmbeddingsCached(collectionName: string, splits: string[])
 
   // check which sentences are not embedded, yet
   let missingsplits = Object.entries(split2embedding).filter(([s, embedding]) => embedding == null || embedding == undefined).map(([split, e]) => split);
-  console.log("test", storeExists, missingsplits.length, splits)
 
   // if nothing is missing, we can directly return
   if (!missingsplits.length)
@@ -153,14 +150,15 @@ async function computeEmbeddingsCached(collectionName: string, splits: string[])
   if (missingsplits.length) {
     const missingdocs = missingsplits.map((split, i) => new Document({ pageContent: split }))
     const missingembeddings = await openaiembedding.embedDocuments(missingsplits);
-    console.log(collectionName, storeExists, dbVersion)
-    const db = await openDatabase(DBNAME, collectionName, dbVersion + 1);
+    const db = await openDatabase(DBNAME, collectionName, dbVersion + (storeExists ? 0 : 1));
+    const new_split2embedding = [];
     for (let i = 0; i < missingdocs.length; i++) {
       const split = missingdocs[i].pageContent;
       const embedding = missingembeddings[i];
       split2embedding[split] = embedding;
-      await saveData(db, collectionName, split, embedding);
+      new_split2embedding.push([split, embedding]);
     }
+    await saveBulkData(db, collectionName, new_split2embedding);
   }
 
   return split2embedding;
