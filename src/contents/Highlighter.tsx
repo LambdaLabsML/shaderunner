@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getMainContent, splitContent } from '~util/extractContent'
+import { getMainContent, extractSplits, mapSplitsToTextnodes } from '~util/extractContent'
 import { highlightText, resetHighlights, textNodesNotUnderHighlight, surroundTextNode } from '~util/DOM'
 import { computeEmbeddingsLocal } from '~util/embedding'
 import { sendToBackground } from "@plasmohq/messaging"
@@ -128,7 +128,7 @@ const Highlighter = () => {
 
       // extract main content & generate splits
       const mainel = getMainContent();
-      const {splits, splitDetails, textNodes} = splitContent(mainel, mode)
+      const splits = extractSplits(mode, mainel)
       const splitMetadata = new Array(splits.length).fill({
           "data-type": mode,
           "url": url
@@ -146,7 +146,7 @@ const Highlighter = () => {
           onStatus(["computing", Math.floor(i / splits.length * 100)])
         }
       }
-      const _pageEmbeddings = { [mode]: { splits, splitDetails, splitMetadata, splitEmbeddings, textNodes } }
+      const _pageEmbeddings = { [mode]: { splits, splitMetadata, splitEmbeddings } }
       onStatus(["loaded", 100])
       return _pageEmbeddings;
     }
@@ -164,7 +164,9 @@ const Highlighter = () => {
 
       // ensure we have embedded the page contents
       const pageEmbeddings = await getPageEmbeddings(mode)
-      let { splits, splitDetails, splitEmbeddings, textNodes } = pageEmbeddings[mode];
+      let { splits, splitEmbeddings } = pageEmbeddings[mode];
+      const mainel = getMainContent();
+      let {splitDetails, textNodes} = mapSplitsToTextnodes(splits, mainel, mode)
       splits = splits.filter((s,i) => splitDetails[i])
       splitDetails = splitDetails.filter((s,i) => splitDetails[i])
 

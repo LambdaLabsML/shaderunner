@@ -11,32 +11,34 @@ const getMainContent = () => {
 
 
 
-const splitContent = (bodyElement: HTMLElement, type: string) => {
-
-  // Function to process and split content
-  const processAndSplit = (type: string, currentText: string) => {
-    const doc = nlp(currentText);
-    if (type === 'sentences') {
-      return doc.sentences().out('array');
-    } else if (type === 'paragraphs') {
-      return (doc as any).paragraphs().map(p => p.text()).views;
-    } else if (type === 'terms') {
-      return doc.terms().out('array');
-    } else {
-      throw new Error(`Cannot split into ${type}. (Not known)`);
-    }
-  };
+// Function to process and split content
+const extractSplits = (type: string, element: HTMLElement) => {
 
   // extract splits on innerText
-  const currentInnerText = bodyElement.innerText;
-  const splits = processAndSplit(type, currentInnerText);
+  const currentText = element.innerText;
+
+  const doc = nlp(currentText);
+  if (type === 'sentences') {
+    return doc.sentences().out('array');
+  } else if (type === 'paragraphs') {
+    return (doc as any).paragraphs().map(p => p.text()).views;
+  } else if (type === 'terms') {
+    return doc.terms().out('array');
+  } else {
+    throw new Error(`Cannot split into ${type}. (Not known)`);
+  }
+
+};
+
+
+const mapSplitsToTextnodes = (splits: string[], element: HTMLElement, type: string) => {
 
   // extract merged text from textContent
   let allText = '';
   let textNodes = [];
   let nodePositions = [];
   let currentTextLength = 0;
-  const walker = document.createTreeWalker(bodyElement, NodeFilter.SHOW_TEXT, null, false);
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
   let node;
   while (node = walker.nextNode()) {
 
@@ -109,12 +111,13 @@ const fuzzyMatch = (text: string, split: string | any[]) => {
       bestMatch = { start: i, end: i + split.length, distance };
     }
 
-    if (distance == 0)
+    if (distance == 0 || split.length > 50 && distance <= 2) {
       return bestMatch;
+    }
   }
 
   return bestMatch;
 };
 
 
-export { getMainContent, splitContent };
+export { getMainContent, extractSplits, mapSplitsToTextnodes };
