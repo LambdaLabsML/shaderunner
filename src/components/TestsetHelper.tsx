@@ -6,9 +6,10 @@ const TestsetHelper = ({tabId}) => {
     const [ [ mode ], [ controlSend ], [ highlighterData ] ] = useGlobalStorage(tabId, "highlightMode", "testsethelperControlSend", "DEV_highlighterData")
 
     useEffect(() => {
+        if (mode != "testset helper") return;
+
         const spans = document.querySelectorAll("span.shaderunner-highlight[splitid]");
         function handleClick(event) {
-            if (mode != "testset helper") return;
             const span = event.currentTarget;
             const splitid = span.getAttribute("splitid")
             console.log("splitid", splitid)
@@ -28,7 +29,6 @@ const TestsetHelper = ({tabId}) => {
             }
         }, true); // Use capture to ensure the event is captured in the capturing phase
 
-
         // replace event listener with newest version
         spans.forEach(span => span.addEventListener('click', handleClick));
         return () => spans.forEach(span => span.removeEventListener('click', handleClick));
@@ -36,13 +36,11 @@ const TestsetHelper = ({tabId}) => {
 
     // save-button
     useEffect(() => {
-        console.log("send!", controlSend, highlighterData)
         if(!controlSend || !highlighterData) return;
 
         async function send() {
             console.log("sending")
             const classification = highlighterData.splits.map((s, i) => {
-                console.log(s, i)
                 const elements = document.querySelectorAll(`span.shaderunner-highlight[splitid="${i}"]`);
                 return Array.from(elements).some(element => element.classList.contains('good'));
             });
