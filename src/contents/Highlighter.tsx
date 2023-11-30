@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getMainContent, extractSplits, mapSplitsToTextnodes } from '~util/extractContent'
 import { highlightText, resetHighlights, textNodesNotUnderHighlight, surroundTextNode } from '~util/DOM'
-import { computeEmbeddingsLocal } from '~util/embedding'
-import { sendToBackground } from "@plasmohq/messaging"
+import { computeEmbeddingsCached, computeEmbeddingsLocal, embeddingExists, type Metadata } from '~util/embedding'
 import { useStorage } from "@plasmohq/storage/hook";
 import { useSessionStorage as _useSessionStorage, arraysAreEqual } from '~util/misc'
 import { useActiveState } from '~util/activeStatus'
@@ -15,7 +14,6 @@ import { MemoryVectorStore } from 'langchain/vectorstores/memory';
 const DEV = process.env.NODE_ENV == "development";
 const useSessionStorage = DEV && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;
 type classEmbeddingType = {allclasses: string[], classStore: any};
-type Metadata = { "data-type": string, "url": string };
 
 const Highlighter = () => {
     const [ tabId, setTabId ] = useState(null);
@@ -120,7 +118,7 @@ const Highlighter = () => {
       if (pageEmbeddings[mode]) return pageEmbeddings[mode];
 
       // if not in cache, check if database has embeddings
-      const exists = await sendToBackground({ name: "embedding_exists", body: { collectionName: url } })
+      const exists = await embeddingExists(url as string)
       if (!exists)
         onStatus(["computing", 0])
       else
@@ -129,24 +127,26 @@ const Highlighter = () => {
       // extract main content & generate splits
       const mainel = getMainContent();
       const splits = extractSplits(mode, mainel)
-      const splitMetadata = new Array(splits.length).fill({
+      const metadata_template = {
           "data-type": mode,
           "url": url
-      })
+      }
 
       // retrieve embedding (either all at once or batch-wise)
-      let splitEmbeddings = [];
-      if (exists)
-        splitEmbeddings = await sendToBackground({ name: "embedding_compute", body: { collectionName: url, splits: splits, metadata: splitMetadata } })
+      let splitEmbeddings = {};
+      if (false && exists)
+        splitEmbeddings = await computeEmbeddingsCached(url as string, splits, metadata_template as Metadata, {"method": "get_embeddings"})
       else {
         const batchSize = 64;
         for(let i = 0; i < splits.length; i+= batchSize) {
-          const splitEmbeddingsBatch = await sendToBackground({ name: "embedding_compute", body: { collectionName: url, splits: splits.slice(i, i+batchSize), metadata: splitMetadata.slice(i, i+batchSize) } })
-          splitEmbeddings = splitEmbeddings.concat(splitEmbeddingsBatch);
+          console.log("start batch", i, splits.length, batchSize)
+          const splitEmbeddingsBatch = await computeEmbeddingsCached(url as string, splits.slice(i, i+batchSize), metadata_template as Metadata, {"method": "get_embeddings"})
+          splitEmbeddings = {...splitEmbeddings, ...splitEmbeddingsBatch};
+          console.log("end batch", i)
           onStatus(["computing", Math.floor(i / splits.length * 100)])
         }
       }
-      const _pageEmbeddings = { [mode]: { splits, splitMetadata, splitEmbeddings } }
+      const _pageEmbeddings = { [mode]: { splits, splitEmbeddings } }
       onStatus(["loaded", 100])
       return _pageEmbeddings;
     }
