@@ -166,6 +166,7 @@ const Legend = ({tabId, topics, flipVisibility}) => {
         const _topicStyles = topicStyles || {}
         const overwriteStyles = Object.fromEntries(classifierData[topics].map(c => [c, flipVisibility ? "highlight" : "no-highlight"]))
         const filteredTopicStyles = Object.fromEntries(Object.entries(_topicStyles).filter(([c]) => !classifierData[topics].includes(c)))
+        setGlobalStorage({highlightDefaultStyle: "highlight"})
         if (flipVisibility) {
           if (value == "show all") setTopicStyles({..._topicStyles, ...overwriteStyles})
           if (value == "hide all") setTopicStyles(filteredTopicStyles)
