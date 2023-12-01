@@ -1,7 +1,7 @@
-import testset from 'data-env:~assets/merged_testset.json';
+//import testset from 'data-env:~assets/merged_testset.json';
 
 function TestingPage() {
-    console.log(testset);
+    //console.log(testset);
     
     return (
       <div

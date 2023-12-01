@@ -77,6 +77,7 @@ const mapSplitsToTextnodes = (splits: string[], element: HTMLElement, type: stri
 
     // skip textnode if distance is greater than 10% of the split
     // in this case we try to find the next position of the next textnode
+    // TODO: see english_people wiki page. alternatively: use fastTextFind method
     if (match.distance >= split.length * 0.1) {
         return null;
     }
