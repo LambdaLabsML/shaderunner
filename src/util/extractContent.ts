@@ -42,10 +42,19 @@ const mapSplitsToTextnodes = (splits: string[], element: HTMLElement, type: stri
   let node;
   while (node = walker.nextNode()) {
 
-    // Check if the node is inside a <style> or <script> element
-    let parentNode = node.parentNode;
-    if (parentNode && parentNode.nodeName === 'STYLE' || parentNode.nodeName === 'SCRIPT')
+    // Skip over comment nodes
+    if (node.nodeType === Node.COMMENT_NODE) {
       continue;
+    }
+
+    const parentNode = node.parentNode;
+
+    // Skip if the node is inside <style>, <script>, <iframe>, <object>, or <embed> elements
+    if (parentNode && (parentNode.nodeName === 'STYLE' || parentNode.nodeName === 'SCRIPT' ||
+      parentNode.nodeName === 'IFRAME' || parentNode.nodeName === 'OBJECT' || parentNode.nodeName === 'NOSCRIPT' ||
+      parentNode.nodeName === 'EMBED')) {
+      continue;
+    }
 
     const text = node.textContent.toLowerCase();
     nodePositions.push({ start: currentTextLength, end: currentTextLength + text.length, length: text.length });
