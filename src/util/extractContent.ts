@@ -72,7 +72,7 @@ const mapSplitsToTextnodes = (splits: string[], element: HTMLElement, type: stri
 
     // Limit the search to the maximum length of the split
     const lookAhead = split.length + 1000;
-    const searchSpace = allText.substring(previousEnd, previousEnd + lookAhead); // assuming splits contain whitespace
+    const searchSpace = allText.substring(previousEnd)//, previousEnd + lookAhead); // assuming splits contain whitespace
     const match = fuzzyMatch(searchSpace, split.trim().toLowerCase());
 
     // skip textnode if distance is greater than 10% of the split
