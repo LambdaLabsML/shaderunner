@@ -42,7 +42,7 @@ const setActiveStatus = async (_url: string, isActive: boolean) => {
 const useActiveState = (_url: string | Location | URL) => {
   const [activeURLs, setActiveURLs] = useStorage("activeURLs", {})
   const url = new URL(_url as URL).hostname; // Normalize URL
-  const fullurl = window.location.hostname + window.location.pathname;
+  const fullurl = window.location.hostname + window.location.pathname + window.location.search;
   const setActive = (active: Boolean) => setActiveURLs({ ...activeURLs, [url]: active });
   return [fullurl, url in activeURLs, setActive];
 }
