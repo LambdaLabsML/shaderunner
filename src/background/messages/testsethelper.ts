@@ -13,9 +13,9 @@ async function isApiAccessible(url: string) {
 }
 
 
-async function sendDataToServer(dataObject) {
+async function sendDataToServer(url, dataObject) {
   try {
-      const response = await fetch(REST_API+"save", {
+      const response = await fetch(url, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json'
@@ -69,6 +69,7 @@ type RequestBody = {
 };
 
 
+
 const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
   const body = req.body as RequestBody;
   console.log("testsethelper:", body)
@@ -76,10 +77,16 @@ const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
     res.send(await isApiAccessible(REST_API+"hello"))
   }
   else if (body.cmd == "write") {
-    res.send(await sendDataToServer(body))
+    res.send(await sendDataToServer(REST_API+"save", body))
   }
   else if (body.cmd == "gettestset") {
     res.send(await fetchJsonData(REST_API+"gettestset"))
+  }
+  else if (body.cmd == "getresults") {
+    res.send(await fetchJsonData(REST_API+"getresults"))
+  }
+  else if (body.cmd == "saveresults") {
+    res.send(await sendDataToServer(REST_API+"saveresults", body))
   }
 }
 

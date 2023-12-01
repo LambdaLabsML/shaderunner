@@ -26,6 +26,7 @@ def write_merged_file(output_file, data):
 
 try:
     os.mkdir("./testing/testset/")
+    os.mkdir("./testing/results/")
 except:
     pass
 
@@ -56,8 +57,8 @@ async def handle(request):
     print("writing file", file_name)
 
     # write merged file
-    merged_data = merge_json_files('./testing/testset/*.json')
-    write_merged_file('./src/assets/merged_testset.json', merged_data)
+    # merged_data = merge_json_files('./testing/testset/*.json')
+    # write_merged_file('./src/assets/merged_testset.json', merged_data)
 
     return web.Response(text=f"Data saved to {file_name}")
 
@@ -69,14 +70,35 @@ async def gettestset(request):
 
 
 
+async def getresults(request):
+    merged_data = merge_json_files('./testing/results/*.json')
+    print(merged_data)
+    return web.json_response({})
+
+
+async def saveresults(request):
+    data = await request.json()
+    model = data["model"]["name"]
+    write_merged_file(f"./testing/results/{model}", data)
+    # print(model)
+    # print(data["results"].keys())
+    # for experiment, result in data["results"].items():
+    #     print(experiment)
+    #     print(result)
+    return web.json_response({})
+
+
 
 async def hello(request):
     return web.Response(text=f"world")
+
 
 app = web.Application()
 app.add_routes([web.get('/hello', hello)])
 app.add_routes([web.post('/save', handle)])
 app.add_routes([web.get('/gettestset', gettestset)])
+app.add_routes([web.get('/getresults', getresults)])
+app.add_routes([web.post('/saveresults', saveresults)])
 
 if __name__ == '__main__':
     web.run_app(app, port=9901)
