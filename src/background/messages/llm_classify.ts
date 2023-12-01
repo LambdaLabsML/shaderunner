@@ -2,6 +2,7 @@ import type { PlasmoMessaging } from "@plasmohq/messaging"
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { OpenAI } from "langchain/llms/openai";
 import { Storage } from "@plasmohq/storage"
+import { HumanMessage, SystemMessage } from "langchain/dist/schema";
 const storage = new Storage()
 
 
@@ -89,7 +90,7 @@ const llm2classes = async (url: string, title: string, query: string) => {
     //'General' sentences align with broader topics not specific to the query but related to the overall content.
     //'Outlier' sentences are those that align with miscellaneous or tangential topics, reflecting content not directly related to the main theme or query.
 
-    const PROMPT = `Classify sentences from a webpage as either 'interesting' or 'outlier'.
+    const SYSTEM = `Classify sentences from a webpage as either 'interesting' or 'outlier'.
 For this, use two categories: 'interesting' for sentences closely related to specific topics relevant to the user query, and 'outlier' for sentences that are only mildly related or unrelated.
 Sentences are deemed 'interesting' if they are nearer to a topic in the 'interesting' category than to those in the 'outlier' category.
 Conversely, classify a sentence as 'outlier' if it is broadly related to general topics but not closely aligned with the 'interesting' topics.
@@ -131,6 +132,7 @@ Thought: Since the page is about the Rabin-Karp algorithm and the user asks for 
 Interesting Class Topics: Core Idea and Trick (Rolling Hash Mechanism), Implementation of the Rabin-Karp Algorithm
 Outlier Class Topics: Hashing, String Matching, Algorithm History, Algorithm Theory, String Matching Algorithms, Usage, Related Algorithms, Code Expression, Programming in C++, Site Navigation, External Links
 
+# Training Example
 URL: www.spaceexplorationnews.com/moon-landing
 Title: The History of Moon Landings
 Query: Source of "The Eagle has landed" quote
@@ -138,17 +140,28 @@ Scope: super-narrow (looking for specific information)
 Thought: The user is specifically looking for the source of the quote "The Eagle has landed". Sentences that directly discuss this quote, its context, or its origin are 'interesting'. The focus should be extremely narrow, centered on the quote and its immediate context.
 Interesting Class Topics: "The Eagle has landed", Apollo 11 Moon Landing Quote
 Outlier Class Topics: General Moon Landing History, Other Space Missions, Astronaut Biographies, Space Exploration Technology, Future Moon Missions, Advertisements, External Links, Site Navigation
+`
 
-# Incoming User Request (always use training example template)
+    const USER = `# Incoming User Request (always use training example template)
 URL: ${url}
 Page title: ${title}
 Query: ${query}
 Scope: `;
 
-    const llmResult = await llm.predict(PROMPT);
-    console.log("using", gptversion, chatgpt ? "ChatGPT" : "InstructGPT")
-    console.log(llmResult)
-    const parsed = parseInput(llmResult)
+
+    let parsed;
+    if (!chatgpt) {
+      const llmResult = await llm.predict(SYSTEM + "\n" + USER);
+      console.log(llmResult)
+      parsed = parseInput(llmResult)
+    } else {
+      const llmResult = await llm.call([
+        new SystemMessage(SYSTEM),
+        new HumanMessage(USER)
+      ]);
+      console.log(llmResult.content)
+      parsed = parseInput(llmResult.content)
+    }
 
     return {
         "scope": parsed[0],
