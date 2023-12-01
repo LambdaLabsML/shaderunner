@@ -56,6 +56,10 @@ const mapSplitsToTextnodes = (splits: string[], element: HTMLElement, type: stri
       continue;
     }
 
+    // skip if parent node not visible
+    if (!parentNode.innerText.trim())
+      continue;
+
     const text = node.textContent.toLowerCase();
     nodePositions.push({ start: currentTextLength, end: currentTextLength + text.length, length: text.length });
     allText += text;
