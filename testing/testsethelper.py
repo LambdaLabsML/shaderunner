@@ -3,6 +3,7 @@ import json
 import datetime
 import os
 import glob
+from pathlib import Path
 
 def merge_json_files(directory_pattern):
     all_data = []
@@ -12,6 +13,7 @@ def merge_json_files(directory_pattern):
         with open(file_name, 'r') as file:
             data = json.load(file)
             data["file_name"] = file_name
+            data["experiment_name"] = Path(file_name).stem
             all_data.append(data)
 
     return all_data
@@ -59,12 +61,22 @@ async def handle(request):
 
     return web.Response(text=f"Data saved to {file_name}")
 
+
+
+async def gettestset(request):
+    merged_data = merge_json_files('./testing/testset/*.json')
+    return web.json_response(merged_data)
+
+
+
+
 async def hello(request):
     return web.Response(text=f"world")
 
 app = web.Application()
 app.add_routes([web.get('/hello', hello)])
 app.add_routes([web.post('/save', handle)])
+app.add_routes([web.get('/gettestset', gettestset)])
 
 if __name__ == '__main__':
     web.run_app(app, port=9901)

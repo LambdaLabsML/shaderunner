@@ -35,6 +35,29 @@ async function sendDataToServer(dataObject) {
       return "Saving failed.";
   }
 }
+
+
+async function fetchJsonData(url) {
+  try {
+      // Send a GET request to the server
+      const response = await fetch(url);
+
+      // Check if the response is OK (status code 200)
+      if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Parse the JSON data from the response
+      const data = await response.json();
+
+      // Use the JSON data as needed
+      console.log(data);
+      return data;
+  } catch (error) {
+      console.error('There was a problem fetching the test data:', error);
+  }
+}
+
  
 
 type RequestBody = {
@@ -48,11 +71,15 @@ type RequestBody = {
 
 const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
   const body = req.body as RequestBody;
+  console.log("testsethelper:", body)
   if (body.cmd == "check") {
     res.send(await isApiAccessible(REST_API+"hello"))
   }
   else if (body.cmd == "write") {
     res.send(await sendDataToServer(body))
+  }
+  else if (body.cmd == "gettestset") {
+    res.send(await fetchJsonData(REST_API+"gettestset"))
   }
 }
 
