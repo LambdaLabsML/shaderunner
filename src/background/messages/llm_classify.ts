@@ -37,7 +37,7 @@ function splitStringIgnoringParentheses(input: any) {
 
 function parseInput(input: string) {
     // Split the input into lines
-    const lines = input.split('\n');
+    const lines = input.split('\n').filter(lines => lines.trim());
     
     // Process each line
     const output = lines.map((line: string) => {
