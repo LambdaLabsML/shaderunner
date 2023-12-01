@@ -299,7 +299,8 @@ const Highlighter = () => {
       emptyTextNodes.forEach(node => surroundTextNode(node, "normaltext"))
 
       // in DEV mode, we also save the all the data
-      const devOpts = DEV ? { DEV_highlighterData: { url, classifierData, splits }} : {};
+      const title = document.title;
+      const devOpts = DEV ? { DEV_highlighterData: { url, classifierData, splits, title }} : {};
 
       setStatusHighlight(["loaded", 100]) // bug: needs to be outside due to concurrency conflict of this variable
       setGlobalStorage({
