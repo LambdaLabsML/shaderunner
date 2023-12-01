@@ -1,6 +1,32 @@
 
 
 
+
+## ShadeRunner Version 0.6.0
+
+**Features**:
+- **Reimplementation of core highlighting mechanism**
+    - to increase quality uses precomputed fuzzy string distances on text nodes for matching `innerText` to `textContent`
+    - better text Node selection (only actually visible text nodes)
+- **Performance**:
+    - parallel embedding of classifier and content
+    - replaced ChromaDB by local IndexedDB
+
+**Minor**:
+- TestsetHelper: disabled any click events other than those of shaderunner in this mode 
+
+**Bugfixes**:
+- Legend: "show all" after "focus on" did not show all highlights
+- TestsetHelper: fixed interference with other highlighting modes
+- LLM Classifier:
+    - fixed chat models
+    - using more stable class delimiter (`|` instead of `,`)
+- saved url was missing `window.location.search`
+
+-------
+
+
+
 ## ShadeRunner Version 0.5.0
 
 **Features**:
