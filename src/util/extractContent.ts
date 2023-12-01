@@ -62,9 +62,11 @@ const mapSplitsToTextnodes = (splits: string[], element: HTMLElement, type: stri
     const searchSpace = allText.substring(previousEnd, previousEnd + lookAhead); // assuming splits contain whitespace
     const match = fuzzyMatch(searchSpace, split.trim().toLowerCase());
 
-    // skip if distance is greater than 10% of the split
-    if (match.distance >= splits.length * 0.2)
-      return null;
+    // skip textnode if distance is greater than 10% of the split
+    // in this case we try to find the next position of the next textnode
+    if (match.distance >= split.length * 0.1) {
+        return null;
+    }
 
     const globalStart = previousEnd + match.start;
     const globalEnd = previousEnd + match.end;
