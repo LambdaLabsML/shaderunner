@@ -22,8 +22,20 @@ ChartJS.register(
 );
 
 
+const mock_metrics = (experiment, model) => {
+  const accuracy = 0.5;
+  const precision = 0.5;
+  const recall = 0.5;
+  const tp = 0.5;
+  const tn = 0.5;
+  const fp = 0.5;
+  const fn = 0.5;
+  return { accuracy, precision, recall, tp, tn, fp, fn, model };
+};
+
 
 const MergedBarPlot = ({ resultsData }) => {
+  console.log(resultsData);
   const data = {
     labels: ['Accuracy', 'Precision', 'Recall', 'TP', 'TN', 'FP', 'FN'],
     datasets: resultsData.map(result => ({
@@ -48,11 +60,12 @@ const MergedBarPlot = ({ resultsData }) => {
 
 
 const ExperimentRow = ({ experiment, resultsData, color }) => {
+  console.log(experiment, resultsData)
 
   return (
     <>
       <tr style={{backgroundColor: color}}>
-        <td style={{verticalAlign:"top"}}><b>{experiment.experiment_name}</b></td>
+        <td style={{"vertical-align":"top"}}><b>{experiment.experiment_name}</b></td>
         <td colSpan="10">
           <div style={{height: "150px"}}>
             <MergedBarPlot resultsData={resultsData} />
@@ -68,7 +81,6 @@ const ExperimentRow = ({ experiment, resultsData, color }) => {
 function TestingPage() {
   const [testData, setTestData] = useState([]);
   const [progress, setProgress] = useState("No experiment running.");
-  const [resultData, setResultData] = useState({});
 
   useEffect(() => {
     const intervalId = setInterval(async () => {
@@ -82,74 +94,38 @@ function TestingPage() {
     return () => clearInterval(intervalId);
   }, [])
 
+  const models = [
+    { name: "_gpt3.5", model: "gpt", chat: true, temperature: 0, prompt: "myprompt" },
+    { name: "gpt3.6", model: "gpt", chat: true, temperature: 0, prompt: "myprompt" },
+    { name: "__gpt3.7", model: "gpt", chat: true, temperature: 0, prompt: "myprompt" }
+  ]
 
-  //const resultData = Object.fromEntries(testData.map(t => [t.experiment_name, models.map(m => mock_metrics(t,m))]));
+  const resultData = Object.fromEntries(testData.map(t => [t.experiment_name, models.map(m => mock_metrics(t,m))]));
   console.log("results",resultData)
-
-  function getCurrentModel() {
-    return {
-      name: "",
-      model: "",
-      chat: "",
-      temperature: "",
-      prompt: "",
-    }
-  }
-
-  function mock_metrics(experiment, model) {
-    const accuracy = 0.5;
-    const precision = 0.5;
-    const recall = 0.5;
-    const tp = 0.5;
-    const tn = 0.5;
-    const fp = 0.5;
-    const fn = 0.5;
-    return { accuracy, precision, recall, tp, tn, fp, fn, model };
-  };
-
-
-  async function evaluate() {
-    const model = getCurrentModel();
-    const results = testData.map(experiment => mock_metrics(experiment, model))
-
-    // send results to server
-    setResultData(await sendToBackground({ name: "testsethelper", body: { cmd: "saveresults" } }))
-
-    // update state with newest results
-    setResultData(await sendToBackground({ name: "testsethelper", body: { cmd: "getresults" } }))
-  }
-
 
   //const { accuracy, precision, recall, tp, tn, fp, fn } = calculateMetrics(setup);
 
-  const table = (!testData || !Object.entries(resultData).length) ? "No experiments found." : (
-    <table style={{marginTop: "3em"}}>
-      <thead>
-        <tr>
-          <th>Model</th>
-          <th>Results</th>
-        </tr>
-      </thead>
-      <tbody>
-        {testData.map((experiment, index) => (
-          <ExperimentRow key={index} experiment={experiment} resultsData={resultData[experiment.experiment_name]} color={index % 2 ? "#eee" : "white"} />
-        ))}
-      </tbody>
-    </table>
-  );
+  if (!testData) return "";
 
   return (
     <div>
       <h2>Testing Page</h2>
-      <div style={{marginBottom: "1em"}}>
-        <h3>Controls</h3>
-        <button onClick={() => evaluate()}>Test current model.</button>
-        <div>Progress: {progress}</div>
-      </div>
-      <div style={{marginBottom: "1em"}}>
-        <h3>Controls</h3>
-        {table}
-      </div>
+      <button>Test current model.</button>
+      <span>Progress: {progress}</span>
+
+      <table style={{marginTop: "3em"}}>
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>Results</th>
+          </tr>
+        </thead>
+        <tbody>
+          {testData.map((experiment, index) => (
+            <ExperimentRow key={index} experiment={experiment} resultsData={resultData[experiment.experiment_name]} color={index % 2 ? "#eee" : "white"}/>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
