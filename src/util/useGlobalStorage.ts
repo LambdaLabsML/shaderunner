@@ -40,17 +40,17 @@ const useGlobalStorage = (_tabId: Number | string, ...names: string[]) => {
     const stateVars = stateVarsReact.map(([getName, setName, name]) => {
 
         // when saving, we also send the update to the controller
-        function setWrapper(val: any) {
+        async function setWrapper(val: any) {
             setName(async old => {
                 val = (typeof val === 'function') ? val(old) : val;
-                controller.send({ [name]: val, _who, _tabId })
+                await controller.send({ [name]: val, _who, _tabId })
                 return val;
             });
         }
         return [getName, setWrapper];
     });
 
-    function setGlobalStorage(obj) {
+    async function setGlobalStorage(obj) {
         controller.send({ _tabId, ...obj })
     }
 
