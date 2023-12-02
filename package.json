@@ -1,7 +1,7 @@
 {
   "name": "shaderunner",
   "displayName": "Shaderunner",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "ShadeRunner",
   "author": "Lambda, Inc.",
   "scripts": {

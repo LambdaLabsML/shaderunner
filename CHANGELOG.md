@@ -2,6 +2,22 @@
 
 
 
+## ShadeRunner Version 0.6.1
+
+**Minor**:
+- content extraction now searches till the end of the document
+
+**Bugfixes**:
+- content extraction bug: cannot trim undefined
+- Testsethelper: did not save `document.title`
+- race conditions for status messages
+- fixed embedding "commputing" status indicator (percentage was not showing up)
+
+-------
+
+
+
+
 ## ShadeRunner Version 0.6.0
 
 **Features**:
