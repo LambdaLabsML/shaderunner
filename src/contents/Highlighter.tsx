@@ -142,10 +142,8 @@ const Highlighter = () => {
 
       // if not in cache, check if database has embeddings
       const exists = await embeddingExists(url as string)
-      if (!exists)
-        onStatus(["computing", 0])
-      else
-        onStatus(["computing", 0, "found database"])
+      const status_msg = exists ? "found database" : "";
+      await onStatus(["computing", 0, status_msg])
 
       // extract main content & generate splits
       const mainel = getMainContent();
@@ -157,11 +155,10 @@ const Highlighter = () => {
       for(let i = 0; i < splits.length; i+= batchSize) {
         const splitEmbeddingsBatch = await computeEmbeddingsCached(url as string, splits.slice(i, i+batchSize))
         splitEmbeddings = {...splitEmbeddings, ...splitEmbeddingsBatch};
-        if (!exists)
-          onStatus(["computing", Math.floor(i / splits.length * 100)])
+        await onStatus(["computing", Math.floor(i / splits.length * 100), status_msg])
         setPageEmbeddings({ splits: splits.slice(0, i+batchSize), splitEmbeddings, mode });
       }
-      onStatus(["loaded", 100])
+      await onStatus(["loaded", 100])
     }
 
 
