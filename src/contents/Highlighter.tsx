@@ -153,7 +153,7 @@ const Highlighter = () => {
 
       // retrieve embedding (either all at once or batch-wise)
       let splitEmbeddings = {};
-      const batchSize = 256;
+      const batchSize = 32;
       for(let i = 0; i < splits.length; i+= batchSize) {
         const splitEmbeddingsBatch = await computeEmbeddingsCached(url as string, splits.slice(i, i+batchSize))
         splitEmbeddings = {...splitEmbeddings, ...splitEmbeddingsBatch};
