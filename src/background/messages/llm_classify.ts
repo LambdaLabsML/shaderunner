@@ -7,7 +7,7 @@ import { Storage } from "@plasmohq/storage"
 const storage = new Storage()
 
 
-const llm2classes = async (url: string, title: string, query: string) => {
+export async function llm2classes(url: string, title: string, query: string) {
 
     const api_key = await storage.get("OPENAI_API_KEY");
     const openchat_api_base = await storage.get("OPENCHAT_API_BASE");

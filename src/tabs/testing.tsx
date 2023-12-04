@@ -3,6 +3,8 @@ import React, {useState, useEffect} from 'react';
 import { eval_prompt, getCurrentModel } from '~llm_classify_prompt';
 import ResultsTable from './testing/visualization';
 import CollapsibleBox from '~components/basic/CollapsibleBox';
+import { VectorStore_fromClass2Embedding, computeEmbeddingsCached } from '~util/embedding';
+import { llm2classes } from '~background/messages/llm_classify';
 
 
 
@@ -25,16 +27,39 @@ function TestingPage() {
   }, [])
 
 
-  async function evaluate_model(experiment, model) {
+  async function evaluate_model(experiment, classifier) {
+      const splits = experiment.splits;
+      const splitEmbeddings = experiment.splitEmbeddings;
       const url = experiment.url;
-      const title = experiment.title;
-      const splits = experiment.labeled_splits;
-      const classification = new Array(splits.length).fill(false);
+
+      const classes_pos = classifier.classes_pos;
+      const classes_neg = classifier.classes_neg;
+      const classStore = classifier.classStore;
+
+      // mark sentences based on similarity
+      let classification = [];
+      for (let i=0; i<splits.length; i++) {
+        const split = splits[i];
+
+        // using precomputed embeddings
+        const embedding = splitEmbeddings[split];
+        const closest = await classStore.similaritySearchVectorWithScore(embedding, classes_pos.length, classes_neg.length);
+
+        const score_plus = classes_pos ? closest.filter((c) => classes_pos.includes(c[0].pageContent)).reduce((a, c) => Math.max(a, c[1]), 0) : 0
+        const score_minus = classes_neg ? closest.filter((c) => classes_neg.includes(c[0].pageContent)).reduce((a, c) => Math.max(a, c[1]), 0) : 0
+
+        // apply color if is first class
+        classification.push(score_plus > score_minus)
+      }
+
       return {classification};
   }
 
 
   async function evaluate() {
+
+    // init evaluation
+    setProgress("initializing")
     const model = await getCurrentModel();
     const { SYSTEM, USER } = eval_prompt({ url: "$URL", title: "$TITLE", query: "$QUERY" });
     model.prompt = `${SYSTEM}\n${USER}`
@@ -45,34 +70,61 @@ function TestingPage() {
       now.getHours().toString().padStart(2, '0') +
       now.getMinutes().toString().padStart(2, '0') +
       now.getSeconds().toString().padStart(2, '0');
-
     model.name = `${timestamp}-${model.model}-${model.chat}-${model.temperature}`;
-    const results = [];
+
+    // embed splits
+    setProgress("embedding")
     for(let i=0; i<testData.length; i++) {
       const experiment = testData[i];
-      const result = await evaluate_model(experiment, model);
+      setProgress(`embedding ${experiment.name} from url: ${experiment.url}`)
+      experiment.splits = experiment.labeled_splits.map(([label, split]) => split)
+      experiment.splitEmbeddings = await computeEmbeddingsCached(experiment.url as string, experiment.splits)
+    }
+
+    // get classifiers for each experiment
+    setProgress("query classifier")
+    const classifiers = [];
+    for(let i=0; i<testData.length; i++) {
+      const experiment = testData[i];
+      setProgress(`retrieving classifier for ${experiment.name} with query ${experiment.query}.`)
+      const classifier = await llm2classes(experiment.url, experiment.title, experiment.query)
+      classifiers.push(classifier)
+    }
+
+    // embed classes
+    setProgress("embed classifiers")
+    for(let i=0; i<testData.length; i++) {
+      const classifier = classifiers[i];
+      const experiment = testData[i];
+      const url = experiment.url;
+      const allclasses = [...classifier.classes_pos, ...classifier.classes_neg]
+      const classCollection = url + "|classes";
+      const classEmbeddings = await computeEmbeddingsCached(classCollection, allclasses, "shaderunner-classes");
+      const classStore = VectorStore_fromClass2Embedding(classEmbeddings)
+      classifier.classStore = classStore;
+    }
+
+    // classify
+    setProgress("classify")
+    const results = [];
+    for (let i = 0; i < testData.length; i++) {
+      const experiment = testData[i];
+      const result = await evaluate_model(experiment, classifiers[i]);
       results.push([experiment.name, result]);
     }
 
     // send results to server
+    setProgress("saving results")
     await sendToBackground({ name: "testsethelper", body: { cmd: "saveresults", model: model, results: Object.fromEntries(results) } })
 
     // update state with newest results
     setResultsData(await sendToBackground({ name: "testsethelper", body: { cmd: "getresults" } }))
   }
 
-
-  //const { accuracy, precision, recall, tp, tn, fp, fn } = calculateMetrics(setup);
-
-  console.log("result", resultsData)
-
-
   if (!testData) return "";
 
-  const groups = ["all", ...new Set(testData.map(experiment => experiment.type))]
-
-
   // merged results & experiments
+  const groups = ["all", ...new Set(testData.map(experiment => experiment.type))]
   const mergedTestData = groups.map(g => {
     const groupedTest = g == "all" ? testData : testData.filter(t => t.type == g)
     return {
