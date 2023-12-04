@@ -73,36 +73,44 @@ function TestingPage() {
   }
 
   const callQueue = [];
-  let isProcessing = false;
+  let lastRequestStartTime = 0;
+  const minIntervalBetweenCalls = 300;
 
-  async function enqueueCall(url, title, query) {
+  async function enqueueCall(url, title, query, onStartup) {
     return new Promise((resolve, reject) => {
-      callQueue.push({ url, title, query, resolve, reject });
+      callQueue.push({ url, title, query, resolve, reject, onStartup });
       processQueue();
     });
   }
-
+  
   async function processQueue() {
-    if (isProcessing || callQueue.length === 0) {
+    if (callQueue.length === 0) {
       return;
     }
-
-    isProcessing = true;
-    const { url, title, query, resolve, reject } = callQueue.shift();
-
-    try {
-      const result = await llm2classes(url, title, query);
-      resolve(result);
-    } catch (error) {
-      reject(error);
-    } finally {
-      isProcessing = false;
-      processQueue();
+  
+    const now = Date.now();
+    const timeElapsed = now - lastRequestStartTime;
+  
+    if (timeElapsed < minIntervalBetweenCalls) {
+      setTimeout(processQueue, minIntervalBetweenCalls - timeElapsed);
+      return;
+    }
+  
+    const { url, title, query, resolve, reject, onStartup } = callQueue.shift();
+    lastRequestStartTime = Date.now();
+  
+    if (onStartup)
+      onStartup();
+    llm2classes(url, title, query).then(resolve).catch(reject);
+  
+    // Schedule the next request in 3 seconds
+    if (callQueue.length > 0) {
+      setTimeout(processQueue, minIntervalBetweenCalls);
     }
   }
 
-  async function getClassifier(url, title, query) {
-    return enqueueCall(url, title, query);
+  async function getClassifier(url, title, query, onStartup: () => {}) {
+    return enqueueCall(url, title, query, onStartup);
   }
 
   async function evaluate() {
@@ -121,26 +129,29 @@ function TestingPage() {
 
     // Function to process each experiment
     async function processExperiment(experiment) {
+      const setStatus = (msg) => setExperimentStatus(experiment, msg);
+
       // Embed splits
-      setExperimentStatus(experiment, `embedding splits.`);
+      setStatus(`embedding splits.`);
       experiment.splits = experiment.labeled_splits.map(([label, split]) => split);
       experiment.splitEmbeddings = await computeEmbeddingsCached(experiment.url, experiment.splits);
 
       // Query classifier
-      setExperimentStatus(experiment, `retrieving classifier`);
-      const classifier = await getClassifier(experiment.url, experiment.title, experiment.query);
+      setStatus(`... waiting for place in queue`);
+      const classifier = await getClassifier(experiment.url, experiment.title, experiment.query, () => setStatus(`retrieving classifier`));
 
       // Embed classifiers
-      setExperimentStatus(experiment, 'embedding classifiers');
+      setStatus('embedding classifiers');
+      console.log(experiment, classifier)
       const allclasses = [...classifier.classes_pos, ...classifier.classes_neg];
       const classEmbeddings = await computeEmbeddingsCached("", allclasses, null); // dont save
       classifier.classStore = VectorStore_fromClass2Embedding(classEmbeddings);
 
       // Classify
-      setExperimentStatus(experiment, 'classifying');
+      setStatus('classifying');
       const result = await evaluate_model(experiment, classifier);
 
-      setExperimentStatus(experiment, 'done');
+      setStatus('done');
       return [experiment.name, result];
     }
 
@@ -170,15 +181,15 @@ function TestingPage() {
     // Run all experiments concurrently
     const results = await Promise.all(testData.map(experiment => processExperiment(experiment)));
 
-    // Final status update
-    setProgress(`All experiments completed in ${formatElapsedTime(startTime, new Date())}.`);
-
     // send results to server
     setProgress("saving results")
     await sendToBackground({ name: "testsethelper", body: { cmd: "saveresults", model: model, results: Object.fromEntries(results) } })
 
     // update state with newest results
     setResultsData(await sendToBackground({ name: "testsethelper", body: { cmd: "getresults" } }))
+
+    // Final status update
+    setProgress(`All experiments completed in ${formatElapsedTime(startTime, new Date())}.`);
   }
 
   if (!testData) return "";
