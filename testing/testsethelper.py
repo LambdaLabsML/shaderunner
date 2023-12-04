@@ -5,7 +5,7 @@ import os
 import glob
 from pathlib import Path
 
-def merge_json_files(directory_pattern):
+def merge_json_files(directory_pattern, fn=None):
     all_data = []
 
     # Find all JSON files in the specified directory
@@ -13,7 +13,10 @@ def merge_json_files(directory_pattern):
         with open(file_name, 'r') as file:
             data = json.load(file)
             data["file_name"] = file_name
-            data["experiment_name"] = Path(file_name).stem
+            if "cmd" in data:
+                del data["cmd"]
+            if fn:
+                fn(data)
             all_data.append(data)
 
     return all_data
@@ -30,7 +33,7 @@ try:
 except:
     pass
 
-async def handle(request):
+async def savetestset(request):
     data = await request.json()
 
     # remove save command
@@ -65,15 +68,19 @@ async def handle(request):
 
 
 async def gettestset(request):
-    merged_data = merge_json_files('./testing/testset/*.json')
+    def add_to_data(data):
+        file_name = data["file_name"]
+        data["name"] = Path(file_name).stem
+        data["type"], data["page"], data["label"] = data["name"].split("_")
+    merged_data = merge_json_files('./testing/testset/*.json', add_to_data)
+
     return web.json_response(merged_data)
 
 
 
 async def getresults(request):
-    merged_data = merge_json_files('./testing/results/*.json')
-    print(merged_data)
-    return web.json_response({})
+    merged_data = merge_json_files('./testing/results/*')
+    return web.json_response(merged_data)
 
 
 async def saveresults(request):
@@ -95,7 +102,7 @@ async def hello(request):
 
 app = web.Application()
 app.add_routes([web.get('/hello', hello)])
-app.add_routes([web.post('/save', handle)])
+app.add_routes([web.post('/savetestset', savetestset)])
 app.add_routes([web.get('/gettestset', gettestset)])
 app.add_routes([web.get('/getresults', getresults)])
 app.add_routes([web.post('/saveresults', saveresults)])

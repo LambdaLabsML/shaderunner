@@ -44,7 +44,7 @@ const TestsetHelper = ({tabId}) => {
                 const elements = document.querySelectorAll(`span.shaderunner-highlight[splitid="${i}"]`);
                 return Array.from(elements).some(element => element.classList.contains('good'));
             });
-            const result = await sendToBackground({name: "testsethelper", body: {cmd: "write", ...highlighterData, classification: classification}})
+            const result = await sendToBackground({name: "testsethelper", body: {cmd: "savetestset", ...highlighterData, classification: classification}})
             console.log("sending result:", result)
         }
         send();

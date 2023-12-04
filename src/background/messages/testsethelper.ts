@@ -51,7 +51,6 @@ async function fetchJsonData(url) {
       const data = await response.json();
 
       // Use the JSON data as needed
-      console.log(data);
       return data;
   } catch (error) {
       console.error('There was a problem fetching the test data:', error);
@@ -75,19 +74,11 @@ const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
   console.log("testsethelper:", body)
   if (body.cmd == "check") {
     res.send(await isApiAccessible(REST_API+"hello"))
+    return
   }
-  else if (body.cmd == "write") {
-    res.send(await sendDataToServer(REST_API+"save", body))
-  }
-  else if (body.cmd == "gettestset") {
-    res.send(await fetchJsonData(REST_API+"gettestset"))
-  }
-  else if (body.cmd == "getresults") {
-    res.send(await fetchJsonData(REST_API+"getresults"))
-  }
-  else if (body.cmd == "saveresults") {
-    res.send(await sendDataToServer(REST_API+"saveresults", body))
-  }
+
+  const method = body.cmd.startsWith("save") ? sendDataToServer : fetchJsonData;
+  res.send(await method(REST_API+body.cmd, body))
 }
 
 export default handler;
