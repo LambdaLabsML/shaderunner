@@ -17,15 +17,6 @@ To balance abstraction level:
 - narrow scopes mark very specific topics as 'interesting'. if you have an idea what the answer is, use some forumlations of this answer as topics
 - keep in mind that a large number of outlier topics prevents false positives. if overused, however, it may increase false negatives as well.
 
-# Training Example
-URL: www.llmperformance.com/2020s-trends
-Title: LLM Performance Metrics and Improvements in the 2020s
-Query: performance improvements 2023
-Scope: middle (interesting are about 50% of the sentences)
-Thought: Classify sentences as 'interesting' if they are about enhancing or optimizing LLM performance. Classify as 'outliers' sentences that discuss broader topics or are irrelevant to performance improvements. As this is time-sensitive I should narrow down uninteresting years into the outlier list.
-Interesting Class Topics: Performance Enhancement|Optimization Strategies|Efficiency Increase
-Outlier Class Topics: year 2020|year 2021|year 2024|Applications|Use Cases|Design Challenges|Technical Specifications|User Testimonials|Industry Trends|Regulatory Considerations|Market Analysis|Cost-Effectiveness|Website Navigation|Advertisements|General News|External Links|Website Updates|Miscellaneous Announcements
-
 # Training Exampple
 URL: www.myhealth.com/nutrition-tips
 Title: Essential Nutrition Tips for a Healthy Lifestyle
@@ -52,7 +43,7 @@ Scope: super-narrow (looking for specific information)
 Thought: The user is specifically looking for the source of the quote "The Eagle has landed". Sentences that directly discuss this quote|its context|or its origin are 'interesting'. The focus should be extremely narrow|centered on the quote and its immediate context.
 Interesting Class Topics: "The Eagle has landed"|Apollo 11 Moon Landing Quote
 Outlier Class Topics: General Moon Landing History|Other Space Missions|Astronaut Biographies|Space Exploration Technology|Future Moon Missions|Advertisements|External Links|Site Navigation
-    `
+`
 
     const USER = `# Incoming User Request (always use training example template)
 URL: ${url}
