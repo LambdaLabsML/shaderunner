@@ -29,7 +29,7 @@ function formatElapsedTime(startTime, endTime) {
 function TestingPage() {
   const [testData, setTestData] = useState([]);
   const [progress, setProgress] = useState(<span>No experiment running.</span>);
-  const [resultsData, setResultsData] = useState([]);
+  const [_resultsData, setResultsData] = useState([]);
 
 
   useEffect(() => {
@@ -193,6 +193,10 @@ function TestingPage() {
   }
 
   if (!testData) return "";
+
+  // sort results by model name / filename
+  const resultsData = _resultsData.sort((r1,r2) => r1.model.name.localeCompare(r2.model.name))
+  console.log(resultsData)
 
   // merged results & experiments
   const groups = ["all", ...new Set(testData.map(experiment => experiment.type))]

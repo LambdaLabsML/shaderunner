@@ -59,7 +59,7 @@ const ExperimentRow = ({ experiment, resultsData, color }) => {
       <tr style={{ backgroundColor: color }}>
         <td style={{ verticalAlign: "top", width: "250px", padding: "1em" }}><b>{experiment.name}</b><br/><div>{experiment.query}</div></td>
         <td colSpan={10}>
-          <div style={{ width: "800px", padding:"1em" }}>
+          <div style={{ width: "1000px", padding:"1em" }}>
             <MergedBarPlot resultsData={resultsData} experiment={experiment} />
           </div>
         </td>
