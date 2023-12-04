@@ -6,6 +6,7 @@
 /.pnp
 .pnp.js
 testing/testset/
+testing/results/
 
 # testing
 /coverage
