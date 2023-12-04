@@ -125,7 +125,7 @@ function TestingPage() {
       now.getHours().toString().padStart(2, '0') +
       now.getMinutes().toString().padStart(2, '0') +
       now.getSeconds().toString().padStart(2, '0');
-    model.name = `${timestamp}-${model.model}-${model.chat}-${model.temperature}`;
+    model.name = `${model.model.replace("gpt-","").replace("-1106-preview", "turbo")}-${model.chat ? "chat" : "instr"}-T${model.temperature}-${timestamp}-`;
 
     // Function to process each experiment
     async function processExperiment(experiment) {
@@ -142,7 +142,6 @@ function TestingPage() {
 
       // Embed classifiers
       setStatus('embedding classifiers');
-      console.log(experiment, classifier)
       const allclasses = [...classifier.classes_pos, ...classifier.classes_neg];
       const classEmbeddings = await computeEmbeddingsCached("", allclasses, null); // dont save
       classifier.classStore = VectorStore_fromClass2Embedding(classEmbeddings);
@@ -196,7 +195,6 @@ function TestingPage() {
 
   // sort results by model name / filename
   const resultsData = _resultsData.sort((r1,r2) => r1.model.name.localeCompare(r2.model.name))
-  console.log(resultsData)
 
   // merged results & experiments
   const groups = ["all", ...new Set(testData.map(experiment => experiment.type))]
