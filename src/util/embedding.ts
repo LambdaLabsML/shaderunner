@@ -134,7 +134,7 @@ async function computeEmbeddingsCached(collectionName: string, splits: string[],
   const openaiembedding = new OpenAIEmbeddings({ openAIApiKey: api_key, modelName: modelName })
 
   // first try to get an existing collection
-  let { storeExists, dbVersion } = await collection_exists(dbname, collectionName)
+  let { storeExists, dbVersion } = dbname ? await collection_exists(dbname, collectionName) : {storeExists: false, dbVersion: "ignore"}
 
   // embeddings we want to have
   const split2embedding = storeExists ? await retrieveMultipleData(dbname, collectionName, splits) : Object.fromEntries(splits.map((s, i) => [s, null]));
@@ -150,7 +150,7 @@ async function computeEmbeddingsCached(collectionName: string, splits: string[],
   if (missingsplits.length) {
     const missingdocs = missingsplits.map((split, i) => new Document({ pageContent: split }))
     const missingembeddings = await openaiembedding.embedDocuments(missingsplits);
-    const db = await openDatabase(dbname, collectionName, dbVersion + (storeExists ? 0 : 1));
+    let db = dbname ? await openDatabase(dbname, collectionName, dbVersion + (storeExists ? 0 : 1)) : null;
     const new_split2embedding = [];
     for (let i = 0; i < missingdocs.length; i++) {
       const split = missingdocs[i].pageContent;
@@ -158,7 +158,8 @@ async function computeEmbeddingsCached(collectionName: string, splits: string[],
       split2embedding[split] = embedding;
       new_split2embedding.push([split, embedding]);
     }
-    await saveBulkData(db, collectionName, new_split2embedding);
+    if (dbname)
+      await saveBulkData(db, collectionName, new_split2embedding);
   }
 
   return split2embedding;

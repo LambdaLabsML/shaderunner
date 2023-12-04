@@ -8,10 +8,27 @@ import { llm2classes } from '~background/messages/llm_classify';
 
 
 
+function formatElapsedTime(startTime, endTime) {
+  let delta = endTime - startTime; // delta time in milliseconds
+
+  const hours = Math.floor(delta / 3600000); // 1 hour = 3600000 milliseconds
+  delta %= 3600000;
+
+  const minutes = Math.floor(delta / 60000); // 1 minute = 60000 milliseconds
+  delta %= 60000;
+
+  const seconds = Math.floor(delta / 1000); // 1 second = 1000 milliseconds
+  const milliseconds = delta % 1000;
+
+  return `${hours} hours, ${minutes} minutes, ${seconds} seconds, ${milliseconds} milliseconds`;
+}
+
+
+
 
 function TestingPage() {
   const [testData, setTestData] = useState([]);
-  const [progress, setProgress] = useState("No experiment running.");
+  const [progress, setProgress] = useState(<span>No experiment running.</span>);
   const [resultsData, setResultsData] = useState([]);
 
 
@@ -43,7 +60,7 @@ function TestingPage() {
 
         // using precomputed embeddings
         const embedding = splitEmbeddings[split];
-        const closest = await classStore.similaritySearchVectorWithScore(embedding, classes_pos.length, classes_neg.length);
+        const closest = await classStore.similaritySearchVectorWithScore(embedding, classes_pos.length + classes_neg.length);
 
         const score_plus = classes_pos ? closest.filter((c) => classes_pos.includes(c[0].pageContent)).reduce((a, c) => Math.max(a, c[1]), 0) : 0
         const score_minus = classes_neg ? closest.filter((c) => classes_neg.includes(c[0].pageContent)).reduce((a, c) => Math.max(a, c[1]), 0) : 0
@@ -55,11 +72,41 @@ function TestingPage() {
       return {classification};
   }
 
+  const callQueue = [];
+  let isProcessing = false;
+
+  async function enqueueCall(url, title, query) {
+    return new Promise((resolve, reject) => {
+      callQueue.push({ url, title, query, resolve, reject });
+      processQueue();
+    });
+  }
+
+  async function processQueue() {
+    if (isProcessing || callQueue.length === 0) {
+      return;
+    }
+
+    isProcessing = true;
+    const { url, title, query, resolve, reject } = callQueue.shift();
+
+    try {
+      const result = await llm2classes(url, title, query);
+      resolve(result);
+    } catch (error) {
+      reject(error);
+    } finally {
+      isProcessing = false;
+      processQueue();
+    }
+  }
+
+  async function getClassifier(url, title, query) {
+    return enqueueCall(url, title, query);
+  }
 
   async function evaluate() {
-
-    // init evaluation
-    setProgress("initializing")
+    const startTime = new Date();
     const model = await getCurrentModel();
     const { SYSTEM, USER } = eval_prompt({ url: "$URL", title: "$TITLE", query: "$QUERY" });
     model.prompt = `${SYSTEM}\n${USER}`
@@ -72,46 +119,59 @@ function TestingPage() {
       now.getSeconds().toString().padStart(2, '0');
     model.name = `${timestamp}-${model.model}-${model.chat}-${model.temperature}`;
 
-    // embed splits
-    setProgress("embedding")
-    for(let i=0; i<testData.length; i++) {
-      const experiment = testData[i];
-      setProgress(`embedding ${experiment.name} from url: ${experiment.url}`)
-      experiment.splits = experiment.labeled_splits.map(([label, split]) => split)
-      experiment.splitEmbeddings = await computeEmbeddingsCached(experiment.url as string, experiment.splits)
+    // Function to process each experiment
+    async function processExperiment(experiment) {
+      // Embed splits
+      setExperimentStatus(experiment, `embedding splits.`);
+      experiment.splits = experiment.labeled_splits.map(([label, split]) => split);
+      experiment.splitEmbeddings = await computeEmbeddingsCached(experiment.url, experiment.splits);
+
+      // Query classifier
+      setExperimentStatus(experiment, `retrieving classifier`);
+      const classifier = await getClassifier(experiment.url, experiment.title, experiment.query);
+
+      // Embed classifiers
+      setExperimentStatus(experiment, 'embedding classifiers');
+      const allclasses = [...classifier.classes_pos, ...classifier.classes_neg];
+      const classEmbeddings = await computeEmbeddingsCached("", allclasses, null); // dont save
+      classifier.classStore = VectorStore_fromClass2Embedding(classEmbeddings);
+
+      // Classify
+      setExperimentStatus(experiment, 'classifying');
+      const result = await evaluate_model(experiment, classifier);
+
+      setExperimentStatus(experiment, 'done');
+      return [experiment.name, result];
     }
 
-    // get classifiers for each experiment
-    setProgress("query classifier")
-    const classifiers = [];
-    for(let i=0; i<testData.length; i++) {
-      const experiment = testData[i];
-      setProgress(`retrieving classifier for ${experiment.name} with query ${experiment.query}.`)
-      const classifier = await llm2classes(experiment.url, experiment.title, experiment.query)
-      classifiers.push(classifier)
+    // Function to update progress for all experiments
+    function updateAllProgress(testData) {
+      setProgress((
+        <table>
+          <thead>
+            <tr>
+              <th>Experiment</th>
+              <th>Progress</th>
+            </tr>
+          </thead>
+          <tbody>
+            {testData.map(experiment => (<tr key={experiment.name}><td><b>{experiment.name}</b></td><td>{experiment.status}</td></tr>))}
+          </tbody>
+        </table>
+      ));
     }
 
-    // embed classes
-    setProgress("embed classifiers")
-    for(let i=0; i<testData.length; i++) {
-      const classifier = classifiers[i];
-      const experiment = testData[i];
-      const url = experiment.url;
-      const allclasses = [...classifier.classes_pos, ...classifier.classes_neg]
-      const classCollection = url + "|classes";
-      const classEmbeddings = await computeEmbeddingsCached(classCollection, allclasses, "shaderunner-classes");
-      const classStore = VectorStore_fromClass2Embedding(classEmbeddings)
-      classifier.classStore = classStore;
+    // Function to set individual experiment status and update progress
+    function setExperimentStatus(experiment, status) {
+      experiment.status = status;
+      updateAllProgress(testData);
     }
 
-    // classify
-    setProgress("classify")
-    const results = [];
-    for (let i = 0; i < testData.length; i++) {
-      const experiment = testData[i];
-      const result = await evaluate_model(experiment, classifiers[i]);
-      results.push([experiment.name, result]);
-    }
+    // Run all experiments concurrently
+    const results = await Promise.all(testData.map(experiment => processExperiment(experiment)));
+
+    // Final status update
+    setProgress(`All experiments completed in ${formatElapsedTime(startTime, new Date())}.`);
 
     // send results to server
     setProgress("saving results")
