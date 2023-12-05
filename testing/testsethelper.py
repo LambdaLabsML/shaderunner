@@ -81,7 +81,8 @@ async def gettestset(request):
 async def getresults(request):
     def add_to_data(data):
         file_name = data["file_name"]
-        data["model"]["name"] = Path(file_name).stem
+        # data["model"]["name"] = Path(file_name).stem
+        data["model"]["name"] = Path(file_name).name#.split('.')[:-1])
     merged_data = merge_json_files('./testing/results/*', add_to_data)
     return web.json_response(merged_data)
 
