@@ -24,7 +24,7 @@ const Legend = ({tabId, topics, flipVisibility}) => {
     [ setGlobalStorage ]
   ] = useGlobalStorage(tabId, "url", "highlightTopicStyles", "highlightActiveTopic", "topicCounts", "ScrollerCommand")
   const [ sortBy, setSortBy ] = useState(undefined)
-  const allclasses = classifierData && classifierData.classes_pos ? [...classifierData.classes_pos, ...classifierData.classes_neg] : [];
+  const allclasses = classifierData && Array.isArray(classifierData.classes_pos) && Array.isArray(classifierData.classes_neg) ? [...classifierData.classes_pos, ...classifierData.classes_neg] : [];
 
 
 
