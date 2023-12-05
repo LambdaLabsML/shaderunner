@@ -14,6 +14,7 @@ For best results: balance the abstraction level of all topics to be more or less
 
 To balance abstraction level:
 - broad scopes mark general topics as 'interesting'
+- always formulate the query as an interesting topic
 - narrow scopes mark very specific topics as 'interesting'. if you have an idea what the answer is, use some formulations of this answer as topics
 - keep in mind that a large number of neutral topics prevents false positives. if overused, however, it may increase false negatives as well.
 
