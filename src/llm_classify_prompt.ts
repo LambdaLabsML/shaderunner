@@ -1,17 +1,22 @@
 import { Storage } from "@plasmohq/storage"
 const storage = new Storage()
 
-const prompt_description = [
-  "Classify webpage sentences as 'interesting' or 'outlier' based on their relevance to a user query.",
-  "'Interesting' sentences closely relate to specific topics pertinent to the query, while 'outliers' are unrelated.",
-  "Sentences nearer to an 'interesting' topic than an 'outlier' topic are classified as 'interesting', and vice versa.",
-  "Use a nearest neighbor approach to consider sentence-topic distance.",
-  "Let the query context guide classification.",
-  "Topics should be balanced in abstraction level.",
-]
 
 export const eval_prompt = ({ url, title, query }) => {
-    const SYSTEM = `${prompt_description.join(' ')}
+    const SYSTEM = `Classify sentences from a webpage as either 'interesting' or 'outlier'.
+For this, use two categories: 'interesting' for sentences closely related to specific topics relevant to the user query, and 'outlier' for sentences that are only mildly related or unrelated.
+Sentences are deemed 'interesting' if they are nearer to a topic in the 'interesting' category than to those in the 'outlier' category.
+Conversely, classify a sentence as 'outlier' if it is broadly related to general topics but not closely aligned with the 'interesting' topics.
+Classes are always positive and never in their negated form (e.g omit the words "Other" and "Non-" for all class topics).
+The classification relies on a nearest neighbor approach, considering the sentence-topic distance.
+The context of the query should guide the classification, ensuring sentences are appropriately grouped.
+The number of negative topics may be higher than the number of positive topics.
+For best results: balance the abstraction level of all topics to be more or less equal.
+
+To balance abstraction level:
+- broad scopes mark general topics as 'interesting'
+- narrow scopes mark very specific topics as 'interesting'. if you have an idea what the answer is, use some forumlations of this answer as topics
+- keep in mind that a large number of outlier topics prevents false positives. if overused, however, it may increase false negatives as well.
 
 # Training Exampple
 URL: www.myhealth.com/nutrition-tips
