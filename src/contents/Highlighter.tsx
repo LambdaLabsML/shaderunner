@@ -86,7 +86,7 @@ const Highlighter = () => {
 
     // on every classifier change, recompute highlights
     useEffect(() => {
-      if(!tabId || !isActive || !connected || !classifierData.thought) return;
+      if(!tabId || !isActive || !connected || !classifierData.classes_pos) return;
 
       const applyHighlight = () => {
         try {
@@ -106,12 +106,12 @@ const Highlighter = () => {
 
     // on every classifier change, recompute class embeddings
     useEffect(() => {
-      if(!tabId || !isActive || !connected || !classifierData.thought) return;
+      if(!tabId || !isActive || !connected || !classifierData.classes_pos) return;
 
       async function computeClassEmbeddings() {
         const classes_pos = classifierData.classes_pos;
         const classes_neg = classifierData.classes_neg;
-        if (!classes_pos || !classes_neg)
+        if (!Array.isArray(classes_pos) || !Array.isArray(classes_neg))
           return;
 
         const allclasses = [...classes_pos, ...classes_neg]
