@@ -28,9 +28,10 @@ const Highlighter = () => {
       [highlightAmount],
       [decisionEpsAmount],
       [highlightRetrieval],
+      [highlightClassify],
       [retrievalK],
       [setGlobalStorage, connected]
-    ] = useGlobalStorage(tabId, "url", "topicCounts", "classifierScores", "status_embedding", "status_highlight", "classEmbeddings", "highlightAmount", "decisionEps", "highlightRetrieval", "retrievalK");
+    ] = useGlobalStorage(tabId, "url", "topicCounts", "classifierScores", "status_embedding", "status_highlight", "classEmbeddings", "highlightAmount", "decisionEps", "highlightRetrieval", "highlightClassify", "retrievalK");
     const [ url, isActive ] = useActiveState(window.location);
     const [ pageEmbeddings, setPageEmbeddings ] = useState({mode: "sentences", splits: [], splitEmbeddings: {}});
     const [ classifierData ] = useSessionStorage("classifierData:"+tabId, {});
@@ -101,7 +102,7 @@ const Highlighter = () => {
         }
       }
       applyHighlight()
-    }, [pageEmbeddings, connected, classifierData, isActive, textclassifier, textretrieval, retrievalQuery, highlightAmount, highlightRetrieval, decisionEpsAmount, classEmbeddings, retrievalK])
+    }, [pageEmbeddings, connected, classifierData, isActive, textclassifier, textretrieval, retrievalQuery, highlightAmount, highlightRetrieval, highlightClassify, decisionEpsAmount, classEmbeddings, retrievalK])
 
 
     // on every classifier change, recompute class embeddings
