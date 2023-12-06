@@ -11,9 +11,10 @@ import TestsetHelperControls from '~components/modules/TestsetHelperControls';
 import ThoughtInfo from '~components/modules/ThoughtInfo';
 import ClassDimRed from '~components/modules/ClassDimRed';
 import AmountHighlighted from '~components/modules/AmountHighlighted';
-import { useActiveState } from '~util/activeStatus';
+import {useSessionStorage as _useSessionStorage} from '~util/misc';
+import { useStorage } from '@plasmohq/storage/hook';
 
-
+const useSessionStorage = process.env.NODE_ENV == "development" && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;
 
 const StatusIndicator = ({name, status, size=4}) => {
   const [statusClass, progress, statusMsg] = status || ["", 0, "off"];
@@ -30,6 +31,7 @@ const StatusIndicator = ({name, status, size=4}) => {
 const Sidepanel = () => {
   const tabId = new URL(window.location.href).searchParams.get("tabId")
   const [[url], [statusEmbedding], [statusClassifier], [statusHighlight], [highlightMode]] = useGlobalStorage(tabId, "url", "status_embedding", "status_classifier", "status_highlight", "highlightMode")
+  const [ classifierData ] = useSessionStorage("classifierData:"+tabId, {});
 
 
   // ======= //
@@ -85,25 +87,26 @@ const Sidepanel = () => {
     <CollapsibleBox title="TestsetHelper">
       <TestsetHelperControls tabId={tabId}></TestsetHelperControls>
     </CollapsibleBox>
-    ) : [
+    ) : 
+    classifierData.classes_pos && classifierData.classes_neg ? [
       <CollapsibleBox key="interesting_topics" title="Interesting Topics" className="Legend">
         <Legend tabId={tabId} topics="classes_pos" flipVisibility={false}></Legend>
       </CollapsibleBox>,
       <CollapsibleBox key="outlier_topics" title="Outlier Topics" className="Legend" open={false}>
         <Legend tabId={tabId} topics="classes_neg" flipVisibility={true}></Legend>
+      </CollapsibleBox>,
+      <CollapsibleBox key="advanced" title="Advanced" open={false}>
+        <CollapsibleBox key="amount_highlighted" title="Amount Highlighted" open={false}>
+          <AmountHighlighted tabId={tabId} />
+        </CollapsibleBox>
+        <CollapsibleBox key="thought_info" title="Thought Info" open={false}>
+          <ThoughtInfo tabId={tabId} />
+        </CollapsibleBox>
+        <CollapsibleBox key="class_similarities" title="Class Similarities" open={false}>
+          <ClassDimRed tabId={tabId} />
+        </CollapsibleBox>
       </CollapsibleBox>
-    ]}
-    <CollapsibleBox key="advanced" title="Advanced" open={false}>
-      <CollapsibleBox key="amount_highlighted" title="Amount Highlighted" open={false}>
-        <AmountHighlighted tabId={tabId}/>
-      </CollapsibleBox>
-      <CollapsibleBox key="thought_info" title="Thought Info" open={false}>
-        <ThoughtInfo tabId={tabId}/>
-      </CollapsibleBox>
-      <CollapsibleBox key="class_similarities" title="Class Similarities" open={false}>
-        <ClassDimRed tabId={tabId}/>
-      </CollapsibleBox>
-    </CollapsibleBox>
+    ] : []}
     {/*<div className="logoContainer">
       <img className="thinking_logo" width="30" src={Logo}/>
     </div>*/}
