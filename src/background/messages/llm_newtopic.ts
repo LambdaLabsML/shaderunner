@@ -26,7 +26,8 @@ const llmNewTopic = async (url: string, pos_topics: string[], neg_topics: string
     const PROMPT = `We are currently looking at the webpage: ${url}
 Assume these are interesting topics: ${pos_topics.join(",")}.
 Assume these are uninteresting topics: ${neg_topics.join(",")}.
-This is another interesting topic that matches the theme: `;
+What is another interesting topic that matches the theme?
+Important: Answer only with the topic and nothing else.`;
 
     const llmResult = await llm.predict(PROMPT);
     console.log("using", gptversion, chatgpt ? "ChatGPT" : "InstructGPT")
