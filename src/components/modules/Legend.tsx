@@ -47,10 +47,10 @@ const Legend = ({tabId, topics, flipVisibility}) => {
   // --------- //
 
   // active current, hide all others
-  const onFocusHighlight = (ev, topic: string) => {
+  const onFocusHighlight = async (ev, topic: string) => {
     ev.stopPropagation();
-    setScrollerCommand(null)
-    setGlobalStorage({
+    await setScrollerCommand(null)
+    await setGlobalStorage({
       highlightActiveTopic: topic,
       highlightActiveStyle: "highlight",
       highlightDefaultStyle: "no-highlight",
@@ -59,9 +59,9 @@ const Legend = ({tabId, topics, flipVisibility}) => {
   }
 
   // active current, dim all others
-  const mouseOverHighlight = (topic: string) => {
-    setScrollerCommand(null)
-    setGlobalStorage({
+  const mouseOverHighlight = async (topic: string) => {
+    await setScrollerCommand(null)
+    await setGlobalStorage({
       highlightActiveTopic: topic,
       highlightDefaultStyle: flipVisibility ? null : "dim-highlight",
       highlightDefaultNegStyle: flipVisibility ? "dim-highlight" : null,
@@ -70,9 +70,9 @@ const Legend = ({tabId, topics, flipVisibility}) => {
   }
 
   // restore state before mouseOver
-  const mouseOverHighlightFinish = () => {
-    setScrollerCommand(null)
-    setGlobalStorage({
+  const mouseOverHighlightFinish = async () => {
+    await setScrollerCommand(null)
+    await setGlobalStorage({
       highlightActiveTopic: null,
       highlightDefaultStyle: null,
       highlightDefaultNegStyle: null,
@@ -80,8 +80,8 @@ const Legend = ({tabId, topics, flipVisibility}) => {
   }
 
   // hide topic
-  const toggleHighlight = (topic: string) => {
-    setScrollerCommand(null)
+  const toggleHighlight = async (topic: string) => {
+    await setScrollerCommand(null)
     let newTopicStyles = {};
     if (topicStyles && topicStyles[topic]) {
       let { [topic]: removed, ..._newTopicStyles } = topicStyles;
@@ -90,7 +90,7 @@ const Legend = ({tabId, topics, flipVisibility}) => {
       newTopicStyles = { ...topicStyles, [topic]: flipVisibility ? "highlight" : "no-highlight" };
     }
 
-    setGlobalStorage({
+    await setGlobalStorage({
         highlightActiveStyle: topicIsActive(topic, newTopicStyles) ? "strong-highlight" : "light-highlight",
         highlightTopicStyles: newTopicStyles
     })
