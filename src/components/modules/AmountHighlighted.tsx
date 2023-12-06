@@ -65,7 +65,7 @@ const AmountHighlighted = ({tabId}) => {
       <div className="slider">
       <input
         type="range"
-        min="0"
+        min="1"
         max="100"
         value={retrieval_slider}
         onChange={handleRetrievalSlider}
