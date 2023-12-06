@@ -11,6 +11,7 @@ import TestsetHelperControls from '~components/modules/TestsetHelperControls';
 import ThoughtInfo from '~components/modules/ThoughtInfo';
 import ClassDimRed from '~components/modules/ClassDimRed';
 import AmountHighlighted from '~components/modules/AmountHighlighted';
+import { useActiveState } from '~util/activeStatus';
 
 
 
@@ -28,7 +29,7 @@ const StatusIndicator = ({name, status, size=4}) => {
 // mount in sidepanel
 const Sidepanel = () => {
   const tabId = new URL(window.location.href).searchParams.get("tabId")
-  const [[statusEmbedding], [statusClassifier], [statusHighlight], [highlightMode]] = useGlobalStorage(tabId, "status_embedding", "status_classifier", "status_highlight", "highlightMode")
+  const [[url], [statusEmbedding], [statusClassifier], [statusHighlight], [highlightMode]] = useGlobalStorage(tabId, "url", "status_embedding", "status_classifier", "status_highlight", "highlightMode")
 
 
   // ======= //
@@ -55,6 +56,20 @@ const Sidepanel = () => {
   // ====== //
   // Render //
   // ====== //
+    if (!url)
+      return (<div className="ShadeRunner-Sidepanel">
+        <div className="statusContainer">
+          <StatusIndicator name="embedding" status={statusEmbedding} />
+          <StatusIndicator name="classifier" status={statusClassifier} />
+          <StatusIndicator name="highlight" status={statusHighlight} />
+        </div>
+        <CollapsibleBox title="Error">
+          <b>This plugin is either not active on this webpage or it lost connection to the page content.</b>
+          Activate this plugin for this webpage or if you have already, reload the webpage to restore a connection.
+        </CollapsibleBox>
+      </div>);
+
+
 
   return <div className="ShadeRunner-Sidepanel">
     <div className="statusContainer">
