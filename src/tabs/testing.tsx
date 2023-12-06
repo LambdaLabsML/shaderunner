@@ -54,6 +54,7 @@ function TestingPage() {
       const classStore = classifier.classStore;
 
       // mark sentences based on similarity
+      const decisioneps = -1;//0.25;
       let classification = [];
       for (let i=0; i<splits.length; i++) {
         const split = splits[i];
@@ -64,6 +65,11 @@ function TestingPage() {
 
         const score_plus = classes_pos ? closest.filter((c) => classes_pos.includes(c[0].pageContent)).reduce((a, c) => Math.max(a, c[1]), 0) : 0
         const score_minus = classes_neg ? closest.filter((c) => classes_neg.includes(c[0].pageContent)).reduce((a, c) => Math.max(a, c[1]), 0) : 0
+
+        if ((decisioneps > 0 && Math.abs(score_plus - score_minus) < decisioneps)) {
+          classification.push(false)
+          continue;
+        }
 
         // apply color if is first class
         classification.push(score_plus > score_minus)
