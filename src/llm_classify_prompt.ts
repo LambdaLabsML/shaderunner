@@ -47,8 +47,7 @@ Neutral Class Topics: General Moon Landing History|Other Space Missions|Astronau
 
 `
 
-    const USER = `# Incoming User Request (always use training example template)
-URL: ${url}
+    const USER = `URL: ${url}
 Page title: ${title}
 Query: ${query}
 Scope: `;
