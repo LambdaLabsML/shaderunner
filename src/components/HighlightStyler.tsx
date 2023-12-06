@@ -40,12 +40,13 @@ const HighlightStyler = ({tabId}) => {
         // create class for each pos-class
         const allclasses = [...classifierData.classes_pos, ...classifierData.classes_neg, ...classifierData.classes_retrieval];
         const colorStyle = allclasses.map((c, i) => {
-            const isPosClass = classifierData.classes_retrieval.includes(c) || i < classifierData.classes_pos.length;
+            const isPosClass = i < classifierData.classes_pos.length;
+            const isRetrievalClass = classifierData.classes_retrieval.includes(c);
             const isActive = activeTopic == c
 
             // use default setting unless we have a specific highlight setting given
             // i.e. if class is "active", use "strong-highlight" setting
-            const classSetting = isActive ? activeStyle : topicStyles && c in topicStyles ? topicStyles[c] : isPosClass ? defaultStyle : defaultNegStyle;
+            const classSetting = isActive ? activeStyle : topicStyles && c in topicStyles ? topicStyles[c] : isPosClass || isRetrievalClass ? defaultStyle : defaultNegStyle;
 
             if (mode == "testset helper")
                 return `span.shaderunner-highlight[splitid] {
@@ -57,7 +58,7 @@ const HighlightStyler = ({tabId}) => {
                 }
                 ` 
 
-            if (mode == "focus" && classSetting == "no-highlight")
+            if (mode == "focus" && classSetting == "no-highlight" || mode == "focus" && highlightRetrieval && !isRetrievalClass)
                 return `span.highlightclass-${i} {
                             display: none;
                         }`
