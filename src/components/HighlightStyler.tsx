@@ -46,7 +46,6 @@ const HighlightStyler = ({tabId}) => {
             // use default setting unless we have a specific highlight setting given
             // i.e. if class is "active", use "strong-highlight" setting
             const classSetting = isActive ? activeStyle : topicStyles && c in topicStyles ? topicStyles[c] : isPosClass ? defaultStyle : defaultNegStyle;
-            console.log(c, classSetting, isPosClass);
 
             if (mode == "testset helper")
                 return `span.shaderunner-highlight[splitid] {

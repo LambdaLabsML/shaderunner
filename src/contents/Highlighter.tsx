@@ -166,7 +166,7 @@ const Highlighter = () => {
       const classes_pos = classifierData.classes_pos;
       const classes_neg = classifierData.classes_neg;
       const classes_retrieval = classifierData.classes_retrieval;
-      if (!classes_pos || !classes_neg)
+      if (!classes_pos || !classes_neg || !classes_retrieval)
         return;
       if (!classEmbeddings || isPromise(classEmbeddings)) return;
 
@@ -175,7 +175,7 @@ const Highlighter = () => {
       const numClasses = allclasses.length;
       const class2Id = Object.fromEntries(allclasses.map((c, i) => [c, i]))
       const classStore = VectorStore_fromClass2Embedding(Object.fromEntries(Object.entries(classEmbeddings).filter(([c]) => !classes_retrieval.includes(c))))
-      allclasses.concat(classes_retrieval)
+      allclasses.push(...classes_retrieval)
 
       // ensure we have embedded the page contents
       let { splits, splitEmbeddings, mode } = pageEmbeddings;
@@ -263,7 +263,6 @@ const Highlighter = () => {
         
         else {
           if (verbose) console.log("reject", split, score_plus, score_minus)
-          h.highlight = false;
         }
 
       })
@@ -308,7 +307,7 @@ const Highlighter = () => {
           if (DEV)
             span.setAttribute("splitid", index);
         });
-        topicCounts[className] += highlight ? 1 : 0;
+        topicCounts[className] += highlight || isRetrieval ? 1 : 0;
         currentTextNodes.splice(true_from_node_pos, num_textnodes, ...replacedNodes);
         node_offset += replacedNodes.length - num_textnodes 
         if (index < splits.length - 1 && splitDetails[index+1].from_text_node == details.to_text_node && nextTextOffset > 0) {
@@ -317,7 +316,7 @@ const Highlighter = () => {
         } else {
           textoffset = 0;
         }
-        //setStatusHighlight(["computing", i / toHighlight.length * 100]) // bug: needs to be outside due to concurrency conflict of this variable
+        setStatusHighlight(["computing", i / toHighlight.length * 100]) // bug: needs to be outside due to concurrency conflict of this variable
       }
 
       // finally, let's highlight all textnodes that are not highlighted
@@ -330,8 +329,8 @@ const Highlighter = () => {
 
       const _statusEmbedding = await statusEmbedding;
       if (_statusEmbedding && _statusEmbedding[1] == 100)
-        setStatusHighlight(["loaded", 100]) // bug: needs to be outside due to concurrency conflict of this variable
-      setGlobalStorage({
+        await setStatusHighlight(["loaded", 100]) // bug: needs to be outside due to concurrency conflict of this variable
+      await setGlobalStorage({
         topicCounts: topicCounts,
         classifierScores: scores,
         ...devOpts

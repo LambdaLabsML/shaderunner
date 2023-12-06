@@ -94,14 +94,14 @@ const Sidepanel = () => {
       <AmountHighlighted tabId={tabId} />,
       highlightRetrieval ? (
         <CollapsibleBox key="retrieval_topic" title="Retrieval" className="Legend">
-          <RetrievalLegend tabId={tabId}></RetrievalLegend>
+          <Legend tabId={tabId} topics="classes_retrieval" flipVisibility={false} orderSwitch={false}></Legend>
         </CollapsibleBox>
       ) : "",
       <CollapsibleBox key="interesting_topics" title="Interesting Topics" className="Legend">
-        <Legend tabId={tabId} topics="classes_pos" flipVisibility={false}></Legend>
+        <Legend tabId={tabId} topics="classes_pos" flipVisibility={false} orderSwitch={true}></Legend>
       </CollapsibleBox>,
       <CollapsibleBox key="outlier_topics" title="Outlier Topics" className="Legend" open={false}>
-        <Legend tabId={tabId} topics="classes_neg" flipVisibility={true}></Legend>
+        <Legend tabId={tabId} topics="classes_neg" flipVisibility={true} orderSwitch={true}></Legend>
       </CollapsibleBox>,
       <CollapsibleBox key="advanced" title="Advanced" open={false}>
         <CollapsibleBox key="thought_info" title="Thought Info" open={false}>

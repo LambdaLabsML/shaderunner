@@ -12,7 +12,7 @@ import { sendToBackground } from '@plasmohq/messaging';
 const useSessionStorage = process.env.NODE_ENV == "development" && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;
 
 
-const Legend = ({tabId, topics, flipVisibility}) => {
+const Legend = ({tabId, topics, flipVisibility, orderSwitch}) => {
   //const [retrievalQuery] = useSessionStorage("retrievalQuery:"+tabId, null);
   const [classifierData, setClassifierData] = useSessionStorage("classifierData:"+tabId, {});
   const [
@@ -24,7 +24,7 @@ const Legend = ({tabId, topics, flipVisibility}) => {
     [ setGlobalStorage ]
   ] = useGlobalStorage(tabId, "url", "highlightTopicStyles", "highlightActiveTopic", "topicCounts", "ScrollerCommand")
   const [ sortBy, setSortBy ] = useState(undefined)
-  const allclasses = classifierData && Array.isArray(classifierData.classes_pos) && Array.isArray(classifierData.classes_neg) ? [...classifierData.classes_pos, ...classifierData.classes_neg] : [];
+  const allclasses = classifierData && Array.isArray(classifierData.classes_pos) && Array.isArray(classifierData.classes_neg) ? [...(classifierData.classes_pos||[]), ...(classifierData.classes_neg||[]), ...(classifierData.classes_retrieval||[])] : [];
 
 
 
@@ -32,6 +32,7 @@ const Legend = ({tabId, topics, flipVisibility}) => {
   // helper //
   // ------ //
   const topicIsActive = (topic: string, _topicStyles: any) => {
+    console.log(topic, _topicStyles)
     if (flipVisibility)
       return _topicStyles && topic in _topicStyles && _topicStyles[topic] != "no-highlight"
     else
@@ -54,7 +55,10 @@ const Legend = ({tabId, topics, flipVisibility}) => {
       highlightActiveTopic: topic,
       highlightActiveStyle: "highlight",
       highlightDefaultStyle: "no-highlight",
-      highlightTopicStyles: {...Object.fromEntries(classifierData.classes_pos.map(c => [c, "no-highlight"])), ...{[topic]: "highlight"}}
+      highlightTopicStyles: {
+        ...Object.fromEntries(classifierData.classes_retrieval.map(c => [c, "no-highlight"])),
+        ...Object.fromEntries(classifierData.classes_pos.map(c => [c, "no-highlight"])),
+        ...{[topic]: "highlight"}}
     })
   }
 
@@ -150,13 +154,13 @@ const Legend = ({tabId, topics, flipVisibility}) => {
     topicList.sort(sortByCounts)
 
   return [
-    <SwitchInput
+    orderSwitch ? <SwitchInput
       label=""
       key={topics+"order_selector"}
       options={['gpt order', "sort by occurences"]}
       selected={sortBy || 'gpt order'}
       onChange={(value: string) => setSortBy(value)}
-    />,
+    /> : "",
     <SwitchInput
       label=""
       key={topics+"show_selector"}
