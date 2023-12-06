@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getMainContent, extractSplits, mapSplitsToTextnodes } from '~util/extractContent'
 import { highlightText, resetHighlights, textNodesNotUnderHighlight, surroundTextNode } from '~util/DOM'
-import { computeEmbeddingsCached, computeEmbeddingsLocal, embeddingExists, VectorStore_fromClass2Embedding, type Metadata } from '~util/embedding'
+import { computeEmbeddingsCached, embeddingExists, VectorStore_fromClass2Embedding, type Metadata } from '~util/embedding'
 import { useStorage } from "@plasmohq/storage/hook";
-import { useSessionStorage as _useSessionStorage, arraysAreEqual } from '~util/misc'
+import { useSessionStorage as _useSessionStorage } from '~util/misc'
 import { useActiveState } from '~util/activeStatus'
 import HighlightStyler from '~components/HighlightStyler';
 import { useGlobalStorage } from '~util/useGlobalStorage';
@@ -28,8 +28,9 @@ const Highlighter = () => {
       [highlightAmount],
       [decisionEpsAmount],
       [highlightRetrieval],
+      [retrievalK],
       [setGlobalStorage, connected]
-    ] = useGlobalStorage(tabId, "url", "topicCounts", "classifierScores", "status_embedding", "status_highlight", "classEmbeddings", "highlightAmount", "decisionEps", "highlightRetrieval");
+    ] = useGlobalStorage(tabId, "url", "topicCounts", "classifierScores", "status_embedding", "status_highlight", "classEmbeddings", "highlightAmount", "decisionEps", "highlightRetrieval", "retrievalK");
     const [ url, isActive ] = useActiveState(window.location);
     const [ pageEmbeddings, setPageEmbeddings ] = useState({mode: "sentences", splits: [], splitEmbeddings: {}});
     const [ classifierData ] = useSessionStorage("classifierData:"+tabId, {});
@@ -100,7 +101,7 @@ const Highlighter = () => {
         }
       }
       applyHighlight()
-    }, [pageEmbeddings, connected, classifierData, isActive, textclassifier, textretrieval, retrievalQuery, highlightAmount, highlightRetrieval, decisionEpsAmount, classEmbeddings])
+    }, [pageEmbeddings, connected, classifierData, isActive, textclassifier, textretrieval, retrievalQuery, highlightAmount, highlightRetrieval, decisionEpsAmount, classEmbeddings, retrievalK])
 
 
     // on every classifier change, recompute class embeddings
@@ -226,7 +227,7 @@ const Highlighter = () => {
           class2Id[c] = numClasses + i;
           const query_embedding = classEmbeddings[c];
           const retrievalStore = VectorStore_fromClass2Embedding(splitEmbeddings)
-          const closestRetrieved = await retrievalStore.similaritySearchVectorWithScore(query_embedding, 1)
+          const closestRetrieved = await retrievalStore.similaritySearchVectorWithScore(query_embedding, retrievalK)
           closestRetrieved.forEach(retrieved => {
             const split_id = splits.indexOf(retrieved[0].pageContent)
             if (split_id < 0) return;

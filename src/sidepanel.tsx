@@ -31,7 +31,7 @@ const StatusIndicator = ({name, status, size=4}) => {
 // mount in sidepanel
 const Sidepanel = () => {
   const tabId = new URL(window.location.href).searchParams.get("tabId")
-  const [[url], [statusEmbedding], [statusClassifier], [statusHighlight], [highlightMode], [highlightRetrieval]] = useGlobalStorage(tabId, "url", "status_embedding", "status_classifier", "status_highlight", "highlightMode", "highlightRetrieval")
+  const [[url], [statusEmbedding], [statusClassifier], [statusHighlight], [highlightMode], [highlightRetrieval], [highlightClassify]] = useGlobalStorage(tabId, "url", "status_embedding", "status_classifier", "status_highlight", "highlightMode", "highlightRetrieval", "highlightClassify")
   const [ classifierData ] = useSessionStorage("classifierData:"+tabId, {});
 
 
@@ -97,6 +97,7 @@ const Sidepanel = () => {
           <Legend tabId={tabId} topics="classes_retrieval" flipVisibility={false} orderSwitch={false}></Legend>
         </CollapsibleBox>
       ) : "",
+      highlightClassify ? [
       <CollapsibleBox key="interesting_topics" title="Interesting Topics" className="Legend">
         <Legend tabId={tabId} topics="classes_pos" flipVisibility={false} orderSwitch={true}></Legend>
       </CollapsibleBox>,
@@ -111,6 +112,7 @@ const Sidepanel = () => {
           <ClassDimRed tabId={tabId} />
         </CollapsibleBox>
       </CollapsibleBox>
+      ] : []
     ] : []}
     {/*<div className="logoContainer">
       <img className="thinking_logo" width="30" src={Logo}/>
