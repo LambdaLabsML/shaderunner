@@ -9,7 +9,7 @@ const useSessionStorage = process.env.NODE_ENV == "development" && process.env.P
 
 
 const HighlightStyler = ({tabId}) => {
-    const [ [highlightMode], [highlightDefaultStyle], [highlightDefaultNegStyle], [highlightActiveStyle], [activeTopic], [topicStyles] ] = useGlobalStorage(tabId, "highlightMode", "highlightDefaultStyle", "highlightDefaultNegStyle", "highlightActiveStyle", "highlightActiveTopic", "highlightTopicStyles")
+    const [ [highlightMode], [highlightRetrieval], [highlightDefaultStyle], [highlightDefaultNegStyle], [highlightActiveStyle], [activeTopic], [topicStyles] ] = useGlobalStorage(tabId, "highlightMode", "highlightRetrieval", "highlightDefaultStyle", "highlightDefaultNegStyle", "highlightActiveStyle", "highlightActiveTopic", "highlightTopicStyles")
     const [ classifierData ] = useSessionStorage("classifierData:"+tabId, {});
     const [ styleEl, setStyleEl ] = useState(null);
 
@@ -28,7 +28,7 @@ const HighlightStyler = ({tabId}) => {
 
     // adapt style dynamically according to classifier & topicStyles 
     useEffect(() => {
-        if (!Array.isArray(classifierData.classes_pos) || !styleEl) return;
+        if (!Array.isArray(classifierData.classes_pos) || !Array.isArray(classifierData.classes_neg) || !Array.isArray(classifierData.classes_retrieval) || !styleEl) return;
 
         const mode = highlightMode || "highlight";
 
@@ -38,14 +38,15 @@ const HighlightStyler = ({tabId}) => {
         const activeStyle = highlightActiveStyle || "highlight";
 
         // create class for each pos-class
-        const allclasses = [...classifierData.classes_pos, ...classifierData.classes_neg];
+        const allclasses = [...classifierData.classes_pos, ...classifierData.classes_neg, ...classifierData.classes_retrieval];
         const colorStyle = allclasses.map((c, i) => {
-            const isPosClass = i < classifierData.classes_pos.length;
+            const isPosClass = classifierData.classes_retrieval.includes(c) || i < classifierData.classes_pos.length;
             const isActive = activeTopic == c
 
             // use default setting unless we have a specific highlight setting given
             // i.e. if class is "active", use "strong-highlight" setting
             const classSetting = isActive ? activeStyle : topicStyles && c in topicStyles ? topicStyles[c] : isPosClass ? defaultStyle : defaultNegStyle;
+            console.log(c, classSetting, isPosClass);
 
             if (mode == "testset helper")
                 return `span.shaderunner-highlight[splitid] {
@@ -129,7 +130,7 @@ const HighlightStyler = ({tabId}) => {
 
         // apply styles
         styleEl.textContent = focusModeStyle + colorStyle + scrollFocusStyle;
-    }, [classifierData.classes_pos, styleEl, highlightMode, highlightDefaultStyle, activeTopic, topicStyles])
+    }, [classifierData.classes_pos, styleEl, highlightMode, highlightDefaultStyle, highlightRetrieval, activeTopic, topicStyles])
 
 
     return "";

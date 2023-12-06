@@ -54,7 +54,7 @@ const MainInput = ({tabId}) => {
     const getQueryClasses = async (query, onLLM = () => {}, onLLMDone = () => {}) => {
       onLLM()
       const result = await sendToBackground({ name: "llm_classify", body: {query: query, url: url, title: title }})
-      setClassifierData(old => ({...old, classes_pos: result.classes_pos, classes_neg: result.classes_neg, thought: result.thought, scope: result.scope, query: query}))
+      setClassifierData(old => ({...old, classes_pos: result.classes_pos, classes_neg: result.classes_neg, thought: result.thought, scope: result.scope, query: query, classes_retrieval: [query]}))
       onLLMDone()
     }
 

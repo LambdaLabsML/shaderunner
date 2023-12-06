@@ -523,6 +523,19 @@ $default-button-padding: 0.5rem 1rem;
 }
 
 
+.Modes {
+  display: flex;
+  flex-direction: column;
+  row-gap: 0.5em;
+
+  .switch-options {
+    button {
+      flex-grow: 1;
+    }
+  }
+}
+
+
 /* ENDLESS ROTATE */
 .rotate{
   animation: rotate 1.5s linear infinite; 

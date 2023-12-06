@@ -13,6 +13,7 @@ import ClassDimRed from '~components/modules/ClassDimRed';
 import AmountHighlighted from '~components/modules/AmountHighlighted';
 import {useSessionStorage as _useSessionStorage} from '~util/misc';
 import { useStorage } from '@plasmohq/storage/hook';
+import RetrievalLegend from '~components/modules/RetrievalLegend';
 
 const useSessionStorage = process.env.NODE_ENV == "development" && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;
 
@@ -30,7 +31,7 @@ const StatusIndicator = ({name, status, size=4}) => {
 // mount in sidepanel
 const Sidepanel = () => {
   const tabId = new URL(window.location.href).searchParams.get("tabId")
-  const [[url], [statusEmbedding], [statusClassifier], [statusHighlight], [highlightMode]] = useGlobalStorage(tabId, "url", "status_embedding", "status_classifier", "status_highlight", "highlightMode")
+  const [[url], [statusEmbedding], [statusClassifier], [statusHighlight], [highlightMode], [highlightRetrieval]] = useGlobalStorage(tabId, "url", "status_embedding", "status_classifier", "status_highlight", "highlightMode", "highlightRetrieval")
   const [ classifierData ] = useSessionStorage("classifierData:"+tabId, {});
 
 
@@ -72,6 +73,7 @@ const Sidepanel = () => {
       </div>);
 
 
+  console.log(highlightMode, highlightRetrieval)
 
   return <div className="ShadeRunner-Sidepanel">
     <div className="statusContainer">
@@ -90,6 +92,11 @@ const Sidepanel = () => {
     ) : 
     classifierData.classes_pos && classifierData.classes_neg ? [
       <AmountHighlighted tabId={tabId} />,
+      highlightRetrieval ? (
+        <CollapsibleBox key="retrieval_topic" title="Retrieval" className="Legend">
+          <RetrievalLegend tabId={tabId}></RetrievalLegend>
+        </CollapsibleBox>
+      ) : "",
       <CollapsibleBox key="interesting_topics" title="Interesting Topics" className="Legend">
         <Legend tabId={tabId} topics="classes_pos" flipVisibility={false}></Legend>
       </CollapsibleBox>,

@@ -6,8 +6,9 @@ const DEV = process.env.NODE_ENV == "development";
 
 const Modes = ({tabId}) => {
   const [
-    [ mode, setMode ]
-    ] = useGlobalStorage(tabId, "highlightMode")
+    [ highlightMode, setHighlightMode ],
+    [ highlightRetrieval, setHighlightRetrieval ]
+    ] = useGlobalStorage(tabId, "highlightMode", "highlightRetrieval")
 
 
   // ------ //
@@ -18,8 +19,14 @@ const Modes = ({tabId}) => {
     <SwitchInput
         label=""
         options={['highlight', "focus", ...(DEV ? ["testset helper"] : [])]}
-        selected={mode || "highlight"}
-        onChange={(value: string) => setMode(value)}
+        selected={highlightMode || "highlight"}
+        onChange={(value: string) => setHighlightMode(value)}
+      />
+    <SwitchInput
+        label=""
+        options={['llm-topics', "llm-topics + direct retrieval"]}
+        selected={highlightRetrieval ? "llm-topics + direct retrieval" : "llm-topics"}
+        onChange={(value: string) => setHighlightRetrieval(value != "llm-topics")}
       />
   </div>
 }
