@@ -73,8 +73,6 @@ const Sidepanel = () => {
       </div>);
 
 
-  console.log(highlightMode, highlightRetrieval)
-
   return <div className="ShadeRunner-Sidepanel">
     <div className="statusContainer">
       <StatusIndicator name="classifier" status={statusClassifier}/>
@@ -90,7 +88,7 @@ const Sidepanel = () => {
       <TestsetHelperControls tabId={tabId}></TestsetHelperControls>
     </CollapsibleBox>
     ) : 
-    classifierData.classes_pos && classifierData.classes_neg ? [
+    Array.isArray(classifierData.classes_pos) && Array.isArray(classifierData.classes_neg) ? [
       <AmountHighlighted tabId={tabId} />,
       highlightRetrieval ? (
         <CollapsibleBox key="retrieval_topic" title="Retrieval" className="Legend">

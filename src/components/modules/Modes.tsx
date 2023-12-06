@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useGlobalStorage } from '~util/useGlobalStorage';
 import SwitchInput from "~components/basic/SwitchInput";
 
@@ -8,9 +8,15 @@ const Modes = ({tabId}) => {
   const [
     [ highlightMode, setHighlightMode ],
     [ highlightRetrieval, setHighlightRetrieval ],
-    [ highlightClassify, setHighlightClassify ]
+    [ highlightClassify, setHighlightClassify ],
+    [ , isSynced ]
     ] = useGlobalStorage(tabId, "highlightMode", "highlightRetrieval", "highlightClassify")
 
+  useEffect(() => {
+    if (!isSynced) return;
+    setHighlightClassify(highlightClassify || true)
+    setHighlightRetrieval(highlightRetrieval || false)
+  }, [isSynced]);
 
   // ------ //
   // render //
@@ -25,7 +31,7 @@ const Modes = ({tabId}) => {
       />
     <SwitchInput
         label=""
-        options={['llm-topics', "both", "retrieval"]}
+        options={['llm-topics', "retrieval", "both"]}
         selected={highlightRetrieval && highlightClassify ? "both" : highlightRetrieval ? "retrieval" : "llm-topics"}
         onChange={(value: string) => {
           setHighlightRetrieval(value != "llm-topics")
