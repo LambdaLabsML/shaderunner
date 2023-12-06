@@ -5,6 +5,7 @@ import { MemoryVectorStore } from 'langchain/vectorstores/memory';
 import { consistentColor } from '~util/DOM';
 import { useSessionStorage as _useSessionStorage } from '~util/misc';
 import { useStorage } from '@plasmohq/storage/hook';
+import { VectorStore_fromClass2Embedding } from '~util/embedding';
 
 
 const DEV = process.env.NODE_ENV == "development";
@@ -23,18 +24,15 @@ const ClassDimRed = ({ tabId }) => {
     if (!classEmbeddings) return;
 
     async function init() {
-        const allclasses = classEmbeddings.allclasses;
-        const embeddings = allclasses.map(c => classEmbeddings.embeddings[c].embedding)
-        const classStore = new MemoryVectorStore(classEmbeddings.embeddings);
-        classStore.memoryVectors = Object.values(classEmbeddings.embeddings);
+        const allclasses = [...classifierData.classes_pos, ...classifierData.classes_neg];
+        const classStore = VectorStore_fromClass2Embedding(classEmbeddings)
         const class2Id = Object.fromEntries(allclasses.map((c, i) => [c, i]));
-
 
         const similarities = [];
         let [min, max] = [Infinity, 0];
         for(let i=0; i<allclasses.length; i++) {
-            const similarities_c = new Array(embeddings.length).fill(0);
-            const closest = await classStore.similaritySearchVectorWithScore(embeddings[i], embeddings.length);
+            const similarities_c = new Array(allclasses.length).fill(0);
+            const closest = await classStore.similaritySearchVectorWithScore(classStore.embeddings[i], allclasses.length);
             closest.forEach(c => {
                 const cname = c[0].pageContent;
                 const cscore = c[1];
@@ -51,7 +49,7 @@ const ClassDimRed = ({ tabId }) => {
         setSettings([similarities, allclasses, min, max]);
     }
     init();
-  }, [classEmbeddings])
+  }, [classEmbeddings, classifierData])
 
 
   useEffect(() => {
