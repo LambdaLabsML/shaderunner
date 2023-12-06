@@ -20,12 +20,13 @@ const Highlighter = () => {
       [savedUrl],
       [,setTopicCounts],
       [,setScores],
-      [,setStatusEmbeddings],
+      [statusEmbedding,setStatusEmbeddings],
       [,setStatusHighlight],
       [classEmbeddings, setClassEmbeddings],
       [highlightAmount],
+      [decisionEpsAmount],
       [setGlobalStorage, connected]
-    ] = useGlobalStorage(tabId, "url", "topicCounts", "classifierScores", "status_embedding", "status_highlight", "classEmbeddings", "highlightAmount");
+    ] = useGlobalStorage(tabId, "url", "topicCounts", "classifierScores", "status_embedding", "status_highlight", "classEmbeddings", "highlightAmount", "decisionEps");
     const [ url, isActive ] = useActiveState(window.location);
     const [ pageEmbeddings, setPageEmbeddings ] = useState({mode: "sentences", splits: [], splitEmbeddings: {}});
     const [ classifierData ] = useSessionStorage("classifierData:"+tabId, {});
@@ -40,7 +41,7 @@ const Highlighter = () => {
     const [ textretrieval_k ] = useStorage('textretrieval_k')
     const [ alwayshighlighteps ] = useStorage("alwayshighlighteps");
     const [ minimalhighlighteps ] = useStorage("minimalhighlighteps");
-    const [ decisioneps ] = useStorage("decisioneps");
+    const [ default_decisioneps ] = useStorage("decisioneps");
 
 
     // ------- //
@@ -101,7 +102,7 @@ const Highlighter = () => {
         }
       }
       applyHighlight()
-    }, [pageEmbeddings, connected, classifierData, isActive, textclassifier, textretrieval, retrievalQuery, highlightAmount, classEmbeddings])
+    }, [pageEmbeddings, connected, classifierData, isActive, textclassifier, textretrieval, retrievalQuery, highlightAmount, decisionEpsAmount, classEmbeddings])
 
 
     // on every classifier change, recompute class embeddings
@@ -182,11 +183,12 @@ const Highlighter = () => {
       let {splitDetails, textNodes} = mapSplitsToTextnodes(splits, mainel, mode)
       splits = splits.filter((s,i) => splitDetails[i])
       splitDetails = splitDetails.filter((s,i) => splitDetails[i])
+      setStatusHighlight(["checking", 0, "starting highlighting"]);
 
       // mark sentences based on similarity
       let toHighlight = [];
-      let scores_diffs = [];
-      let scores_plus = [];
+      let scores = [];
+      let max_diff = 0;
       for (let i=0; i<splits.length; i++) {
         const split = splits[i];
 
@@ -197,53 +199,58 @@ const Highlighter = () => {
         const score_plus = classes_pos ? closest.filter((c) => classes_pos.includes(c[0].pageContent)).reduce((a, c) => Math.max(a, c[1]), 0) : 0
         const score_minus = classes_neg ? closest.filter((c) => classes_neg.includes(c[0].pageContent)).reduce((a, c) => Math.max(a, c[1]), 0) : 0
 
-        scores_plus.push(score_plus);
-        scores_diffs.push(score_plus - score_minus);
+        scores.push([score_plus, score_minus]);
+        if (score_plus > score_minus)
+          max_diff = Math.max(max_diff, (Math.abs(score_plus - score_minus)))
 
-        let highlight = false;
+        // remember to mark split for highlighting later streamlined
+        const closestClass = closest[0];
+        const closestClassName = closestClass[0].pageContent
+        const otherclassmod = class2Id[closestClassName] < classifierData.classes_pos.length ? -1 : 1;
+        const otherclassmatches = closest.filter(([doc, score]) => class2Id[doc.pageContent] * otherclassmod < classifierData.classes_pos.length * otherclassmod)
+        const closestOtherClass = otherclassmatches[0];
+        const index = i;
+        const highlight = true;
+        toHighlight.push({ index, closestClass, closestOtherClass, otherclassmod, highlight })
+
+        setStatusHighlight(["computing", 100 * Number(i) / splits.length]);
+      }
+
+      // highlight based on statistics
+      const decisioneps = (1-decisionEpsAmount) * (max_diff - 1e-7);
+      toHighlight.forEach((h,i) => {
+        const [score_plus, score_minus] = scores[i];
+        const split = splits[i];
 
         // always highlight if similarity is above given value
         if (alwayshighlighteps > 0 && score_plus > alwayshighlighteps) {
           if (verbose) console.log("mark", split, score_plus, score_minus)
-          highlight = true;
         }
 
         // ignore anything that is not distinguishable
         //if (score_plus < MIN_CLASS_EPS || Math.abs(score_plus - score_minus) < EPS) {
-        else if (!highlight && (decisioneps > 0 && Math.abs(score_plus - score_minus) < decisioneps || minimalhighlighteps > 0 && score_plus < minimalhighlighteps)) {
+        else if ((decisioneps > 0 && Math.abs(score_plus - score_minus) < decisioneps || minimalhighlighteps > 0 && score_plus < minimalhighlighteps)) {
           if (verbose) console.log("skipping", split, score_plus, score_minus)
+          h.highlight = false;
         }
 
         // apply color if is first class
         else if (score_plus > score_minus) {
           if (verbose) console.log("mark", split, score_plus, score_minus)
-          highlight = true;
         }
         
         else {
           if (verbose) console.log("reject", split, score_plus, score_minus)
+          h.highlight = false;
         }
 
-        // remember to mark split for highlighting later streamlined
-        if (true || highlight) {
-          const closestClass = closest[0];
-          const closestClassName = closestClass[0].pageContent
-          const otherclassmod = class2Id[closestClassName] < classifierData.classes_pos.length ? -1 : 1;
-          const otherclassmatches = closest.filter(([doc, score]) => class2Id[doc.pageContent] * otherclassmod < classifierData.classes_pos.length * otherclassmod)
-          const closestOtherClass = otherclassmatches[0];
-          const index = i;
-          const show = true;
-          toHighlight.push({ index, closestClass, closestOtherClass, otherclassmod, show })
-        }
-
-        setStatusHighlight(["computing", 100 * Number(i) / splits.length]);
-      }
+      })
 
       // filter out amount to highlight
       if (highlightAmount !== null && highlightAmount < 1.0) {
         toHighlight.sort((a,b) => b.closestScore - a.closestScore)
         toHighlight.slice(Math.ceil(toHighlight.length * highlightAmount)).forEach((h) => {
-          h.show = false
+          h.highlight = false
         })
         toHighlight.sort((a,b) => a.index - b.index)
       }
@@ -254,7 +261,7 @@ const Highlighter = () => {
       let textoffset = 0;
       const topicCounts = Object.fromEntries(allclasses.map((c) => [c, 0]))
       for(let i=0; i<toHighlight.length; i++) {
-        const {index, closestClass, closestOtherClass, otherclassmod, show} = toHighlight[i];
+        const {index, closestClass, closestOtherClass, otherclassmod, highlight} = toHighlight[i];
         const className = closestClass[0].pageContent;
         const classScore = closestClass[1];
         const otherClassName = closestOtherClass[0].pageContent;
@@ -274,12 +281,12 @@ const Highlighter = () => {
         const { replacedNodes, nextTextOffset } = highlightText(relative_details, textNodesSubset, highlightClass, (span) => {
           span.setAttribute("data-title", `[${otherclassmod < 0 ? "✓" : "✗"}] ${classScore.toFixed(2)}: ${className} | [${otherclassmod < 0 ? "✗" : "✓"}] ${otherClassScore.toFixed(2)}: ${otherClassName}`);
           span.setAttribute("splitid_class", topicCounts[className])
-          if (!show)
+          if (!highlight)
             span.classList.add("transparent")
           if (DEV)
             span.setAttribute("splitid", index);
         });
-        topicCounts[className] += show ? 1 : 0;
+        topicCounts[className] += highlight ? 1 : 0;
         currentTextNodes.splice(true_from_node_pos, num_textnodes, ...replacedNodes);
         node_offset += replacedNodes.length - num_textnodes 
         if (index < splits.length - 1 && splitDetails[index+1].from_text_node == details.to_text_node && nextTextOffset > 0) {
@@ -299,10 +306,12 @@ const Highlighter = () => {
       const title = document.title;
       const devOpts = DEV ? { DEV_highlighterData: { url, classifierData, splits, title }} : {};
 
-      setStatusHighlight(["loaded", 100]) // bug: needs to be outside due to concurrency conflict of this variable
+      const _statusEmbedding = await statusEmbedding;
+      if (_statusEmbedding && _statusEmbedding[1] == 100)
+        setStatusHighlight(["loaded", 100]) // bug: needs to be outside due to concurrency conflict of this variable
       setGlobalStorage({
         topicCounts: topicCounts,
-        classifierScores: [scores_plus, scores_diffs],
+        classifierScores: scores,
         ...devOpts
       })
     }

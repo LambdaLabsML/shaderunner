@@ -61,8 +61,8 @@ const Sidepanel = () => {
     if (!url)
       return (<div className="ShadeRunner-Sidepanel">
         <div className="statusContainer">
-          <StatusIndicator name="embedding" status={statusEmbedding} />
           <StatusIndicator name="classifier" status={statusClassifier} />
+          <StatusIndicator name="embedding" status={statusEmbedding} />
           <StatusIndicator name="highlight" status={statusHighlight} />
         </div>
         <CollapsibleBox title="Error">
@@ -75,8 +75,8 @@ const Sidepanel = () => {
 
   return <div className="ShadeRunner-Sidepanel">
     <div className="statusContainer">
-      <StatusIndicator name="embedding" status={statusEmbedding}/>
       <StatusIndicator name="classifier" status={statusClassifier}/>
+      <StatusIndicator name="embedding" status={statusEmbedding}/>
       <StatusIndicator name="highlight" status={statusHighlight}/>
     </div>
     <CollapsibleBox title="What to Highlight">
@@ -89,6 +89,7 @@ const Sidepanel = () => {
     </CollapsibleBox>
     ) : 
     classifierData.classes_pos && classifierData.classes_neg ? [
+      <AmountHighlighted tabId={tabId} />,
       <CollapsibleBox key="interesting_topics" title="Interesting Topics" className="Legend">
         <Legend tabId={tabId} topics="classes_pos" flipVisibility={false}></Legend>
       </CollapsibleBox>,
@@ -96,9 +97,6 @@ const Sidepanel = () => {
         <Legend tabId={tabId} topics="classes_neg" flipVisibility={true}></Legend>
       </CollapsibleBox>,
       <CollapsibleBox key="advanced" title="Advanced" open={false}>
-        <CollapsibleBox key="amount_highlighted" title="Amount Highlighted" open={false}>
-          <AmountHighlighted tabId={tabId} />
-        </CollapsibleBox>
         <CollapsibleBox key="thought_info" title="Thought Info" open={false}>
           <ThoughtInfo tabId={tabId} />
         </CollapsibleBox>
