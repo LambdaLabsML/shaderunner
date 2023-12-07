@@ -271,7 +271,7 @@ const Highlighter = () => {
 
       // filter out amount to highlight
       if (highlightAmount !== null && highlightAmount < 1.0) {
-        toHighlight.sort((a,b) => b.closestScore - a.closestScore)
+        toHighlight.sort((a,b) => b.closestClass[1] - a.closestClass[1])
         toHighlight.slice(Math.ceil(toHighlight.length * highlightAmount)).forEach((h) => {
           h.highlight = false
         })
