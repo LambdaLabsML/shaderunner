@@ -510,14 +510,21 @@ $default-button-padding: 0.5rem 1rem;
   }
 
   .logoContainer {
-    width: 97%;
+    width: 95%;
+    text-align: center;
     position: absolute;
     bottom: 2em;
+    color: gray;
 
     img {
+      width: 75px;
+    }
+
+    svg {
+      filter: invert(23%) sepia(78%) saturate(4050%) hue-rotate(260deg) brightness(95%) contrast(91%);
       display: block;
+      width: 100px;
       margin: 0 auto;
-      opacity: 0.3;
     }
   }
 }

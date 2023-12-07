@@ -13,7 +13,9 @@ import ClassDimRed from '~components/modules/ClassDimRed';
 import AmountHighlighted from '~components/modules/AmountHighlighted';
 import {useSessionStorage as _useSessionStorage} from '~util/misc';
 import { useStorage } from '@plasmohq/storage/hook';
-import RetrievalLegend from '~components/modules/RetrievalLegend';
+import Logo from "data-base64:./assets/logo.png"
+
+
 
 const useSessionStorage = process.env.NODE_ENV == "development" && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;
 
@@ -112,9 +114,13 @@ const Sidepanel = () => {
       </CollapsibleBox>
       ] : []
     ] : []}
-    {/*<div className="logoContainer">
-      <img className="thinking_logo" width="30" src={Logo}/>
-    </div>*/}
+    {!(Array.isArray(classifierData.classes_pos) && Array.isArray(classifierData.classes_neg)) ? (
+    <div className="logoContainer">
+      <img src={Logo} alt="Some pretty cool image" />
+      <br/>
+      <br/>
+      powered by Lambda
+    </div>) : ""}
   </div>
 }
 
