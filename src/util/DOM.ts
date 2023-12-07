@@ -42,58 +42,6 @@ function splitIntoWords(str) {
 
 
 
-function longestMatchingSubstringStart(str1, str2) {
-
-  // Heuristic check
-  if (str1.startsWith(str2)) return str2;
-  if (str2.startsWith(str1)) return str1;
-
-  // Find the length of the longest matching substring
-  let maxLength = 0;
-  for (let i = 0; i < Math.min(str1.length, str2.length); i++) {
-      if (str1[i] === str2[i]) {
-          maxLength++;
-      } else {
-          break; // Stop if characters don't match
-      }
-  }
-
-  // Extract the matching substring
-  return [0, str1.substring(0, maxLength)];
-}
-
-
-function longestMatchingSubstringAnywhere(str1, str2) {
-
-  // Heuristic checks
-  if (str1 === str2) return [0, str1];
-  if (str1.startsWith(str2)) return [0, str2];
-
-  let maxLength = 0;
-  let maxSubstring = "";
-
-  // Iterate over each position in str1
-  let start;
-  for (start = 0; start <= str1.length; start++) {
-    let length = 0;
-    for (let i = 0; i < str2.length; i++) {
-      if (str1[start + i] == str2[i]) {
-        length++;
-        if (length > maxLength) {
-          maxLength = length;
-          maxSubstring = str1.substring(start, start + length);
-        }
-      } else {
-        break;
-      }
-    }
-  }
-
-  return [start, maxSubstring];
-}
-
-
-
 const defaultHighlightClass = 'shaderunner-highlight'
 
 function highlightText(details: { from_text_node_char_start: any; to_text_node_char_end: any; from_text_node: any; to_text_node: any; }, nodes: Text[], highlightClass: any, transform=(el) => {}, markingClass = defaultHighlightClass) {
