@@ -2,6 +2,45 @@
 
 
 
+
+## ShadeRunner Version 0.7.0
+
+**Features**:
+- Retrieval Mode readded
+    - Added retrieval-k slider for control of amount highlighted
+- Control highlight quality with a "precision-vs-recall" slider
+
+**Minor**:
+- Added version to sidepanel and options tab
+- styling:
+    - Added dark-mode style to options
+    - Adapted options page color
+    - Added logo to sidepanel
+- Improved efficiency of mouse hover events in Legend 
+- Replaced useSessionStorage with useStorage for improved storage handling 
+- Updated global storage handling 
+- Testing:
+    - Implemented batchwise method in `llm_classify`
+    - Implemented evaluation and visualization improvements in `tabs/testing`
+
+
+**Bugfixes**:
+- Fixed visual bug for inactive topics in legend 
+- Fixed collapsible box in light-mode 
+- Bugfix for highlighting not starting without clicking a button 
+- Fixed scroller to exclude hidden elements 
+- Resolved issue with precise search limit not working 
+- Bugfix for amount highlighter not using score 
+- Addressed multiple highlight update issues in different modes 
+- Fixed issue with status display 
+- Corrected error handling in sidepanel when not connected to a webpage 
+- Bugfixes for issues with bad classifierData 
+
+
+-------
+
+
+
 ## ShadeRunner Version 0.6.1
 
 **Minor**:
