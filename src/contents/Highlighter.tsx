@@ -41,12 +41,12 @@ const Highlighter = () => {
     // settings //
     // -------- //
     const [ verbose ] = useStorage("verbose", false);
-    const [ textclassifier ] = useStorage('textclassifier')
-    const [ textretrieval ] = useStorage('textretrieval')
-    const [ textretrieval_k ] = useStorage('textretrieval_k')
+    // const [ textclassifier ] = useStorage('textclassifier')
+    // const [ textretrieval ] = useStorage('textretrieval')
+    // const [ textretrieval_k ] = useStorage('textretrieval_k')
     const [ alwayshighlighteps ] = useStorage("alwayshighlighteps");
     const [ minimalhighlighteps ] = useStorage("minimalhighlighteps");
-    const [ default_decisioneps ] = useStorage("decisioneps");
+    // const [ default_decisioneps ] = useStorage("decisioneps");
 
 
     // ------- //
@@ -102,7 +102,7 @@ const Highlighter = () => {
         }
       }
       applyHighlight()
-    }, [pageEmbeddings, connected, classifierData, isActive, textclassifier, textretrieval, retrievalQuery, highlightAmount, highlightRetrieval, highlightClassify, decisionEpsAmount, classEmbeddings, retrievalK])
+    }, [pageEmbeddings, connected, classifierData, isActive, retrievalQuery, highlightAmount, highlightRetrieval, highlightClassify, decisionEpsAmount, classEmbeddings, retrievalK])
 
 
     // on every classifier change, recompute class embeddings

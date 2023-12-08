@@ -20,6 +20,7 @@ const Settings = () => {
   const [minimalhighlighteps, setminimalhighlighteps] = useStorage('minimalhighlighteps', (v) => v === undefined ? defaults["minimalhighlighteps"] : v)
   const [decisioneps, setdecisioneps] = useStorage('decisioneps', (v) => v === undefined ? defaults["decisioneps"] : v)
   const [verbose, setVerbose] = useStorage('verbose', (v) => v === undefined ? defaults["verbose"] : v)
+  const [apiworks, setApiworks] = useStorage('apiworks', (v) => v === undefined ? true : v)
 
   const resetExpert = () => {
     setalwayshighlighteps(defaults["alwayshighlighteps"])
@@ -34,14 +35,14 @@ const Settings = () => {
         ( <StringInput
           label="OPENAI_API_KEY"
           value={openaikey.replace(/./g, "*")}
-          onChange={(value) => setopenaikey(value)}
+          onChange={(value) => {setopenaikey(value); if (!apiworks) setApiworks(true);}}
         /> ) : ( <StringInput
           label="OPENCHAT_API_BASE"
           value={openchatapibase}
-          onChange={(value) => setopenchatapibase(value)}
+          onChange={(value) => {setopenchatapibase(value); if (!apiworks) setApiworks(true);}}
         /> )
       }
-      <b style={{width:"100%", textAlign: "left"}}>(Note: GPT4 + Instruct seems to be the best combination. Openchat works only in Chat-Mode)</b> 
+      <b style={{width:"100%", textAlign: "left"}}>(Note: GPT4 + Instruct seems to be the best combination, cheaper and nearly as good is gpt-4-1106-preview + ChatGPT. Openchat works only in Chat-Mode)</b> 
       <SwitchInput
         label="GPT-Version"
         options={['gpt-3.5-turbo', 'gpt-4', 'gpt-4-1106-preview', 'openchat_3.5']}
@@ -68,7 +69,7 @@ const Settings = () => {
           step={0.1}
           onChange={(value) => setgpttemperature(Math.min(1.0, Math.max(value, 0.0)))}
         />
-      <SwitchInput
+      {/* <SwitchInput
         label="Modes: Text Classifier (can highlight arbitrary many sentences), Text Retriever (can highlight a fixed amount of sentences)"
         options={['Text Classifier', "Text Retriever", "Both"]}
         selected={textclassifier && textretrieval ? "Both" : textclassifier ? "Text Classifier" : "Text Retriever"}
@@ -76,7 +77,7 @@ const Settings = () => {
           settextclassifier(value == "Both" || value == "Text Classifier")
           settextretrieval(value == "Both" || value == "Text Retriever")
         }}
-      />
+      /> */}
       { textretrieval ? (
         <NumericInput
           label="Number of Retrievals (only for Text Retriever mode)"
@@ -123,13 +124,13 @@ const Settings = () => {
           value={minimalhighlighteps}
           onChange={(value) => setminimalhighlighteps(value)}
         />,
-        <NumericInput
-          key="decisioneps"
-          label="Decision-Highlight Threshold (default 0.025, skips highlight when the similarity of positive and negative class is smaller than this value)."
-          step={0.01}
-          value={decisioneps}
-          onChange={(value) => setdecisioneps(value)}
-        />
+        // <NumericInput
+        //   key="decisioneps"
+        //   label="Decision-Highlight Threshold (default 0.025, skips highlight when the similarity of positive and negative class is smaller than this value)."
+        //   step={0.01}
+        //   value={decisioneps}
+        //   onChange={(value) => setdecisioneps(value)}
+        // />
       ] : ""}
     </div>
   );
