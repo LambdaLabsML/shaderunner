@@ -130,7 +130,7 @@ const Legend = ({tabId, topics, flipVisibility, orderSwitch}) => {
     setScrollerCommand({"selector": "span.shaderunner-highlight.show.highlightclass-"+id, "cmd": next ? "next" : "previous"})
   }
 
-  const topicLineSettings = {toggleHighlight, onFocusHighlight, mouseOverHighlight, mouseOverHighlightFinish, onTopicChange, onTopicDelete, onNextPrev}
+  const topicLineSettings = {toggleHighlight, onFocusHighlight, mouseOverHighlight, onTopicChange, onTopicDelete, onNextPrev}
 
 
   // ------ //
@@ -179,7 +179,7 @@ const Legend = ({tabId, topics, flipVisibility, orderSwitch}) => {
         }
       }}
     />,
-    <div className="topicContainer" key={topics+"topic_container"}>
+    <div className="topicContainer" key={topics+"topic_container"} onMouseLeave={mouseOverHighlightFinish}>
       {topicList.map(c => (
         <TopicLine key={c} topic={c} extraInfo={topicCounts ? topicCounts[c] : null} active={(!topicCounts || topicCounts[c] > 0) && (topicIsActive(c, topicStyles) || c == activeTopic)} {...topicLineSettings}></TopicLine>
       ))}
