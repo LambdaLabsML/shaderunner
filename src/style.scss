@@ -316,10 +316,10 @@ $default-button-padding: 0.5rem 1rem;
 // Legend //
 // ------ //
 
-.ShadeRunner.Legend {
+.ShadeRunner .Legend {
   display: flex;
   flex-direction: column;
-  gap: 0.5em;
+  gap: 0.2em;
 
   div.topicContainer {
     display: flex;
@@ -357,8 +357,6 @@ $default-button-padding: 0.5rem 1rem;
     background-color: white;
     border-radius: 5px;
     color: black;
-
-    border: 2px solid transparent;
   }
 
   .tool_buttons {
@@ -610,7 +608,6 @@ $default-button-padding: 0.5rem 1rem;
     .highlight-wrapper {
       background-color: rgba(255,255,255,1.0);
       color: #333;
-      border: 2px solid $background;
     }
 
     &.inactive .highlight-wrapper {
