@@ -14,6 +14,7 @@ import AmountHighlighted from '~components/modules/AmountHighlighted';
 import {useSessionStorage as _useSessionStorage} from '~util/misc';
 import { useStorage } from '@plasmohq/storage/hook';
 import Logo from "data-base64:./assets/logo.png"
+import {version} from '../package.json';
 
 
 
@@ -156,6 +157,7 @@ const Sidepanel = () => {
       <img src={Logo} alt="Some pretty cool image" />
       <br/>
       <br/>
+      version: {version}<br/>
       powered by Lambda
     </div>) : ""}
   </div>

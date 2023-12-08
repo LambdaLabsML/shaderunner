@@ -5,6 +5,8 @@ import NumericInput from '~components/basic/NumericInput';
 import SwitchInput from '~components/basic/SwitchInput';
 import StringInput from '~components/basic/StringInput';
 import defaults from '~defaults';
+import Logo from "data-base64:./assets/logo.png"
+import {version} from '../package.json';
 
 const Settings = () => {
 
@@ -148,6 +150,13 @@ const Settings = () => {
         //   onChange={(value) => setdecisioneps(value)}
         // />
       ] : ""}
+      <div className="logoContainer">
+        <img src={Logo} alt="Some pretty cool image" />
+        <br />
+        <br />
+        version: {version}<br/>
+        powered by Lambda
+      </div>
     </div>
   );
 };
