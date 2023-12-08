@@ -69,3 +69,6 @@ You can start editing the popup by modifying `popup.tsx`. It should auto-update 
 
 
 Now restart the development server.
+
+## License
+MIT License
