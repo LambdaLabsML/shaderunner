@@ -40,6 +40,9 @@ jobs:
           tag_message: "Release"
           tag_format: "v{version}"
 
+      - name: Install Dependencies
+        run: pnpm install
+
       # Run pnpm build
       - name: Build project
         run: pnpm build
