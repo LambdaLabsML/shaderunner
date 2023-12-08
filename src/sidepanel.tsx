@@ -33,8 +33,9 @@ const StatusIndicator = ({name, status, size=4}) => {
 // mount in sidepanel
 const Sidepanel = () => {
   const tabId = new URL(window.location.href).searchParams.get("tabId")
-  const [[url], [statusEmbedding], [statusClassifier], [statusHighlight], [highlightMode], [highlightRetrieval], [highlightClassify]] = useGlobalStorage(tabId, "url", "status_embedding", "status_classifier", "status_highlight", "highlightMode", "highlightRetrieval", "highlightClassify")
+  const [[url, setUrl], [statusEmbedding, setStatusEmbedding], [statusClassifier, setStatusClassifier], [statusHighlight, setStatusHighlight], [highlightMode], [highlightRetrieval], [highlightClassify]] = useGlobalStorage(tabId, "url", "status_embedding", "status_classifier", "status_highlight", "highlightMode", "highlightRetrieval", "highlightClassify")
   const [ classifierData ] = useSessionStorage("classifierData:"+tabId, {});
+  const [apiworks] = useStorage('apiworks', (v) => v === undefined ? false : v)
 
 
   // ======= //
@@ -57,22 +58,58 @@ const Sidepanel = () => {
     window.document.head.appendChild(style);
   }, [])
 
+  useEffect(() => {
+    if(apiworks) return;
+    setStatusHighlight(null);
+    setStatusClassifier(null);
+    setStatusEmbedding(null);
+  }, [apiworks])
+
+
+  useEffect(() => {
+    if (url) return;
+    chrome.tabs.get(Number(tabId), function(tab) {
+      if (chrome.runtime.lastError) return;
+      const _url = tab.url;
+      const url = new URL(_url).hostname; // Normalize URL
+      setUrl(url);
+    });
+  }, [tabId, url]);
 
   // ====== //
   // Render //
   // ====== //
-    if (!url)
-      return (<div className="ShadeRunner-Sidepanel">
-        <div className="statusContainer">
-          <StatusIndicator name="classifier" status={statusClassifier} />
-          <StatusIndicator name="embedding" status={statusEmbedding} />
-          <StatusIndicator name="highlight" status={statusHighlight} />
-        </div>
-        <CollapsibleBox title="Error">
-          <b>This plugin is either not active on this webpage or it lost connection to the page content.</b>
-          Activate this plugin for this webpage or if you have already, reload the webpage to restore a connection.
-        </CollapsibleBox>
-      </div>);
+
+
+  if (!apiworks)
+  return (<div className="ShadeRunner-Sidepanel">
+    <div className="statusContainer">
+      <StatusIndicator name="classifier" status={statusClassifier} />
+      <StatusIndicator name="embedding" status={statusEmbedding} />
+      <StatusIndicator name="highlight" status={statusHighlight} />
+    </div>
+    <CollapsibleBox title="Error">
+      <b>It seems the api is not responding.</b>
+      <span>
+      Did you insert your API-Key?<br/>
+      Go to the <a href={chrome.runtime.getURL("./options.html")}>settings page</a> and re-insert your apikey.
+      </span>
+    </CollapsibleBox>
+  </div>);
+
+
+  if (!url)
+    return (<div className="ShadeRunner-Sidepanel">
+      <div className="statusContainer">
+        <StatusIndicator name="classifier" status={statusClassifier} />
+        <StatusIndicator name="embedding" status={statusEmbedding} />
+        <StatusIndicator name="highlight" status={statusHighlight} />
+      </div>
+      <CollapsibleBox title="Error">
+        <b>This plugin is either not active on this webpage or it lost connection to the page content.</b>
+        Activate this plugin for this webpage or if you have already, reload the webpage to restore a connection.
+      </CollapsibleBox>
+    </div>);
 
 
   return <div className="ShadeRunner-Sidepanel">
