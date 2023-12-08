@@ -8,16 +8,27 @@ on:
 jobs:
   tag:
     runs-on: ubuntu-latest
-    name: ""
     permissions:
       contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
+      # Add setup for Node.js and pnpm
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16' # Specify the Node.js version you need
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
       - name: Extract and Save latest release notes
         run: awk '/-------/{i++}i==0' CHANGELOG.md > ${{ github.workspace }}/LATEST_CHANGELOG.md
+
       - name: Show Changelog
         run: cat ${{ github.workspace }}/LATEST_CHANGELOG.md
+
       - name: Autoadd release Tags
         uses: sbrodehl/action-autotag@v2
         id: autotag
@@ -28,6 +39,16 @@ jobs:
           capture_group: 1
           tag_message: "Release"
           tag_format: "v{version}"
+
+      # Run pnpm build
+      - name: Build project
+        run: pnpm build
+
+      # Zip the build folder
+      - name: Zip build folder
+        run: zip -r build.zip ./build/chrome-mv3-prod
+
+      # Create release and upload zip file
       - name: Release
         if: steps.autotag.outputs.tagsha
         id: create_release
@@ -36,3 +57,4 @@ jobs:
           tag_name: ${{ steps.autotag.outputs.tagname }}
           name: "Shaderunner ${{ steps.autotag.outputs.tagname }}"
           body_path: ${{ github.workspace }}/LATEST_CHANGELOG.md
+          files: build.zip # Specify the zip file to be uploaded
