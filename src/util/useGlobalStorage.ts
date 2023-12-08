@@ -1,6 +1,7 @@
 import { usePort } from "@plasmohq/messaging/hook";
 import { useEffect, useState } from "react";
 import { generateRandomHash } from "./misc";
+import { sendToBackground } from "@plasmohq/messaging";
 
 
 
@@ -10,6 +11,13 @@ const useGlobalStorage = (_tabId: Number | string, ...names: string[]) => {
     const controller = usePort("controller")
     const [_who] = useState(generateRandomHash(32))
     const [storageSynced, setStatus] = useState(false)
+
+    async function updateData() {
+        const data = await sendToBackground({ name: "data_get", body: { tabId: _tabId, variables: names } })
+        stateVarsReact.forEach(([_, setName, name]) => {
+            if (name in data) setName(data[name]);
+        })
+    }
 
     // register as a listener of tabId results
     useEffect(() => {
@@ -21,6 +29,8 @@ const useGlobalStorage = (_tabId: Number | string, ...names: string[]) => {
             cmd: "register",
             tabId: _tabId
         });
+
+        updateData();
     }, [_tabId])
 
     // create state getter/setter for each name

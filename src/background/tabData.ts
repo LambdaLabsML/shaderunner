@@ -28,4 +28,11 @@ const registerListener = (tabId, update_fn) => {
 }
 
 
-export { registerListener, notifyListeners };
+const getData = (tabId, variables) => {
+    //variables.push("_ver")
+    return Object.fromEntries(variables.map(v => [v,tabData[tabId][v]]))
+}
+
+
+
+export { registerListener, notifyListeners, getData };

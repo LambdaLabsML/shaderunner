@@ -67,16 +67,6 @@ const Sidepanel = () => {
   }, [apiworks])
 
 
-  useEffect(() => {
-    if (url) return;
-    chrome.tabs.get(Number(tabId), function(tab) {
-      if (chrome.runtime.lastError) return;
-      const _url = tab.url;
-      const url = new URL(_url).hostname; // Normalize URL
-      setUrl(url);
-    });
-  }, [tabId, url]);
-
   // ====== //
   // Render //
   // ====== //
