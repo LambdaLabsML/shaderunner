@@ -241,7 +241,7 @@ const Highlighter = () => {
       }
 
       // highlight based on statistics
-      const decisioneps = (1-(decisionEpsAmount||0.5)) * (max_diff - 1e-7);
+      const decisioneps = (1-(decisionEpsAmount ?? 0.5)) * (max_diff - 1e-5);
       toHighlight.forEach((h,i) => {
         const [score_plus, score_minus] = scores[i];
         const split = splits[i];
