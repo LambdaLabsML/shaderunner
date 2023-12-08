@@ -1,16 +1,13 @@
 import { useEffect, useState } from "react"
 import { useStorage } from "@plasmohq/storage/hook";
 import { consistentColor } from "~util/DOM";
-import { useSessionStorage as _useSessionStorage } from '~util/misc'
+import { useStorage as _useStorage } from '~util/misc'
 import { useGlobalStorage } from "~util/useGlobalStorage";
-
-// in development mode we want to use persistent storage for debugging
-const useSessionStorage = process.env.NODE_ENV == "development" && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;
 
 
 const HighlightStyler = ({tabId}) => {
     const [ [highlightMode], [highlightRetrieval], [highlightDefaultStyle], [highlightDefaultNegStyle], [highlightActiveStyle], [activeTopic], [topicStyles] ] = useGlobalStorage(tabId, "highlightMode", "highlightRetrieval", "highlightDefaultStyle", "highlightDefaultNegStyle", "highlightActiveStyle", "highlightActiveTopic", "highlightTopicStyles")
-    const [ classifierData ] = useSessionStorage("classifierData:"+tabId, {});
+    const [ classifierData ] = useStorage("classifierData:"+tabId, {});
     const [ styleEl, setStyleEl ] = useState(null);
 
     // ------- //

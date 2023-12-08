@@ -103,7 +103,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
 
     // overwrite defaults
     if (details.reason === 'install' || details.reason === 'update') {
-        if (process.env.NODE_ENV == "development" && process.env.PLASMO_PUBLIC_STORAGE == "persistent") return;
+        if (process.env.NODE_ENV == "development") return;
         console.log("Setting default settings.");
         Object.entries(defaults).forEach(async (v, i) => {
             const [key, value] = v;

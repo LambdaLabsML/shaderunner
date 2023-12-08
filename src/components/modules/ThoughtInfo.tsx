@@ -1,11 +1,10 @@
 import { useStorage } from '@plasmohq/storage/hook';
 import React from 'react';
-import {useSessionStorage as _useSessionStorage} from '~util/misc';
+import {useStorage as _useStorage} from '~util/misc';
 
-const useSessionStorage = process.env.NODE_ENV == "development" && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;
 
 const ThoughtInfo = ({tabId}) => {
-  const [classifierData] = useSessionStorage("classifierData:"+tabId, {});
+  const [classifierData] = useStorage("classifierData:"+tabId, {});
 
   return [
     <span><b>Scope</b> {classifierData?.scope}</span>,

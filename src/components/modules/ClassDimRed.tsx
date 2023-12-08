@@ -1,19 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { useGlobalStorage } from '~util/useGlobalStorage';
-import { MemoryVectorStore } from 'langchain/vectorstores/memory';
 import { consistentColor } from '~util/DOM';
-import { useSessionStorage as _useSessionStorage } from '~util/misc';
+import { useStorage as _useStorage } from '~util/misc';
 import { useStorage } from '@plasmohq/storage/hook';
 import { VectorStore_fromClass2Embedding } from '~util/embedding';
 
 
-const DEV = process.env.NODE_ENV == "development";
-const useSessionStorage = DEV && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;
-
 
 const ClassDimRed = ({ tabId }) => {
-  const [ classifierData ] = useSessionStorage("classifierData:"+tabId, {});
+  const [ classifierData ] = useStorage("classifierData:"+tabId, {});
   const [ [classEmbeddings] ] = useGlobalStorage(tabId, "classEmbeddings");
   const svgRef = useRef();
   const [ settings, setSettings ]= useState(null);

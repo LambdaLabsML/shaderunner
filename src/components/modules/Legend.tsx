@@ -1,20 +1,16 @@
 import React, { useState } from 'react';
 import { useGlobalStorage } from '~util/useGlobalStorage';
-import { useSessionStorage as _useSessionStorage } from '~util/misc'
+import { useStorage as _useStorage } from '~util/misc'
 import { useStorage } from "@plasmohq/storage/hook";
-import { consistentColor } from '~util/DOM'
 import SwitchInput from "~components/basic/SwitchInput";
 import TopicLine from '../basic/TopicLine';
 import Icon from '~components/basic/Icon';
 import { sendToBackground } from '@plasmohq/messaging';
 
-// in development mode we want to use persistent storage for debugging
-const useSessionStorage = process.env.NODE_ENV == "development" && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;
-
 
 const Legend = ({tabId, topics, flipVisibility, orderSwitch}) => {
-  //const [retrievalQuery] = useSessionStorage("retrievalQuery:"+tabId, null);
-  const [classifierData, setClassifierData] = useSessionStorage("classifierData:"+tabId, {});
+  //const [retrievalQuery] = useStorage("retrievalQuery:"+tabId, null);
+  const [classifierData, setClassifierData] = useStorage("classifierData:"+tabId, {});
   const [
     [ url ],
     [ topicStyles, setTopicStyles ],

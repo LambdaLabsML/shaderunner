@@ -1,27 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { useSessionStorage as _useSessionStorage, random } from '~util/misc'
-import { useActiveState } from '~util/activeStatus'
+import React, { useEffect } from 'react';
+import { useStorage as _useStorage, random } from '~util/misc'
 import { useStorage } from "@plasmohq/storage/hook";
-import { MSG_CONTENT, MSG_EMBED, MSG_QUERY2CLASS } from "../../util/messages";
-import Histogram from "~components/basic/Histogram";
-import CollapsibleBox from "~components/basic/Collapsible";
-import ClassModifierList from "../basic/ClassModifierList";
+import { MSG_QUERY2CLASS } from "../../util/messages";
 import { sendToBackground } from '@plasmohq/messaging';
-import { usePort } from '@plasmohq/messaging/hook';
 import { useGlobalStorage } from '~util/useGlobalStorage';
-
-// in development mode we want to use persistent storage for debugging
-const useSessionStorage = process.env.NODE_ENV == "development" && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;
-
 
 
 
 // the actual shaderunner bar
 const MainInput = ({tabId}) => {
     const [ [title, setTitle], [url, setUrl], [statusClassifier, setStatusClassifier], [, isSynced]] = useGlobalStorage(tabId, "title", "url", "status_classifier")
-    const [ savedHighlightQuery, setSavedHighlightQuery ] = useSessionStorage("savedHighlightQuery:"+tabId, "");
-    const [ classifierData, setClassifierData] = useSessionStorage("classifierData:"+tabId, {});
-    const [ retrievalQuery, setRetrievalQuery] = useSessionStorage("retrievalQuery:"+tabId, null);
+    const [ savedHighlightQuery, setSavedHighlightQuery ] = useStorage("savedHighlightQuery:"+tabId, "");
+    const [ classifierData, setClassifierData] = useStorage("classifierData:"+tabId, {});
+    const [ retrievalQuery, setRetrievalQuery] = useStorage("retrievalQuery:"+tabId, null);
 
 
     // -------- //

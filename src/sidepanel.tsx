@@ -11,14 +11,11 @@ import TestsetHelperControls from '~components/modules/TestsetHelperControls';
 import ThoughtInfo from '~components/modules/ThoughtInfo';
 import ClassDimRed from '~components/modules/ClassDimRed';
 import AmountHighlighted from '~components/modules/AmountHighlighted';
-import {useSessionStorage as _useSessionStorage} from '~util/misc';
 import { useStorage } from '@plasmohq/storage/hook';
 import Logo from "data-base64:./assets/logo.png"
 import {version} from '../package.json';
 
 
-
-const useSessionStorage = process.env.NODE_ENV == "development" && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;
 
 const StatusIndicator = ({name, status, size=4}) => {
   const [statusClass, progress, statusMsg] = status || ["", 0, "off"];
@@ -34,8 +31,8 @@ const StatusIndicator = ({name, status, size=4}) => {
 // mount in sidepanel
 const Sidepanel = () => {
   const tabId = new URL(window.location.href).searchParams.get("tabId")
-  const [[url, setUrl], [statusEmbedding, setStatusEmbedding], [statusClassifier, setStatusClassifier], [statusHighlight, setStatusHighlight], [highlightMode], [highlightRetrieval], [highlightClassify]] = useGlobalStorage(tabId, "url", "status_embedding", "status_classifier", "status_highlight", "highlightMode", "highlightRetrieval", "highlightClassify")
-  const [ classifierData ] = useSessionStorage("classifierData:"+tabId, {});
+  const [[url], [statusEmbedding, setStatusEmbedding], [statusClassifier, setStatusClassifier], [statusHighlight, setStatusHighlight], [highlightMode], [highlightRetrieval], [highlightClassify]] = useGlobalStorage(tabId, "url", "status_embedding", "status_classifier", "status_highlight", "highlightMode", "highlightRetrieval", "highlightClassify")
+  const [ classifierData ] = useStorage("classifierData:"+tabId, {});
   const [apiworks] = useStorage('apiworks', (v) => v === undefined ? false : v)
 
 
@@ -71,6 +68,7 @@ const Sidepanel = () => {
   // Render //
   // ====== //
 
+  console.log(url, classifierData)
 
   if (!apiworks)
   return (<div className="ShadeRunner-Sidepanel">

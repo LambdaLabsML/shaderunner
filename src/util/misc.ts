@@ -40,7 +40,7 @@ function generateRandomHash(length) {
 
 
 // react hook to save in session Storage
-export default function useSessionStorage(key, initialValue) {
+export default function useStorage(key, initialValue) {
   const [item, setInnerValue] = useState(() => {
     try {
       return window.sessionStorage.getItem(key)
@@ -69,4 +69,4 @@ function arraysAreEqual(arr1, arr2) {
 }
 
 
-export { useSessionStorage, simpleHash, random, generateRandomHash, arraysAreEqual };
+export { useStorage, simpleHash, random, generateRandomHash, arraysAreEqual };

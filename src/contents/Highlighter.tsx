@@ -3,16 +3,14 @@ import { getMainContent, extractSplits, mapSplitsToTextnodes } from '~util/extra
 import { highlightText, resetHighlights, textNodesNotUnderHighlight, surroundTextNode } from '~util/DOM'
 import { computeEmbeddingsCached, embeddingExists, VectorStore_fromClass2Embedding, type Metadata } from '~util/embedding'
 import { useStorage } from "@plasmohq/storage/hook";
-import { useSessionStorage as _useSessionStorage } from '~util/misc'
+import { useStorage as _useStorage } from '~util/misc'
 import { useActiveState } from '~util/activeStatus'
 import HighlightStyler from '~components/HighlightStyler';
 import { useGlobalStorage } from '~util/useGlobalStorage';
 import Scroller from '~components/Scroller';
 import TestsetHelper from '~components/TestsetHelper';
-import { MemoryVectorStore } from 'langchain/vectorstores/memory';
 
 const DEV = process.env.NODE_ENV == "development";
-const useSessionStorage = DEV && process.env.PLASMO_PUBLIC_STORAGE == "persistent" ? useStorage : _useSessionStorage;
 
 const isPromise = obj => !!obj && (typeof obj === 'object' || typeof obj === 'function') && typeof obj.then === 'function';
 
@@ -20,8 +18,6 @@ const Highlighter = () => {
     const [ tabId, setTabId ] = useState(null);
     const [
       [savedUrl],
-      [,setTopicCounts],
-      [,setScores],
       [statusEmbedding,setStatusEmbeddings],
       [,setStatusHighlight],
       [classEmbeddings, setClassEmbeddings],
@@ -31,11 +27,11 @@ const Highlighter = () => {
       [highlightClassify],
       [retrievalK],
       [setGlobalStorage, connected]
-    ] = useGlobalStorage(tabId, "url", "topicCounts", "classifierScores", "status_embedding", "status_highlight", "classEmbeddings", "highlightAmount", "decisionEps", "highlightRetrieval", "highlightClassify", "retrievalK");
+    ] = useGlobalStorage(tabId, "url", "status_embedding", "status_highlight", "classEmbeddings", "highlightAmount", "decisionEps", "highlightRetrieval", "highlightClassify", "retrievalK");
     const [ url, isActive ] = useActiveState(window.location);
     const [ pageEmbeddings, setPageEmbeddings ] = useState({mode: "sentences", splits: [], splitEmbeddings: {}});
-    const [ classifierData ] = useSessionStorage("classifierData:"+tabId, {});
-    const [ retrievalQuery ] = useSessionStorage("retrievalQuery:"+tabId, null);
+    const [ classifierData ] = useStorage("classifierData:"+tabId, {});
+    const [ retrievalQuery ] = useStorage("retrievalQuery:"+tabId, null);
 
     // -------- //
     // settings //
