@@ -214,7 +214,7 @@ const Highlighter = () => {
         const otherclassmatches = closest.filter(([doc, score]) => class2Id[doc.pageContent] * otherclassmod < classifierData.classes_pos.length * otherclassmod)
         const closestOtherClass = otherclassmatches[0];
         const index = i;
-        const highlight = highlightClassify;
+        const highlight = highlightClassify ?? true;
         const isRetrieval = false;
         toHighlight.push({ index, closestClass, closestOtherClass, otherclassmod, highlight, isRetrieval })
 
@@ -222,7 +222,7 @@ const Highlighter = () => {
       }
 
       // retrieval
-      if (highlightRetrieval) {
+      if (highlightRetrieval ?? false) {
         for(let i=0; i<classes_retrieval.length; i++) {
           const c = classes_retrieval[i] as string;
           class2Id[c] = numClasses + i;
