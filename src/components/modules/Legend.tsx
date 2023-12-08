@@ -128,7 +128,7 @@ const Legend = ({tabId, topics, flipVisibility, orderSwitch}) => {
   const onNextPrev = (topic: string, next: boolean) => {
     const id = allclasses.indexOf(topic)
     setGlobalStorage({highlightDefaultStyle: "dim-highlight"})
-    setScrollerCommand({"selector": "span.shaderunner-highlight.highlightclass-"+id, "cmd": next ? "next" : "previous"})
+    setScrollerCommand({"selector": "span.shaderunner-highlight.show.highlightclass-"+id, "cmd": next ? "next" : "previous"})
   }
 
   const topicLineSettings = {toggleHighlight, onFocusHighlight, mouseOverHighlight, mouseOverHighlightFinish, onTopicChange, onTopicDelete, onNextPrev}

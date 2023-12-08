@@ -306,6 +306,8 @@ const Highlighter = () => {
           span.setAttribute("splitid_class", topicCounts[className])
           if (!highlight && !isRetrieval)
             span.classList.add("transparent")
+          else
+            span.classList.add("show")
           if (DEV)
             span.setAttribute("splitid", index);
         });
