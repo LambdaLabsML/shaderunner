@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useStorage } from "@plasmohq/storage/hook";
-import './style.scss';
+import {styleCSS} from './style.scss';
 import NumericInput from '~components/basic/NumericInput';
 import SwitchInput from '~components/basic/SwitchInput';
 import StringInput from '~components/basic/StringInput';
@@ -28,6 +28,22 @@ const Settings = () => {
     setdecisioneps(defaults["decisioneps"])
     setVerbose(defaults["verbose"])
   }
+
+  // add darkmode background to sidepannel
+  useEffect(() => {
+    const style = document.createElement("style")
+    style.textContent = `
+      @media (prefers-color-scheme: dark) {
+        body {
+          background: rgba(53,54,58);
+        }
+      }";
+  
+      ${styleCSS}
+      `
+
+    window.document.head.appendChild(style);
+  }, [])
 
   return (
     <div className="settings-container">

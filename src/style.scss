@@ -172,7 +172,7 @@ $default-button-padding: 0.5rem 1rem;
         border-radius: 4px;
         &:focus {
           outline: none;
-          border-color: #007bff;
+          border-color: $primary-color;
         }
       }
   
@@ -560,6 +560,10 @@ $default-button-padding: 0.5rem 1rem;
   $background: rgba(53,54,58);
   $textcolor: #bbb;
 
+  a {
+    color: $textcolor;
+  }
+
   button.switch-option {
     background: darken($background, 5%);
     color: $textcolor;
@@ -614,6 +618,31 @@ $default-button-padding: 0.5rem 1rem;
       background-color: rgba(255,255,255,0.2);
       &, & .bx {
         color: #fff;
+      }
+    }
+  }
+
+  .settings-container {
+    color: #ccc;
+
+    .setting-item {
+      input[type="number"],
+      input[type="text"] {
+        border: 1px solid #ccc;
+        background: darken($background, 5%);
+        color: #ccc;
+        &:focus {
+          border-color: $primary-color;
+        }
+      }
+  
+      .switch-options {
+        .switch-option {
+          background-color: darken($background, 5%);
+          &.active {
+            background-color: $primary-color;
+          }
+        }
       }
     }
   }
