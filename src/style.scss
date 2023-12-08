@@ -12,7 +12,7 @@ $default-button-padding: 0.5rem 1rem;
 // Default Box //
 // ----------- //
 
-.ShadeRunner {
+.CollapsibleBox {
   display: flex;
   flex-direction: column;
   gap: 0.5em;
@@ -33,9 +33,10 @@ $default-button-padding: 0.5rem 1rem;
     margin-bottom: 0em;
   }
 
-  .ShadeRunner div.header {
+  .CollapsibleBox div.header {
     background: transparent;
     border: 2px solid $primary-color;
+    color: black;
   }
 }
 
@@ -356,6 +357,8 @@ $default-button-padding: 0.5rem 1rem;
     background-color: white;
     border-radius: 5px;
     color: black;
+
+    border: 2px solid transparent;
   }
 
   .tool_buttons {
@@ -586,6 +589,10 @@ $default-button-padding: 0.5rem 1rem;
     }
   }
 
+  .CollapsibleBox .CollapsibleBox div.header {
+      color: $textcolor;
+  }
+
   .ShadeRunner-Sidepanel {
     color: $textcolor;
 
@@ -603,6 +610,7 @@ $default-button-padding: 0.5rem 1rem;
     .highlight-wrapper {
       background-color: rgba(255,255,255,1.0);
       color: #333;
+      border: 2px solid $background;
     }
 
     &.inactive .highlight-wrapper {

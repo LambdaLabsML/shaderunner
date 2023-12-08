@@ -103,7 +103,7 @@ const Sidepanel = () => {
     </div>);
 
 
-  return <div className="ShadeRunner-Sidepanel">
+  return <div className="ShadeRunner ShadeRunner-Sidepanel">
     <div className="statusContainer">
       <StatusIndicator name="classifier" status={statusClassifier}/>
       <StatusIndicator name="embedding" status={statusEmbedding}/>
