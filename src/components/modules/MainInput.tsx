@@ -18,7 +18,7 @@ const useSessionStorage = process.env.NODE_ENV == "development" && process.env.P
 
 // the actual shaderunner bar
 const MainInput = ({tabId}) => {
-    const [ [title], [url], [statusClassifier, setStatusClassifier], [, isSynced]] = useGlobalStorage(tabId, "title", "url", "status_classifier")
+    const [ [title, setTitle], [url, setUrl], [statusClassifier, setStatusClassifier], [, isSynced]] = useGlobalStorage(tabId, "title", "url", "status_classifier")
     const [ savedHighlightQuery, setSavedHighlightQuery ] = useSessionStorage("savedHighlightQuery:"+tabId, "");
     const [ classifierData, setClassifierData] = useSessionStorage("classifierData:"+tabId, {});
     const [ retrievalQuery, setRetrievalQuery] = useSessionStorage("retrievalQuery:"+tabId, null);
@@ -38,6 +38,7 @@ const MainInput = ({tabId}) => {
       if (!isSynced) return;
       setStatusClassifier(classifierData && classifierData.classes_pos && classifierData.classes_neg ? ["loaded", 100] : null)
     }, [isSynced]);
+
 
     // ------ //
     // events //

@@ -73,6 +73,10 @@ $default-button-padding: 0.5rem 1rem;
             outline: none !important;
             box-shadow: 0 0 10px #719ECE;
         }
+
+        &[disabled] {
+          opacity: 0.4;
+        }
     }
 
     .thinking_logo {
