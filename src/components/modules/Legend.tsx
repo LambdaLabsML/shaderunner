@@ -50,8 +50,8 @@ const Legend = ({tabId, topics, flipVisibility, orderSwitch}) => {
   // active current, hide all others
   const onFocusHighlight = async (ev, topic: string) => {
     ev.stopPropagation();
-    await setScrollerCommand(null)
-    await setGlobalStorage({
+    setScrollerCommand(null)
+    setGlobalStorage({
       highlightActiveTopic: topic,
       highlightActiveStyle: "highlight",
       highlightDefaultStyle: "no-highlight",
@@ -64,8 +64,8 @@ const Legend = ({tabId, topics, flipVisibility, orderSwitch}) => {
 
   // active current, dim all others
   const mouseOverHighlight = async (topic: string) => {
-    await setScrollerCommand(null)
-    await setGlobalStorage({
+    setScrollerCommand(null)
+    setGlobalStorage({
       highlightActiveTopic: topic,
       highlightDefaultStyle: flipVisibility ? null : "dim-highlight",
       highlightDefaultNegStyle: flipVisibility ? "dim-highlight" : null,
@@ -75,8 +75,8 @@ const Legend = ({tabId, topics, flipVisibility, orderSwitch}) => {
 
   // restore state before mouseOver
   const mouseOverHighlightFinish = async () => {
-    await setScrollerCommand(null)
-    await setGlobalStorage({
+    setScrollerCommand(null)
+    setGlobalStorage({
       highlightActiveTopic: null,
       highlightDefaultStyle: null,
       highlightDefaultNegStyle: null,
@@ -85,7 +85,7 @@ const Legend = ({tabId, topics, flipVisibility, orderSwitch}) => {
 
   // hide topic
   const toggleHighlight = async (topic: string) => {
-    await setScrollerCommand(null)
+    setScrollerCommand(null)
     let newTopicStyles = {};
     if (topicStyles && topicStyles[topic]) {
       let { [topic]: removed, ..._newTopicStyles } = topicStyles;
@@ -94,7 +94,7 @@ const Legend = ({tabId, topics, flipVisibility, orderSwitch}) => {
       newTopicStyles = { ...topicStyles, [topic]: flipVisibility ? "highlight" : "no-highlight" };
     }
 
-    await setGlobalStorage({
+    setGlobalStorage({
         highlightActiveStyle: topicIsActive(topic, newTopicStyles) ? "strong-highlight" : "light-highlight",
         highlightTopicStyles: newTopicStyles
     })

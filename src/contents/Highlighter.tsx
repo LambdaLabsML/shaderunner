@@ -331,10 +331,9 @@ const Highlighter = () => {
       const title = document.title;
       const devOpts = DEV ? { DEV_highlighterData: { url, classifierData, splits, title }} : {};
 
-      const _statusEmbedding = await statusEmbedding;
-      if (_statusEmbedding && _statusEmbedding[1] == 100)
-        await setStatusHighlight(["loaded", 100]) // bug: needs to be outside due to concurrency conflict of this variable
-      await setGlobalStorage({
+      if (statusEmbedding && statusEmbedding[1] == 100)
+        setStatusHighlight(["loaded", 100]) // bug: needs to be outside due to concurrency conflict of this variable
+      setGlobalStorage({
         topicCounts: topicCounts,
         classifierScores: scores,
         ...devOpts
