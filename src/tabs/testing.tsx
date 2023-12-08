@@ -194,7 +194,6 @@ function TestingPage() {
     testData.forEach((e,i) => {
       e.classifier = classifiers[i]
     })
-    console.log(testData)
 
     // run classification
     const results = await Promise.all(testData.map(experiment => processExperiment(experiment)));

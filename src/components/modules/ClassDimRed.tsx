@@ -55,7 +55,6 @@ const ClassDimRed = ({ tabId }) => {
   useEffect(() => {
     if (!settings) return;
 
-    console.log(settings);
     const names = settings[1];
     const similarities = settings[0];
     const min = settings[2];

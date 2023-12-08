@@ -32,7 +32,6 @@ const Legend = ({tabId, topics, flipVisibility, orderSwitch}) => {
   // helper //
   // ------ //
   const topicIsActive = (topic: string, _topicStyles: any) => {
-    console.log(topic, _topicStyles)
     if (flipVisibility)
       return _topicStyles && topic in _topicStyles && _topicStyles[topic] != "no-highlight"
     else
