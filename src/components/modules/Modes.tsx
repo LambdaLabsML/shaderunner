@@ -10,7 +10,7 @@ const Modes = ({tabId}) => {
     [ highlightRetrieval, setHighlightRetrieval ],
     [ highlightClassify, setHighlightClassify ],
     [ classifierData],
-    [ , isSynced ]
+    [ setGlobalSorage, isSynced ]
     ] = useGlobalStorage(tabId, "highlightMode", "highlightRetrieval", "highlightClassify", "classifierData")
 
   // TODO: use these defaults
@@ -20,8 +20,10 @@ const Modes = ({tabId}) => {
   useEffect(() => {
     if (!isSynced) return;
 
-    setHighlightClassify(highlightClassify || false)
-    setHighlightRetrieval(highlightRetrieval || true)
+    setGlobalSorage({
+      highlightClassify: highlightClassify || false,
+      highlightRetrieval: highlightRetrieval || true
+    })
   }, [isSynced]);
 
 
