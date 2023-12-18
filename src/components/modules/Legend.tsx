@@ -177,7 +177,6 @@ const Legend = ({tabId, topics, flipVisibility, orderSwitch}) => {
         <TopicLine key={c} topic={c} extraInfo={topicCounts ? topicCounts[c] : null} active={(!topicCounts || topicCounts[c] > 0) && (topicIsActive(c, topicStyles) || c == activeTopic)} {...topicLineSettings}></TopicLine>
       ))}
       <div className="textLine" onClick={async () => setClassifierData({...classifierData, [topics]: [...classifierData[topics], await suggestNewTopic()]})}><Icon name="add-to-queue"/> Suggest missing topic.</div>
-      {/*retrievalQuery ? <span style={{ backgroundColor: consistentColor(retrievalQuery + " (retrieval)", topicStyles && topicStyles?._retrieval ? 0.125 : 1.0) }}>{retrievalQuery + " (retrieval)"}</span> : ""*/}
     </div>
   ];
 }

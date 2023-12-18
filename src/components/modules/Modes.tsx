@@ -9,35 +9,52 @@ const Modes = ({tabId}) => {
     [ highlightMode, setHighlightMode ],
     [ highlightRetrieval, setHighlightRetrieval ],
     [ highlightClassify, setHighlightClassify ],
+    [ classifierData],
     [ , isSynced ]
-    ] = useGlobalStorage(tabId, "highlightMode", "highlightRetrieval", "highlightClassify")
+    ] = useGlobalStorage(tabId, "highlightMode", "highlightRetrieval", "highlightClassify", "classifierData")
+
+  // TODO: use these defaults
+  //const [ textclassifier ] = useStorage('textclassifier')
+  //const [ textretrieval ] = useStorage('textretrieval')
 
   useEffect(() => {
     if (!isSynced) return;
-    setHighlightClassify(highlightClassify || true)
-    setHighlightRetrieval(highlightRetrieval || false)
+
+    setHighlightClassify(highlightClassify || false)
+    setHighlightRetrieval(highlightRetrieval || true)
   }, [isSynced]);
+
 
   // ------ //
   // render //
   // ------ //
 
+  const findBtn = "Find Reference";
+  const suggestBtn = "Related Topics";
+  const bothBtn = "Both";
+
+  const highlightBtn = "Highlight";
+  const FocusBtn = "Focus";
+  const TestBtn = "Testset Helper";
+
   return <div className="Modes">
     <SwitchInput
         label=""
-        options={['highlight', "focus", ...(DEV ? ["testset helper"] : [])]}
-        selected={highlightMode || "highlight"}
-        onChange={(value: string) => setHighlightMode(value)}
-      />
-    <SwitchInput
-        label=""
-        options={['llm-topics', "retrieval", "both"]}
-        selected={highlightRetrieval && highlightClassify ? "both" : highlightRetrieval ? "retrieval" : "llm-topics"}
+        options={[findBtn, suggestBtn, bothBtn]}
+        selected={highlightRetrieval && highlightClassify ? bothBtn : highlightRetrieval ? findBtn : suggestBtn}
         onChange={(value: string) => {
-          setHighlightRetrieval(value != "llm-topics")
-          setHighlightClassify(value != "retrieval")
+          setHighlightRetrieval(value != suggestBtn)
+          setHighlightClassify(value != findBtn)
         }}
       />
+    {highlightClassify && classifierData ? (
+      <SwitchInput
+          label=""
+          options={[highlightBtn, FocusBtn, ...(DEV ? [TestBtn] : [])]}
+          selected={(highlightMode == "highlight" ? highlightBtn : highlightMode == "focus" ? FocusBtn : TestBtn) || highlightBtn}
+          onChange={(value: string) => setHighlightMode((value == highlightBtn ? "highlight" : value == FocusBtn ? "focus" : "testset helper"))}
+        />
+    ) : ""}
   </div>
 }
 

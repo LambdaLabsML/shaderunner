@@ -31,7 +31,7 @@ const StatusIndicator = ({name, status, size=4}) => {
 // mount in sidepanel
 const Sidepanel = () => {
   const tabId = new URL(window.location.href).searchParams.get("tabId")
-  const [[active, setActive], [url], [statusEmbedding, setStatusEmbedding], [statusClassifier, setStatusClassifier], [statusHighlight, setStatusHighlight], [highlightMode], [highlightRetrieval], [highlightClassify], [classifierData], [, isSynced]] = useGlobalStorage(tabId, "active", "url", "status_embedding", "status_classifier", "status_highlight", "highlightMode", "highlightRetrieval", "highlightClassify", "classifierData")
+  const [[active], [url], [statusEmbedding, setStatusEmbedding], [statusClassifier, setStatusClassifier], [statusHighlight, setStatusHighlight], [highlightMode], [highlightRetrieval], [highlightClassify], [classifierData], [, isSynced]] = useGlobalStorage(tabId, "active", "url", "status_embedding", "status_classifier", "status_highlight", "highlightMode", "highlightRetrieval", "highlightClassify", "classifierData")
   const [apiworks] = useStorage('apiworks', (v) => v === undefined ? false : v)
 
 
@@ -103,11 +103,14 @@ const Sidepanel = () => {
       </CollapsibleBox>
     </div>);
 
+console.log(highlightMode)
 
   return <div className="ShadeRunner ShadeRunner-Sidepanel">
     <div className="statusContainer">
-      <StatusIndicator name="classifier" status={statusClassifier}/>
       <StatusIndicator name="embedding" status={statusEmbedding}/>
+      {highlightClassify ? (
+        <StatusIndicator name="classifier" status={statusClassifier}/>
+      ) : ""}
       <StatusIndicator name="highlight" status={statusHighlight}/>
     </div>
     <CollapsibleBox title="What to Highlight">

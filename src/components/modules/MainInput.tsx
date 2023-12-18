@@ -9,7 +9,7 @@ import { useGlobalStorage } from '~util/useGlobalStorage';
 
 // the actual shaderunner bar
 const MainInput = ({tabId}) => {
-    const [ [title, setTitle], [url, setUrl], [statusClassifier, setStatusClassifier], [ savedHighlightQuery, setSavedHighlightQuery ], [ classifierData, setClassifierData], [ retrievalQuery, setRetrievalQuery], [, isSynced]] = useGlobalStorage(tabId, "title", "url", "status_classifier", "savedHighlightQuery", "classifierData", "retrievalQuery")
+    const [ [title], [url], [, setStatusClassifier], [ savedHighlightQuery, setSavedHighlightQuery ], [ classifierData, setClassifierData], [, isSynced]] = useGlobalStorage(tabId, "title", "url", "status_classifier", "savedHighlightQuery", "classifierData")
 
     // -------- //
     // Settings //
@@ -35,7 +35,6 @@ const MainInput = ({tabId}) => {
     const onReset = () => {
       setSavedHighlightQuery("")
       setClassifierData({})
-      setRetrievalQuery(null)
     }
 
     // ask llm for classes
@@ -56,7 +55,6 @@ const MainInput = ({tabId}) => {
 
         // set query settings
         setSavedHighlightQuery(highlightQuery)
-        setRetrievalQuery(textretrieval ? highlightQuery : null);
 
         // query llm to give classes
         if (textclassifier) {
