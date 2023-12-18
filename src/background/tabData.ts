@@ -30,7 +30,7 @@ const registerListener = (tabId, update_fn) => {
 
 const getData = (tabId, variables) => {
     //variables.push("_ver")
-    return Object.fromEntries(variables.map(v => [v,tabData[tabId][v]]))
+    return Object.fromEntries(variables.map(v => [v,tabData[tabId] ? tabData[tabId][v] : undefined]))
 }
 
 
