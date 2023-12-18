@@ -22,7 +22,10 @@ const HighlightStyler = ({tabId}) => {
 
     // adapt style dynamically according to classifier & topicStyles 
     useEffect(() => {
-        if (!classifierData || !Array.isArray(classifierData.classes_pos) || !Array.isArray(classifierData.classes_neg) || !Array.isArray(classifierData.classes_retrieval) || !styleEl) return;
+        if (!classifierData || ((!Array.isArray(classifierData.classes_pos) || !Array.isArray(classifierData.classes_neg)) && !Array.isArray(classifierData.classes_retrieval)) || !styleEl) return;
+        const classes_pos = classifierData.classes_pos || [];
+        const classes_neg = classifierData.classes_neg || [];
+        const classes_retrieval = classifierData.classes_retrieval || [];
 
         const mode = highlightMode || "highlight";
 
@@ -32,10 +35,10 @@ const HighlightStyler = ({tabId}) => {
         const activeStyle = highlightActiveStyle || "highlight";
 
         // create class for each pos-class
-        const allclasses = [...classifierData.classes_pos, ...classifierData.classes_neg, ...classifierData.classes_retrieval];
+        const allclasses = [...classes_pos, ...classes_neg, ...classes_retrieval];
         const colorStyle = allclasses.map((c, i) => {
-            const isPosClass = i < classifierData.classes_pos.length;
-            const isRetrievalClass = classifierData.classes_retrieval.includes(c);
+            const isPosClass = i < classes_pos.length;
+            const isRetrievalClass = classes_retrieval.includes(c);
             const isActive = activeTopic == c
 
             // use default setting unless we have a specific highlight setting given

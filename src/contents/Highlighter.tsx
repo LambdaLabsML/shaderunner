@@ -7,6 +7,9 @@ import HighlightStyler from '~components/HighlightStyler';
 import { useGlobalStorage } from '~util/useGlobalStorage';
 import Scroller from '~components/Scroller';
 import TestsetHelper from '~components/TestsetHelper';
+import { sendToBackground } from '@plasmohq/messaging';
+import { MSG_QUERY2CLASS } from '~util/messages';
+import { random } from '~util/misc';
 
 const DEV = process.env.NODE_ENV == "development";
 
@@ -16,26 +19,27 @@ const Highlighter = () => {
     const [ tabId, setTabId ] = useState(null);
     const [
       [active],
-      [savedUrl],
+      [url],
+      [title],
       [statusEmbedding,setStatusEmbeddings],
       [,setStatusHighlight],
+      [,setStatusClassifier],
       [classEmbeddings, setClassEmbeddings],
       [highlightAmount],
       [decisionEpsAmount],
       [highlightRetrieval],
       [highlightClassify],
       [retrievalK],
-      [classifierData],
-      [setGlobalStorage, connected]
-    ] = useGlobalStorage(tabId, "active", "url", "status_embedding", "status_highlight", "classEmbeddings", "highlightAmount", "decisionEps", "highlightRetrieval", "highlightClassify", "retrievalK", "classifierData");
+      [classifierData, setClassifierData],
+      [savedHighlightQuery],
+      [setGlobalStorage, isSynced]
+    ] = useGlobalStorage(tabId, "active", "url", "title", "status_embedding", "status_highlight", "status_classifier", "classEmbeddings", "highlightAmount", "decisionEps", "highlightRetrieval", "highlightClassify", "retrievalK", "classifierData", "savedHighlightQuery");
     const [ pageEmbeddings, setPageEmbeddings ] = useState({mode: "sentences", splits: [], splitEmbeddings: {}});
 
     // -------- //
     // settings //
     // -------- //
     const [ verbose ] = useStorage("verbose", false);
-    // const [ textclassifier ] = useStorage('textclassifier')
-    // const [ textretrieval ] = useStorage('textretrieval')
     // const [ textretrieval_k ] = useStorage('textretrieval_k')
     const [ alwayshighlighteps ] = useStorage("alwayshighlighteps");
     const [ minimalhighlighteps ] = useStorage("minimalhighlighteps");
@@ -55,7 +59,36 @@ const Highlighter = () => {
       init();
     }, [])
 
+
+    useEffect(() => {
+      if (!isSynced) return;
+
+      // reset for empty query
+      if (!savedHighlightQuery) setClassifierData({});
+
+        // query llm to give classes
+        if (highlightClassify) {
+          setStatusClassifier(["checking", 0])
+          getQueryClasses(savedHighlightQuery, () => {
+            setStatusClassifier(["checking", 0, random(MSG_QUERY2CLASS)])
+          }, () => {
+            setStatusClassifier(["loaded", 100])
+          })
+        }
+
+        if (highlightRetrieval) {
+          setClassifierData(old => ({...old, classes_retrieval: savedHighlightQuery ? [savedHighlightQuery] : []}))
+        }
+    }, [isSynced, savedHighlightQuery])
+
+
+    // restore classifier status
+    useEffect(() => {
+      if (!isSynced || !classifierData) return;
+      setStatusClassifier(classifierData && classifierData.classes_pos && classifierData.classes_neg ? ["loaded", 100] : null)
+    }, [isSynced, classifierData]);
         
+
     // start directly by getting page embeddings
     useEffect(() => {
       if (!active || !tabId) return;
@@ -80,7 +113,7 @@ const Highlighter = () => {
 
     // on every classifier change, recompute highlights
     useEffect(() => {
-      if(!tabId || !active || !connected || !classifierData?.classes_pos) return;
+      if(!tabId || !active || !isSynced || (!classifierData?.classes_pos && !classifierData?.classes_retrieval)) return;
 
       const applyHighlight = () => {
         try {
@@ -90,23 +123,24 @@ const Highlighter = () => {
         }
       }
       applyHighlight()
-    }, [pageEmbeddings, connected, classifierData, active, highlightAmount, highlightRetrieval, highlightClassify, decisionEpsAmount, classEmbeddings, retrievalK])
+    }, [pageEmbeddings, isSynced, classifierData, active, highlightAmount, highlightRetrieval, highlightClassify, decisionEpsAmount, classEmbeddings, retrievalK])
 
 
     // on every classifier change, recompute class embeddings
     useEffect(() => {
-      if(!tabId || !active || !connected || !classifierData?.classes_pos || !classifierData?.classes_retrieval) return;
+      if(!tabId || !active || !isSynced || (!classifierData?.classes_pos && !classifierData?.classes_retrieval)) return;
 
       async function computeClassEmbeddings() {
-        const classes_pos = classifierData.classes_pos;
-        const classes_neg = classifierData.classes_neg;
-        const classes_retrieval = classifierData.classes_retrieval;
-        if (!Array.isArray(classes_pos) || !Array.isArray(classes_neg))
+        const classes_pos = classifierData.classes_pos || [];
+        const classes_neg = classifierData.classes_neg || [];
+        const classes_retrieval = classifierData.classes_retrieval || [];
+        if ((!classes_pos || !classes_neg) && !classes_retrieval)
           return;
 
         const allclasses = [...classes_pos, ...classes_neg, ...classes_retrieval]
+
         // embeddings of classes (use cached / compute)
-        const classCollection = savedUrl + "|classes"
+        const classCollection = url + "|classes"
         if (classEmbeddings && allclasses.every(a => a in classEmbeddings)) {
           setStatusHighlight(["checking", 0, "using cache"]);
         } else {
@@ -116,13 +150,21 @@ const Highlighter = () => {
         }
       }
       computeClassEmbeddings()
-    }, [active, connected, classifierData])
+    }, [active, isSynced, classifierData])
 
 
 
     // --------- //
     // functions //
     // --------- //
+
+    // ask llm for classes
+    const getQueryClasses = async (query, onLLM = () => {}, onLLMDone = () => {}) => {
+      onLLM()
+      const result = await sendToBackground({ name: "llm_classify", body: {query: query, url: url, title: title }})
+      setClassifierData(old => ({...old, classes_pos: result.classes_pos, classes_neg: result.classes_neg, thought: result.thought, scope: result.scope, query: query, classes_retrieval: [query]}))
+      onLLMDone()
+    }
 
     // ensure page embeddings exist
     const getPageEmbeddings = async (mode = "sentences", onStatus = (status: [string, Number, string?]) => {}) => {
@@ -131,7 +173,7 @@ const Highlighter = () => {
       if (pageEmbeddings.mode == mode && pageEmbeddings.finished) return pageEmbeddings;
 
       // if not in cache, check if database has embeddings
-      const exists = await embeddingExists(savedUrl as string)
+      const exists = await embeddingExists(url as string)
       const status_msg = exists ? "found database" : "";
       await onStatus(["computing", 0, status_msg])
 
@@ -143,7 +185,7 @@ const Highlighter = () => {
       let splitEmbeddings = {};
       const batchSize = exists ? 256 : 64;
       for(let i = 0; i < splits.length; i+= batchSize) {
-        const splitEmbeddingsBatch = await computeEmbeddingsCached(savedUrl as string, splits.slice(i, i+batchSize))
+        const splitEmbeddingsBatch = await computeEmbeddingsCached(url as string, splits.slice(i, i+batchSize))
         splitEmbeddings = {...splitEmbeddings, ...splitEmbeddingsBatch};
         await onStatus(["computing", Math.floor(i / splits.length * 100), status_msg])
         setPageEmbeddings({ splits: splits.slice(0, i+batchSize), splitEmbeddings, mode });
@@ -153,12 +195,13 @@ const Highlighter = () => {
 
 
     const highlight = async () => {
-      const classes_pos = classifierData.classes_pos;
-      const classes_neg = classifierData.classes_neg;
-      const classes_retrieval = classifierData.classes_retrieval;
-      if (!classes_pos || !classes_neg || !classes_retrieval)
+      const classes_pos = classifierData.classes_pos || [];
+      const classes_neg = classifierData.classes_neg || [];
+      const classes_retrieval = classifierData.classes_retrieval || [];
+      if ((!classes_pos || !classes_neg) && !classes_retrieval)
         return;
       if (!classEmbeddings || isPromise(classEmbeddings)) return;
+      const classifyMode = classes_pos.length && classes_neg.length;
 
       setStatusHighlight(["checking", 0]);
       const allclasses = [...classes_pos, ...classes_neg]
@@ -184,23 +227,26 @@ const Highlighter = () => {
       for (let i=0; i<splits.length; i++) {
         const split = splits[i];
 
-        // using precomputed embeddings
-        const embedding = splitEmbeddings[split];
-        const closest = await classStore.similaritySearchVectorWithScore(embedding, numClasses);
+        let closestClass, closestOtherClass, otherclassmod;
+        if (classifyMode) {
+          // using precomputed embeddings
+          const embedding = splitEmbeddings[split];
+          const closest = await classStore.similaritySearchVectorWithScore(embedding, numClasses);
 
-        const score_plus = classes_pos ? closest.filter((c) => classes_pos.includes(c[0].pageContent)).reduce((a, c) => Math.max(a, c[1]), 0) : 0
-        const score_minus = classes_neg ? closest.filter((c) => classes_neg.includes(c[0].pageContent)).reduce((a, c) => Math.max(a, c[1]), 0) : 0
+          const score_plus = classes_pos ? closest.filter((c) => classes_pos.includes(c[0].pageContent)).reduce((a, c) => Math.max(a, c[1]), 0) : 0
+          const score_minus = classes_neg ? closest.filter((c) => classes_neg.includes(c[0].pageContent)).reduce((a, c) => Math.max(a, c[1]), 0) : 0
 
-        scores.push([score_plus, score_minus]);
-        if (score_plus > score_minus)
-          max_diff = Math.max(max_diff, (Math.abs(score_plus - score_minus)))
+          scores.push([score_plus, score_minus]);
+          if (score_plus > score_minus)
+            max_diff = Math.max(max_diff, (Math.abs(score_plus - score_minus)))
 
-        // remember to mark split for highlighting later streamlined
-        const closestClass = closest[0];
-        const closestClassName = closestClass[0].pageContent
-        const otherclassmod = class2Id[closestClassName] < classifierData.classes_pos.length ? -1 : 1;
-        const otherclassmatches = closest.filter(([doc, score]) => class2Id[doc.pageContent] * otherclassmod < classifierData.classes_pos.length * otherclassmod)
-        const closestOtherClass = otherclassmatches[0];
+          // remember to mark split for highlighting later streamlined
+          closestClass = closest[0];
+          const closestClassName = closestClass[0].pageContent
+          otherclassmod = class2Id[closestClassName] < classes_pos.length ? -1 : 1;
+          const otherclassmatches = closest.filter(([doc, score]) => class2Id[doc.pageContent] * otherclassmod < classes_pos.length * otherclassmod)
+          closestOtherClass = otherclassmatches[0];
+        }
         const index = i;
         const highlight = highlightClassify ?? true;
         const isRetrieval = false;
@@ -216,7 +262,7 @@ const Highlighter = () => {
           class2Id[c] = numClasses + i;
           const query_embedding = classEmbeddings[c];
           const retrievalStore = VectorStore_fromClass2Embedding(splitEmbeddings)
-          const closestRetrieved = await retrievalStore.similaritySearchVectorWithScore(query_embedding, retrievalK)
+          const closestRetrieved = await retrievalStore.similaritySearchVectorWithScore(query_embedding, retrievalK || 1)
           closestRetrieved.forEach(retrieved => {
             const split_id = splits.indexOf(retrieved[0].pageContent)
             if (split_id < 0) return;
@@ -230,6 +276,7 @@ const Highlighter = () => {
 
       // highlight based on statistics
       const decisioneps = (1-(decisionEpsAmount ?? 0.5)) * (max_diff - 1e-5);
+      if (classifyMode)
       toHighlight.forEach((h,i) => {
         const [score_plus, score_minus] = scores[i];
         const split = splits[i];
@@ -273,10 +320,10 @@ const Highlighter = () => {
       const topicCounts = Object.fromEntries(allclasses.map((c) => [c, 0]))
       for(let i=0; i<toHighlight.length; i++) {
         const {index, closestClass, closestOtherClass, otherclassmod, highlight, isRetrieval} = toHighlight[i];
-        const className = closestClass[0].pageContent;
-        const classScore = closestClass[1];
-        const otherClassName = closestOtherClass[0].pageContent;
-        const otherClassScore = closestOtherClass[1];
+        const className = closestClass ? closestClass[0].pageContent : null;
+        const classScore = closestClass ? closestClass[1] : null;
+        const otherClassName = closestOtherClass ? closestOtherClass[0].pageContent : null;
+        const otherClassScore = closestOtherClass ? closestOtherClass[1] : null;
         const details = splitDetails[index];
         let true_from_node_pos = details.from_text_node + node_offset;
         let true_to_node_pos = details.to_text_node + node_offset;
@@ -290,8 +337,10 @@ const Highlighter = () => {
           to_text_node: details.to_text_node - details.from_text_node
         }
         const { replacedNodes, nextTextOffset } = highlightText(relative_details, textNodesSubset, highlightClass, (span) => {
-          span.setAttribute("data-title", `[${otherclassmod < 0 ? "✓" : "✗"}] ${classScore.toFixed(2)}: ${className} | [${otherclassmod < 0 ? "✗" : "✓"}] ${otherClassScore.toFixed(2)}: ${otherClassName}`);
-          span.setAttribute("splitid_class", topicCounts[className])
+          if (className && otherClassName)
+            span.setAttribute("data-title", `[${otherclassmod < 0 ? "✓" : "✗"}] ${classScore.toFixed(2)}: ${className} | [${otherclassmod < 0 ? "✗" : "✓"}] ${otherClassScore.toFixed(2)}: ${otherClassName}`);
+          if (className)
+            span.setAttribute("splitid_class", topicCounts[className])
           if (!highlight && !isRetrieval)
             span.classList.add("transparent")
           else
@@ -299,7 +348,8 @@ const Highlighter = () => {
           if (DEV)
             span.setAttribute("splitid", index);
         });
-        topicCounts[className] += highlight || isRetrieval ? 1 : 0;
+        if (className)
+          topicCounts[className] += highlight || isRetrieval ? 1 : 0;
         currentTextNodes.splice(true_from_node_pos, num_textnodes, ...replacedNodes);
         node_offset += replacedNodes.length - num_textnodes 
         if (index < splits.length - 1 && splitDetails[index+1].from_text_node == details.to_text_node && nextTextOffset > 0) {
@@ -317,15 +367,20 @@ const Highlighter = () => {
 
       // in DEV mode, we also save the all the data
       const title = document.title;
-      const devOpts = DEV ? { DEV_highlighterData: { savedUrl, classifierData, splits, title }} : {};
+      const devOpts = DEV ? { DEV_highlighterData: { url, classifierData, splits, title }} : {};
+
+      // if we are in retrieval-only mode, jump to first result
+      const jumpOp = !classifyMode ? {ScrollerCommand: {"selector": "span.shaderunner-highlight.show.highlightclass-0", "cmd": "first"}} : {}
 
       if (statusEmbedding && statusEmbedding[1] == 100)
         setStatusHighlight(["loaded", 100]) // bug: needs to be outside due to concurrency conflict of this variable
       setGlobalStorage({
         topicCounts: topicCounts,
         classifierScores: scores,
-        ...devOpts
+        ...devOpts,
+        ...jumpOp
       })
+
     }
 
     return [

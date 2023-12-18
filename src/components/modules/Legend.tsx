@@ -17,7 +17,7 @@ const Legend = ({tabId, topics, flipVisibility, orderSwitch}) => {
     [ setGlobalStorage ]
   ] = useGlobalStorage(tabId, "url", "highlightTopicStyles", "highlightActiveTopic", "topicCounts", "ScrollerCommand", "classifierData")
   const [ sortBy, setSortBy ] = useState(undefined)
-  const allclasses = classifierData && Array.isArray(classifierData.classes_pos) && Array.isArray(classifierData.classes_neg) ? [...(classifierData.classes_pos||[]), ...(classifierData.classes_neg||[]), ...(classifierData.classes_retrieval||[])] : [];
+  const allclasses = classifierData ? [...(classifierData.classes_pos||[]), ...(classifierData.classes_neg||[]), ...(classifierData.classes_retrieval||[])] : [];
 
 
 
@@ -153,7 +153,7 @@ const Legend = ({tabId, topics, flipVisibility, orderSwitch}) => {
       selected={sortBy || 'gpt order'}
       onChange={(value: string) => setSortBy(value)}
     /> : "",
-    <SwitchInput
+    orderSwitch ? <SwitchInput
       label=""
       key={topics+"show_selector"}
       options={['show all', 'hide all']}
@@ -171,12 +171,14 @@ const Legend = ({tabId, topics, flipVisibility, orderSwitch}) => {
           if (value == "hide all") setTopicStyles({..._topicStyles, ...overwriteStyles})
         }
       }}
-    />,
+    /> : "",
     <div className="topicContainer" key={topics+"topic_container"} onMouseLeave={mouseOverHighlightFinish}>
       {topicList.map(c => (
         <TopicLine key={c} topic={c} extraInfo={topicCounts ? topicCounts[c] : null} active={(!topicCounts || topicCounts[c] > 0) && (topicIsActive(c, topicStyles) || c == activeTopic)} {...topicLineSettings}></TopicLine>
       ))}
+      {topics != "classes_retrieval" ? (
       <div className="textLine" onClick={async () => setClassifierData({...classifierData, [topics]: [...classifierData[topics], await suggestNewTopic()]})}><Icon name="add-to-queue"/> Suggest missing topic.</div>
+      ) : ""}
     </div>
   ];
 }

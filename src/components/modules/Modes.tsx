@@ -51,7 +51,7 @@ const Modes = ({tabId}) => {
       <SwitchInput
           label=""
           options={[highlightBtn, FocusBtn, ...(DEV ? [TestBtn] : [])]}
-          selected={(highlightMode == "highlight" ? highlightBtn : highlightMode == "focus" ? FocusBtn : TestBtn) || highlightBtn}
+          selected={(highlightMode == "highlight" ? highlightBtn : highlightMode == "focus" ? FocusBtn : highlightMode == "testset helper" ? TestBtn : highlightBtn) || highlightBtn}
           onChange={(value: string) => setHighlightMode((value == highlightBtn ? "highlight" : value == FocusBtn ? "focus" : "testset helper"))}
         />
     ) : ""}

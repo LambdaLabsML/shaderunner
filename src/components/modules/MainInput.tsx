@@ -1,71 +1,23 @@
-import React, { useEffect } from 'react';
-import { random } from '~util/misc'
-import { useStorage } from "@plasmohq/storage/hook";
-import { MSG_QUERY2CLASS } from "../../util/messages";
-import { sendToBackground } from '@plasmohq/messaging';
+import React from 'react';
 import { useGlobalStorage } from '~util/useGlobalStorage';
 
 
 
 // the actual shaderunner bar
 const MainInput = ({tabId}) => {
-    const [ [title], [url], [, setStatusClassifier], [ savedHighlightQuery, setSavedHighlightQuery ], [ classifierData, setClassifierData], [, isSynced]] = useGlobalStorage(tabId, "title", "url", "status_classifier", "savedHighlightQuery", "classifierData")
-
-    // -------- //
-    // Settings //
-    // -------- //
-    const [ textclassifier ] = useStorage('textclassifier')
-    const [ textretrieval ] = useStorage('textretrieval')
-
-
-    // ------- //
-    // effects //
-    // ------- //
-    useEffect(() => {
-      if (!isSynced) return;
-      setStatusClassifier(classifierData && classifierData.classes_pos && classifierData.classes_neg ? ["loaded", 100] : null)
-    }, [isSynced]);
+    const [ [ savedHighlightQuery, setSavedHighlightQuery ], [, isSynced]] = useGlobalStorage(tabId, "savedHighlightQuery")
 
 
     // ------ //
     // events //
     // ------ //
 
-    // reset input & data
-    const onReset = () => {
-      setSavedHighlightQuery("")
-      setClassifierData({})
-    }
-
-    // ask llm for classes
-    const getQueryClasses = async (query, onLLM = () => {}, onLLMDone = () => {}) => {
-      onLLM()
-      const result = await sendToBackground({ name: "llm_classify", body: {query: query, url: url, title: title }})
-      setClassifierData(old => ({...old, classes_pos: result.classes_pos, classes_neg: result.classes_neg, thought: result.thought, scope: result.scope, query: query, classes_retrieval: [query]}))
-      onLLMDone()
-    }
-
     const onEnterPress = async (ev) => {
       const highlightQuery = ev.target.value;
 
       if (ev.keyCode == 13 && ev.shiftKey == false) {
         ev.preventDefault(); 
-        onReset();
-        if (!highlightQuery) return;
-
-        // set query settings
         setSavedHighlightQuery(highlightQuery)
-
-        // query llm to give classes
-        if (textclassifier) {
-          setStatusClassifier(["checking", 0])
-          await getQueryClasses(highlightQuery, () => {
-            setStatusClassifier(["checking", 0, random(MSG_QUERY2CLASS)])
-          }, () => {
-            setStatusClassifier(["loaded", 100])
-          })
-        }
-
       }
     }
 
@@ -76,7 +28,6 @@ const MainInput = ({tabId}) => {
 
     return <div className="MainInput">
       <textarea
-        disabled={!title}
         className="text-box"
         placeholder="What do you want to find here?"
         defaultValue={savedHighlightQuery}

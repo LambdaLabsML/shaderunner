@@ -68,7 +68,6 @@ const Sidepanel = () => {
     setStatusEmbedding(null);
   }, [apiworks])
 
-
   // ====== //
   // Render //
   // ====== //
@@ -103,7 +102,6 @@ const Sidepanel = () => {
       </CollapsibleBox>
     </div>);
 
-console.log(highlightMode)
 
   return <div className="ShadeRunner ShadeRunner-Sidepanel">
     <div className="statusContainer">
@@ -117,19 +115,21 @@ console.log(highlightMode)
       <MainInput tabId={tabId}/>
       <Modes tabId={tabId}/>
     </CollapsibleBox>
+    {highlightMode != "testset helper" && (highlightClassify || highlightRetrieval) ? (
+      <AmountHighlighted tabId={tabId} />
+    ) : ""}
     {highlightMode == "testset helper" ? (
     <CollapsibleBox title="TestsetHelper">
       <TestsetHelperControls tabId={tabId}></TestsetHelperControls>
     </CollapsibleBox>
     ) : 
+    highlightRetrieval ?? true ? [
+      <CollapsibleBox key="retrieval_topic" title="Retrieval" className="Legend">
+        <Legend tabId={tabId} topics="classes_retrieval" flipVisibility={false} orderSwitch={false}></Legend>
+      </CollapsibleBox>
+    ] : 
+    highlightClassify ? [
     Array.isArray(classifierData?.classes_pos) && Array.isArray(classifierData?.classes_neg) ? [
-      <AmountHighlighted tabId={tabId} />,
-      highlightRetrieval ? (
-        <CollapsibleBox key="retrieval_topic" title="Retrieval" className="Legend">
-          <Legend tabId={tabId} topics="classes_retrieval" flipVisibility={false} orderSwitch={false}></Legend>
-        </CollapsibleBox>
-      ) : "",
-      highlightClassify ? [
       <CollapsibleBox key="interesting_topics" title="Interesting Topics" className="Legend">
         <Legend tabId={tabId} topics="classes_pos" flipVisibility={false} orderSwitch={true}></Legend>
       </CollapsibleBox>,
