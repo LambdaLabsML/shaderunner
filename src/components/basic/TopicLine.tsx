@@ -3,7 +3,7 @@ import Icon from './Icon';
 import { consistentColor } from '~util/DOM';
 import EditableText from './EditableText';
 
-const TopicLine = ({ topic, active, toggleHighlight, mouseOverHighlight, mouseOverHighlightFinish, onFocusHighlight, onTopicChange, onTopicDelete, onNextPrev, extraInfo=undefined }) => {
+const TopicLine = ({ topic, active, toggleHighlight, mouseOverHighlight, onFocusHighlight, onTopicChange, onTopicDelete, onNextPrev, extraInfo=undefined }) => {
   const [ settingsActive, setSettingsActive ] = useState(false);
   const [ editText, setEditText ] = useState(false);
 
@@ -23,7 +23,6 @@ const TopicLine = ({ topic, active, toggleHighlight, mouseOverHighlight, mouseOv
           style={{ backgroundColor: consistentColor(topic) }} 
           onClick={() => toggleHighlight(topic)} 
           onMouseOver={() => mouseOverHighlight(topic)} 
-          onMouseLeave={() => mouseOverHighlightFinish()}
         >
           <EditableText text={topic} onSubmit={(newtopic) => {setEditText(false); onTopicChange(topic, newtopic)}} wrapped={false} editable={editText}/>
           <span className="right">
