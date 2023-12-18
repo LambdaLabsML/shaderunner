@@ -4,7 +4,6 @@ import { highlightText, resetHighlights, textNodesNotUnderHighlight, surroundTex
 import { computeEmbeddingsCached, embeddingExists, VectorStore_fromClass2Embedding, type Metadata } from '~util/embedding'
 import { useStorage } from "@plasmohq/storage/hook";
 import { useStorage as _useStorage } from '~util/misc'
-import { useActiveState } from '~util/activeStatus'
 import HighlightStyler from '~components/HighlightStyler';
 import { useGlobalStorage } from '~util/useGlobalStorage';
 import Scroller from '~components/Scroller';
@@ -17,6 +16,7 @@ const isPromise = obj => !!obj && (typeof obj === 'object' || typeof obj === 'fu
 const Highlighter = () => {
     const [ tabId, setTabId ] = useState(null);
     const [
+      [active],
       [savedUrl],
       [statusEmbedding,setStatusEmbeddings],
       [,setStatusHighlight],
@@ -27,8 +27,7 @@ const Highlighter = () => {
       [highlightClassify],
       [retrievalK],
       [setGlobalStorage, connected]
-    ] = useGlobalStorage(tabId, "url", "status_embedding", "status_highlight", "classEmbeddings", "highlightAmount", "decisionEps", "highlightRetrieval", "highlightClassify", "retrievalK");
-    const [ url, isActive ] = useActiveState(window.location);
+    ] = useGlobalStorage(tabId, "active", "url", "status_embedding", "status_highlight", "classEmbeddings", "highlightAmount", "decisionEps", "highlightRetrieval", "highlightClassify", "retrievalK");
     const [ pageEmbeddings, setPageEmbeddings ] = useState({mode: "sentences", splits: [], splitEmbeddings: {}});
     const [ classifierData ] = useStorage("classifierData:"+tabId, {});
     const [ retrievalQuery ] = useStorage("retrievalQuery:"+tabId, null);
@@ -51,29 +50,24 @@ const Highlighter = () => {
 
     // init (make sure tabId is known, needed for messaging with other parts of this application)
     useEffect(() => {
-      if (!isActive) return;
-
       async function init() {
         const tabId = await chrome.runtime.sendMessage("get_tabid")
         setTabId(tabId);
       }
       init();
-    }, [isActive])
+    }, [])
 
         
     // start directly by getting page embeddings
     useEffect(() => {
-      if (!isActive || !tabId) return;
-
-      // reset only if we have a new url
-      if (url == savedUrl) return;
+      if (!active || !tabId) return;
 
       // data
       setGlobalStorage({
         message: "",
         status_embedding: ["checking", 0],
         title: document.title,
-        url: url,
+        url: window.location.hostname + window.location.pathname + window.location.search,
         _tabId: tabId
       })
 
@@ -83,12 +77,12 @@ const Highlighter = () => {
         await getPageEmbeddings(mode, setStatusEmbeddings);
       }
       init();
-    }, [isActive, tabId])
+    }, [active, tabId])
 
 
     // on every classifier change, recompute highlights
     useEffect(() => {
-      if(!tabId || !isActive || !connected || !classifierData.classes_pos) return;
+      if(!tabId || !active || !connected || !classifierData.classes_pos) return;
 
       const applyHighlight = () => {
         try {
@@ -98,12 +92,12 @@ const Highlighter = () => {
         }
       }
       applyHighlight()
-    }, [pageEmbeddings, connected, classifierData, isActive, retrievalQuery, highlightAmount, highlightRetrieval, highlightClassify, decisionEpsAmount, classEmbeddings, retrievalK])
+    }, [pageEmbeddings, connected, classifierData, active, retrievalQuery, highlightAmount, highlightRetrieval, highlightClassify, decisionEpsAmount, classEmbeddings, retrievalK])
 
 
     // on every classifier change, recompute class embeddings
     useEffect(() => {
-      if(!tabId || !isActive || !connected || !classifierData.classes_pos || !classifierData.classes_retrieval) return;
+      if(!tabId || !active || !connected || !classifierData.classes_pos || !classifierData.classes_retrieval) return;
 
       async function computeClassEmbeddings() {
         const classes_pos = classifierData.classes_pos;
@@ -114,7 +108,7 @@ const Highlighter = () => {
 
         const allclasses = [...classes_pos, ...classes_neg, ...classes_retrieval]
         // embeddings of classes (use cached / compute)
-        const classCollection = url + "|classes"
+        const classCollection = savedUrl + "|classes"
         if (classEmbeddings && allclasses.every(a => a in classEmbeddings)) {
           setStatusHighlight(["checking", 0, "using cache"]);
         } else {
@@ -124,7 +118,7 @@ const Highlighter = () => {
         }
       }
       computeClassEmbeddings()
-    }, [isActive, connected, classifierData, isActive])
+    }, [active, connected, classifierData])
 
 
 
@@ -139,7 +133,7 @@ const Highlighter = () => {
       if (pageEmbeddings.mode == mode && pageEmbeddings.finished) return pageEmbeddings;
 
       // if not in cache, check if database has embeddings
-      const exists = await embeddingExists(url as string)
+      const exists = await embeddingExists(savedUrl as string)
       const status_msg = exists ? "found database" : "";
       await onStatus(["computing", 0, status_msg])
 
@@ -151,7 +145,7 @@ const Highlighter = () => {
       let splitEmbeddings = {};
       const batchSize = exists ? 256 : 64;
       for(let i = 0; i < splits.length; i+= batchSize) {
-        const splitEmbeddingsBatch = await computeEmbeddingsCached(url as string, splits.slice(i, i+batchSize))
+        const splitEmbeddingsBatch = await computeEmbeddingsCached(savedUrl as string, splits.slice(i, i+batchSize))
         splitEmbeddings = {...splitEmbeddings, ...splitEmbeddingsBatch};
         await onStatus(["computing", Math.floor(i / splits.length * 100), status_msg])
         setPageEmbeddings({ splits: splits.slice(0, i+batchSize), splitEmbeddings, mode });
@@ -325,7 +319,7 @@ const Highlighter = () => {
 
       // in DEV mode, we also save the all the data
       const title = document.title;
-      const devOpts = DEV ? { DEV_highlighterData: { url, classifierData, splits, title }} : {};
+      const devOpts = DEV ? { DEV_highlighterData: { savedUrl, classifierData, splits, title }} : {};
 
       if (statusEmbedding && statusEmbedding[1] == 100)
         setStatusHighlight(["loaded", 100]) // bug: needs to be outside due to concurrency conflict of this variable

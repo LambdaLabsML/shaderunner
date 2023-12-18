@@ -31,7 +31,7 @@ const StatusIndicator = ({name, status, size=4}) => {
 // mount in sidepanel
 const Sidepanel = () => {
   const tabId = new URL(window.location.href).searchParams.get("tabId")
-  const [[url], [statusEmbedding, setStatusEmbedding], [statusClassifier, setStatusClassifier], [statusHighlight, setStatusHighlight], [highlightMode], [highlightRetrieval], [highlightClassify]] = useGlobalStorage(tabId, "url", "status_embedding", "status_classifier", "status_highlight", "highlightMode", "highlightRetrieval", "highlightClassify")
+  const [[active, setActive], [url], [statusEmbedding, setStatusEmbedding], [statusClassifier, setStatusClassifier], [statusHighlight, setStatusHighlight], [highlightMode], [highlightRetrieval], [highlightClassify], [, isSynced]] = useGlobalStorage(tabId, "active", "url", "status_embedding", "status_classifier", "status_highlight", "highlightMode", "highlightRetrieval", "highlightClassify")
   const [ classifierData ] = useStorage("classifierData:"+tabId, {});
   const [apiworks] = useStorage('apiworks', (v) => v === undefined ? false : v)
 
@@ -39,6 +39,12 @@ const Sidepanel = () => {
   // ======= //
   // Effects //
   // ======= //
+
+  // init: activat the plugin for the current tab
+  useEffect(() => {
+    if(!isSynced) return;
+    chrome.runtime.connect({ name: `shaderunnerSidePanel_tabId=${tabId}`});
+  }, [isSynced, active])
 
   // add darkmode background to sidepannel
   useEffect(() => {
@@ -67,8 +73,6 @@ const Sidepanel = () => {
   // ====== //
   // Render //
   // ====== //
-
-  console.log(url, classifierData)
 
   if (!apiworks)
   return (<div className="ShadeRunner-Sidepanel">
