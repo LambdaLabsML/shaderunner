@@ -370,7 +370,7 @@ const Highlighter = () => {
       const devOpts = DEV ? { DEV_highlighterData: { url, classifierData, splits, title }} : {};
 
       // if we are in retrieval-only mode, jump to first result
-      const jumpOp = !classifyMode ? {ScrollerCommand: {"selector": "span.shaderunner-highlight.show.highlightclass-0", "cmd": "first"}} : {}
+      const jumpOp = !classifyMode ? {scrollerCommand: {"selector": "span.shaderunner-highlight.show.highlightclass-0", "cmd": "first"}} : {}
 
       if (statusEmbedding && statusEmbedding[1] == 100)
         setStatusHighlight(["loaded", 100]) // bug: needs to be outside due to concurrency conflict of this variable

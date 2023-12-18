@@ -24,8 +24,8 @@ const Scroller = ({tabId}) => {
 
         // adapt index of selector
         if (!currentSelector || currentSelector[0] != command.selector)
-            currentSelector = [command.selector, command.cmd == "next" ? -1 : max_split_num];
-        const newIndex = Math.max(0, Math.min( max_split_num, currentSelector[1] + (command.cmd == "next" ? 1 : -1)));
+            currentSelector = [command.selector, command.cmd == "first" ? 0 : command.cmd == "next" ? -1 : max_split_num];
+        const newIndex = Math.max(0, Math.min( max_split_num, currentSelector[1] + (command.cmd == "first" ? 0 : command.cmd == "next" ? 1 : -1)));
         currentSelector = [currentSelector[0], newIndex]
 
         // focus chosen highlight
