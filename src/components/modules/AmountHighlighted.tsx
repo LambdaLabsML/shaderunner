@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useGlobalStorage } from '~util/useGlobalStorage';
 
 const AmountHighlighted = ({tabId}) => {
-  const [[highlightAmount, setHighlightAmount], [highlightClassify], [highlightRetrieval], [retrievalK, setRetrievalK], [, isSynced]] = useGlobalStorage(tabId, "highlightAmount", "highlightClassify", "highlightRetrieval", "retrievalK")
+  const [[highlightAmount, setHighlightAmount], [highlightClassify], [highlightRetrieval], [retrievalK, setRetrievalK], [classifierData], [, isSynced]] = useGlobalStorage(tabId, "highlightAmount", "highlightClassify", "highlightRetrieval", "retrievalK", "classifierData")
   const [[decisionEps, setDecisionEps]] = useGlobalStorage(tabId, "decisionEps")
   const [amount_slider, set_amount_slider] = useState(100);
   const [quality_slider, set_quality_slider] = useState(50);
@@ -61,7 +61,7 @@ const AmountHighlighted = ({tabId}) => {
       </div>
     </div>
     </> : ""}
-    {highlightRetrieval ? <>
+    {highlightRetrieval && classifierData && "classes_retrieval" in classifierData && classifierData.classes_retrieval.length > 0 ? <>
       <div className="slider">
       <input
         type="range"

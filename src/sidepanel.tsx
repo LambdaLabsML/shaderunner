@@ -123,7 +123,7 @@ const Sidepanel = () => {
       <TestsetHelperControls tabId={tabId}></TestsetHelperControls>
     </CollapsibleBox>
     ) : 
-    highlightRetrieval ?? true ? [
+    highlightRetrieval && classifierData && "classes_retrieval" in classifierData && classifierData.classes_retrieval.length > 0 ? [
       <CollapsibleBox key="retrieval_topic" title="Retrieval" className="Legend">
         <Legend tabId={tabId} topics="classes_retrieval" flipVisibility={false} orderSwitch={false}></Legend>
       </CollapsibleBox>
