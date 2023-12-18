@@ -1,6 +1,6 @@
 import defaults from "~defaults";
 import { Storage } from "@plasmohq/storage"
-import { notifyListeners } from "~background/tabData";
+import { getData, notifyListeners } from "~background/tabData";
 const storage = new Storage()
 
 const DEV = process.env.NODE_ENV == "development";
@@ -35,10 +35,16 @@ chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse){
 
 
 
-// open sidePanel if settings requires so
+// toggle sidePanel
 chrome.action.onClicked.addListener(async (tab) => {
     if (!tab.url) return;
-    chrome.sidePanel.open({ windowId: tab.windowId });
+    const active = getData(tab.id, ["active"]).active;
+    if (!active)
+        chrome.sidePanel.open({ windowId: tab.windowId });
+    else if (active) {
+        await chrome.sidePanel.setOptions({ tabId: tab.id, enabled: false });
+        await chrome.sidePanel.setOptions({ tabId: tab.id, path: 'sidepanel.html?tabId='+tab.id, enabled: true });
+    }
 })
 
 // toggle active status when sidePanel is opened/closed
