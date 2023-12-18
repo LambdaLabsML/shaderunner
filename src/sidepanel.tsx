@@ -52,7 +52,7 @@ const Sidepanel = () => {
     style.textContent = `
     @media (prefers-color-scheme: dark) {
       body {
-        background: rgba(53,54,58);
+        background: rgba(60,60,60);
       }
     }";
 
