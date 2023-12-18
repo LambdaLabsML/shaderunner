@@ -2,15 +2,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { useGlobalStorage } from '~util/useGlobalStorage';
 import { consistentColor } from '~util/DOM';
-import { useStorage as _useStorage } from '~util/misc';
-import { useStorage } from '@plasmohq/storage/hook';
 import { VectorStore_fromClass2Embedding } from '~util/embedding';
 
 
 
 const ClassDimRed = ({ tabId }) => {
-  const [ classifierData ] = useStorage("classifierData:"+tabId, {});
-  const [ [classEmbeddings] ] = useGlobalStorage(tabId, "classEmbeddings");
+  const [ [classEmbeddings], [classifierData] ] = useGlobalStorage(tabId, "classEmbeddings", "classifierData");
   const svgRef = useRef();
   const [ settings, setSettings ]= useState(null);
   const maxTicks = 300;

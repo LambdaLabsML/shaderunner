@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { useGlobalStorage } from '~util/useGlobalStorage';
-import { useStorage as _useStorage } from '~util/misc'
-import { useStorage } from "@plasmohq/storage/hook";
 import SwitchInput from "~components/basic/SwitchInput";
 import TopicLine from '../basic/TopicLine';
 import Icon from '~components/basic/Icon';
@@ -9,16 +7,15 @@ import { sendToBackground } from '@plasmohq/messaging';
 
 
 const Legend = ({tabId, topics, flipVisibility, orderSwitch}) => {
-  //const [retrievalQuery] = useStorage("retrievalQuery:"+tabId, null);
-  const [classifierData, setClassifierData] = useStorage("classifierData:"+tabId, {});
   const [
     [ url ],
     [ topicStyles, setTopicStyles ],
     [ activeTopic ],
     [ topicCounts ],
     [ , setScrollerCommand ],
+    [ classifierData, setClassifierData ],
     [ setGlobalStorage ]
-  ] = useGlobalStorage(tabId, "url", "highlightTopicStyles", "highlightActiveTopic", "topicCounts", "ScrollerCommand")
+  ] = useGlobalStorage(tabId, "url", "highlightTopicStyles", "highlightActiveTopic", "topicCounts", "ScrollerCommand", "classifierData")
   const [ sortBy, setSortBy ] = useState(undefined)
   const allclasses = classifierData && Array.isArray(classifierData.classes_pos) && Array.isArray(classifierData.classes_neg) ? [...(classifierData.classes_pos||[]), ...(classifierData.classes_neg||[]), ...(classifierData.classes_retrieval||[])] : [];
 
@@ -34,8 +31,8 @@ const Legend = ({tabId, topics, flipVisibility, orderSwitch}) => {
       return !_topicStyles || !(topic in _topicStyles) || _topicStyles[topic] == "highlight"
   }
 
-  const interesting = classifierData[topics];
-  const uninteresting = classifierData[topics == "classes_pos" ? "classes_neg" : "classes_pos"]
+  const interesting = classifierData ? classifierData[topics] : [];
+  const uninteresting = classifierData ? classifierData[topics == "classes_pos" ? "classes_neg" : "classes_pos"] : [];
   const suggestNewTopic = async () => (await sendToBackground({ name: "llm_newtopic", body: {url, interesting, uninteresting}}))
 
   // --------- //
@@ -133,11 +130,11 @@ const Legend = ({tabId, topics, flipVisibility, orderSwitch}) => {
   // render //
   // ------ //
 
-  if (!Array.isArray(classifierData[topics]) || classifierData[topics].length == 0)
+  if (!classifierData || !Array.isArray(classifierData[topics]) || classifierData[topics].length == 0)
     return "";
 
   function sortByCounts (c: string,d: string) { return topicCounts[d] - topicCounts[c] };
-  const numStyles = topicStyles ? classifierData[topics].filter(t => t in topicStyles).length : 0;
+  const numStyles = topicStyles && classifierData ? classifierData[topics].filter(t => t in topicStyles).length : 0;
   let selected : string;
     if(flipVisibility)
       selected = numStyles == classifierData[topics].length ? "show all" : numStyles == 0 ? "hide all" : "custom selection"

@@ -31,8 +31,7 @@ const StatusIndicator = ({name, status, size=4}) => {
 // mount in sidepanel
 const Sidepanel = () => {
   const tabId = new URL(window.location.href).searchParams.get("tabId")
-  const [[active, setActive], [url], [statusEmbedding, setStatusEmbedding], [statusClassifier, setStatusClassifier], [statusHighlight, setStatusHighlight], [highlightMode], [highlightRetrieval], [highlightClassify], [, isSynced]] = useGlobalStorage(tabId, "active", "url", "status_embedding", "status_classifier", "status_highlight", "highlightMode", "highlightRetrieval", "highlightClassify")
-  const [ classifierData ] = useStorage("classifierData:"+tabId, {});
+  const [[active, setActive], [url], [statusEmbedding, setStatusEmbedding], [statusClassifier, setStatusClassifier], [statusHighlight, setStatusHighlight], [highlightMode], [highlightRetrieval], [highlightClassify], [classifierData], [, isSynced]] = useGlobalStorage(tabId, "active", "url", "status_embedding", "status_classifier", "status_highlight", "highlightMode", "highlightRetrieval", "highlightClassify", "classifierData")
   const [apiworks] = useStorage('apiworks', (v) => v === undefined ? false : v)
 
 
@@ -120,7 +119,7 @@ const Sidepanel = () => {
       <TestsetHelperControls tabId={tabId}></TestsetHelperControls>
     </CollapsibleBox>
     ) : 
-    Array.isArray(classifierData.classes_pos) && Array.isArray(classifierData.classes_neg) ? [
+    Array.isArray(classifierData?.classes_pos) && Array.isArray(classifierData?.classes_neg) ? [
       <AmountHighlighted tabId={tabId} />,
       highlightRetrieval ? (
         <CollapsibleBox key="retrieval_topic" title="Retrieval" className="Legend">
@@ -144,7 +143,7 @@ const Sidepanel = () => {
       </CollapsibleBox>
       ] : []
     ] : []}
-    {!(Array.isArray(classifierData.classes_pos) && Array.isArray(classifierData.classes_neg)) ? (
+    {!(Array.isArray(classifierData?.classes_pos) && Array.isArray(classifierData?.classes_neg)) ? (
     <div className="logoContainer">
       <img src={Logo} alt="Some pretty cool image" />
       <br/>

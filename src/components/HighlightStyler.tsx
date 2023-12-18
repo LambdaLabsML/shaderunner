@@ -1,13 +1,10 @@
 import { useEffect, useState } from "react"
-import { useStorage } from "@plasmohq/storage/hook";
 import { consistentColor } from "~util/DOM";
-import { useStorage as _useStorage } from '~util/misc'
 import { useGlobalStorage } from "~util/useGlobalStorage";
 
 
 const HighlightStyler = ({tabId}) => {
-    const [ [highlightMode], [highlightRetrieval], [highlightDefaultStyle], [highlightDefaultNegStyle], [highlightActiveStyle], [activeTopic], [topicStyles] ] = useGlobalStorage(tabId, "highlightMode", "highlightRetrieval", "highlightDefaultStyle", "highlightDefaultNegStyle", "highlightActiveStyle", "highlightActiveTopic", "highlightTopicStyles")
-    const [ classifierData ] = useStorage("classifierData:"+tabId, {});
+    const [ [highlightMode], [highlightRetrieval], [highlightDefaultStyle], [highlightDefaultNegStyle], [highlightActiveStyle], [activeTopic], [topicStyles], [classifierData] ] = useGlobalStorage(tabId, "highlightMode", "highlightRetrieval", "highlightDefaultStyle", "highlightDefaultNegStyle", "highlightActiveStyle", "highlightActiveTopic", "highlightTopicStyles", "classifierData")
     const [ styleEl, setStyleEl ] = useState(null);
 
     // ------- //
@@ -25,7 +22,7 @@ const HighlightStyler = ({tabId}) => {
 
     // adapt style dynamically according to classifier & topicStyles 
     useEffect(() => {
-        if (!Array.isArray(classifierData.classes_pos) || !Array.isArray(classifierData.classes_neg) || !Array.isArray(classifierData.classes_retrieval) || !styleEl) return;
+        if (!classifierData || !Array.isArray(classifierData.classes_pos) || !Array.isArray(classifierData.classes_neg) || !Array.isArray(classifierData.classes_retrieval) || !styleEl) return;
 
         const mode = highlightMode || "highlight";
 
@@ -127,7 +124,7 @@ const HighlightStyler = ({tabId}) => {
 
         // apply styles
         styleEl.textContent = focusModeStyle + colorStyle + scrollFocusStyle;
-    }, [classifierData.classes_pos, styleEl, highlightMode, highlightDefaultStyle, highlightRetrieval, activeTopic, topicStyles])
+    }, [classifierData, styleEl, highlightMode, highlightDefaultStyle, highlightRetrieval, activeTopic, topicStyles])
 
 
     return "";

@@ -1,10 +1,9 @@
-import { useStorage } from '@plasmohq/storage/hook';
 import React from 'react';
-import {useStorage as _useStorage} from '~util/misc';
+import { useGlobalStorage } from '~util/useGlobalStorage';
 
 
 const ThoughtInfo = ({tabId}) => {
-  const [classifierData] = useStorage("classifierData:"+tabId, {});
+  const [[classifierData]] = useGlobalStorage(tabId , "classifierData");
 
   return [
     <span><b>Scope</b> {classifierData?.scope}</span>,

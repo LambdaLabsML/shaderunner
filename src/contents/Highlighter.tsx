@@ -3,7 +3,6 @@ import { getMainContent, extractSplits, mapSplitsToTextnodes } from '~util/extra
 import { highlightText, resetHighlights, textNodesNotUnderHighlight, surroundTextNode } from '~util/DOM'
 import { computeEmbeddingsCached, embeddingExists, VectorStore_fromClass2Embedding, type Metadata } from '~util/embedding'
 import { useStorage } from "@plasmohq/storage/hook";
-import { useStorage as _useStorage } from '~util/misc'
 import HighlightStyler from '~components/HighlightStyler';
 import { useGlobalStorage } from '~util/useGlobalStorage';
 import Scroller from '~components/Scroller';
@@ -26,11 +25,11 @@ const Highlighter = () => {
       [highlightRetrieval],
       [highlightClassify],
       [retrievalK],
+      [classifierData],
+      [retrievalQuery],
       [setGlobalStorage, connected]
-    ] = useGlobalStorage(tabId, "active", "url", "status_embedding", "status_highlight", "classEmbeddings", "highlightAmount", "decisionEps", "highlightRetrieval", "highlightClassify", "retrievalK");
+    ] = useGlobalStorage(tabId, "active", "url", "status_embedding", "status_highlight", "classEmbeddings", "highlightAmount", "decisionEps", "highlightRetrieval", "highlightClassify", "retrievalK", "classifierData", "retrievalQuery");
     const [ pageEmbeddings, setPageEmbeddings ] = useState({mode: "sentences", splits: [], splitEmbeddings: {}});
-    const [ classifierData ] = useStorage("classifierData:"+tabId, {});
-    const [ retrievalQuery ] = useStorage("retrievalQuery:"+tabId, null);
 
     // -------- //
     // settings //
@@ -82,7 +81,7 @@ const Highlighter = () => {
 
     // on every classifier change, recompute highlights
     useEffect(() => {
-      if(!tabId || !active || !connected || !classifierData.classes_pos) return;
+      if(!tabId || !active || !connected || !classifierData?.classes_pos) return;
 
       const applyHighlight = () => {
         try {
@@ -97,7 +96,7 @@ const Highlighter = () => {
 
     // on every classifier change, recompute class embeddings
     useEffect(() => {
-      if(!tabId || !active || !connected || !classifierData.classes_pos || !classifierData.classes_retrieval) return;
+      if(!tabId || !active || !connected || !classifierData?.classes_pos || !classifierData?.classes_retrieval) return;
 
       async function computeClassEmbeddings() {
         const classes_pos = classifierData.classes_pos;

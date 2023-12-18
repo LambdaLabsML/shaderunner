@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useStorage as _useStorage, random } from '~util/misc'
+import { random } from '~util/misc'
 import { useStorage } from "@plasmohq/storage/hook";
 import { MSG_QUERY2CLASS } from "../../util/messages";
 import { sendToBackground } from '@plasmohq/messaging';
@@ -9,11 +9,7 @@ import { useGlobalStorage } from '~util/useGlobalStorage';
 
 // the actual shaderunner bar
 const MainInput = ({tabId}) => {
-    const [ [title, setTitle], [url, setUrl], [statusClassifier, setStatusClassifier], [, isSynced]] = useGlobalStorage(tabId, "title", "url", "status_classifier")
-    const [ savedHighlightQuery, setSavedHighlightQuery ] = useStorage("savedHighlightQuery:"+tabId, "");
-    const [ classifierData, setClassifierData] = useStorage("classifierData:"+tabId, {});
-    const [ retrievalQuery, setRetrievalQuery] = useStorage("retrievalQuery:"+tabId, null);
-
+    const [ [title, setTitle], [url, setUrl], [statusClassifier, setStatusClassifier], [ savedHighlightQuery, setSavedHighlightQuery ], [ classifierData, setClassifierData], [ retrievalQuery, setRetrievalQuery], [, isSynced]] = useGlobalStorage(tabId, "title", "url", "status_classifier", "savedHighlightQuery", "classifierData", "retrievalQuery")
 
     // -------- //
     // Settings //
