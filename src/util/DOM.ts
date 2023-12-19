@@ -219,4 +219,22 @@ const consistentColor = (s: string, alpha=0.7, saturation=80) => {
 }
 
 
-export { textNodesUnderElem, splitIntoWords, findTextSlow, findTextFast, highlightText, resetHighlights, findMainContent, consistentColor, defaultHighlightClass, textNodesNotUnderHighlight, surroundTextNode };
+function getTextNodesIn(element) {
+  let textNodes = [];
+  
+  function getTextNodes(node) {
+      // Check if the current node is a text node
+      if (node.nodeType === Node.TEXT_NODE) {
+          textNodes.push(node);
+      } else {
+          // Recursively check for text nodes in the child nodes
+          node.childNodes.forEach(getTextNodes);
+      }
+  }
+
+  getTextNodes(element);
+  return textNodes;
+}
+
+
+export { textNodesUnderElem, splitIntoWords, highlightText, resetHighlights, findMainContent, consistentColor, defaultHighlightClass, textNodesNotUnderHighlight, surroundTextNode, getTextNodesIn };

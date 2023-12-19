@@ -23,7 +23,8 @@ const Modes = ({tabId}) => {
 
     setGlobalSorage({
       highlightClassify: highlightClassify || false,
-      highlightRetrieval: highlightRetrieval || true
+      highlightRetrieval: highlightRetrieval || true,
+      summarizeParagraphs: false
     })
   }, [isSynced]);
 

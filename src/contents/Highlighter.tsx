@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getMainContent, extractSplits, mapSplitsToTextnodes } from '~util/extractContent'
-import { highlightText, resetHighlights, textNodesNotUnderHighlight, surroundTextNode } from '~util/DOM'
+import { highlightText, resetHighlights, textNodesNotUnderHighlight, surroundTextNode, getTextNodesIn } from '~util/DOM'
 import { computeEmbeddingsCached, embeddingExists, VectorStore_fromClass2Embedding, type Metadata } from '~util/embedding'
 import { useStorage } from "@plasmohq/storage/hook";
 import HighlightStyler from '~components/HighlightStyler';
@@ -143,14 +143,14 @@ const Highlighter = () => {
         const summary = await sendToBackground({name: "llm_summarize", body: {text: split}})
         const summaries = splitMarkdownList(summary);
         container.classList.remove("loading");
-        const el = document.querySelector("div.shaderunner-summarized[summaryid='"+i+"'] .summary");
+        const el = document.querySelector("p.shaderunner-summarized[summaryid='"+i+"'] .summary");
         el.innerHTML = "<ul>" + summaries.map(s => "<li>"+s+"</li>").join("\n") + "</ul>";
       }
       async function summarize() {
         for(let i=0; i<splits.length; i++) {
-          const container = document.querySelector("div.shaderunner-summarized[summaryid='"+i+"']");
+          const container = document.querySelector("p.shaderunner-summarized[summaryid='"+i+"']");
           if (!container) continue;
-          summarize_and_replace(container, i);
+          await summarize_and_replace(container, i);
         }
       }
       summarize();
@@ -260,54 +260,35 @@ const Highlighter = () => {
 
     const init_summary = async () => {
       const mainel = getMainContent();
-      const splits = extractSplits("paragraphs", mainel).filter(s => s.trim().endsWith(".") && s.length > 150)
-      let {splitDetails, textNodes} = mapSplitsToTextnodes(splits, mainel, -1);//2000)
-
-      // streamlined text highlighting
-      let currentTextNodes = textNodes.slice();
-      let node_offset = 0;
-      let textoffset = 0;
-      for (let i = 0; i < splits.length; i++) {
-        const details = splitDetails[i];
-        if (!details) continue;
-        let true_from_node_pos = details.from_text_node + node_offset;
-        let true_to_node_pos = details.to_text_node + node_offset;
-        const num_textnodes = 1 + details.to_text_node - details.from_text_node
-        const textNodesSubset = currentTextNodes.slice(true_from_node_pos, true_to_node_pos + 1);
-        const highlightClass = "hidden";
-        const relative_details = {
-          from_text_node_char_start: details.from_text_node_char_start - textoffset,
-          to_text_node_char_end: details.to_text_node_char_end - (details.from_text_node == details.to_text_node ? textoffset : 0),
-          from_text_node: 0,
-          to_text_node: details.to_text_node - details.from_text_node
-        }
-        const { replacedNodes, nextTextOffset } = highlightText(relative_details, textNodesSubset, highlightClass, (span) => {
-          span.setAttribute("summaryid", i);
-        }, "shaderunner-origtext");
-
-        const summarizedEl = document.createElement('div');
+      const pElements = mainel.querySelectorAll('p');
+      const splits = [];
+      const textNodes = [];
+    
+      pElements.forEach((pElement, index) => {
+        // Prepend the shaderunner-summarized div
+        const summarizedEl = document.createElement('p');
         summarizedEl.innerHTML = `<div class='logoContainer'><img src='${Logo}'/></div><span class='summary'>Loading</span>`;
-        summarizedEl.classList.add("shaderunner-summarized");
-        summarizedEl.classList.add("loading");
-        summarizedEl.setAttribute("summaryid", i);
+        summarizedEl.classList.add("shaderunner-summarized", "loading");
+        summarizedEl.setAttribute("summaryid", index);
+        pElement.parentNode.insertBefore(summarizedEl, pElement);
+    
+        // Adjust mapSplitsToTextNodes and text highlighting for each <p> element
+        const split = pElement.textContent
+        splits.push(split);
+        textNodes.push(getTextNodesIn(pElement));
+
         function toggleShowOriginal() {
           this.parentElement.classList.toggle('showoriginal'); // 'this' now refers to 'logoContainer'
           const summaryId = this.parentNode.getAttribute('summaryid'); // Get summaryid from parent
-          const sameIdElements = document.querySelectorAll(`.shaderunner-origtext[summaryid="${summaryId}"]`);
+          const sameIdElements = document.querySelectorAll(`p.original-text[summaryid="${summaryId}"]`);
           sameIdElements.forEach(elem => elem.classList.toggle('showoriginal'));
         }
         const logoContainer = summarizedEl.querySelector('.logoContainer');
         logoContainer.addEventListener('click', toggleShowOriginal);
-        replacedNodes[0].parentElement.parentElement.insertBefore(summarizedEl, replacedNodes[0].parentElement);
 
-        currentTextNodes.splice(true_from_node_pos, num_textnodes, ...replacedNodes);
-        node_offset += replacedNodes.length - num_textnodes
-        if (i < splits.length - 1 && splitDetails[i + 1] && splitDetails[i + 1].from_text_node == details.to_text_node && nextTextOffset > 0) {
-          textoffset = nextTextOffset + (details.to_text_node == details.from_text_node ? textoffset : 0);
-        } else {
-          textoffset = 0;
-        }
-      }
+        pElement.setAttribute("summaryid", index)
+        pElement.classList.add("original-text")
+      });
 
       setSummaryInitalized({splits});
     };
