@@ -31,7 +31,7 @@ const extractSplits = (type: string, element: HTMLElement) => {
 };
 
 
-const mapSplitsToTextnodes = (splits: string[], element: HTMLElement, type: string) => {
+const mapSplitsToTextnodes = (splits: string[], element: HTMLElement, lookAheadAdditional=-1) => {
 
   // extract merged text from textContent
   let allText = '';
@@ -68,19 +68,21 @@ const mapSplitsToTextnodes = (splits: string[], element: HTMLElement, type: stri
   }
 
   let previousEnd = 0;
+  let foundprevious = false;
   const splitDetails = splits.map(split => {
 
     // Limit the search to the maximum length of the split
-    const lookAhead = split.length + 1000;
-    const searchSpace = allText.substring(previousEnd)//, previousEnd + lookAhead); // assuming splits contain whitespace
+    const searchSpace = !foundprevious || lookAheadAdditional < 0 ? allText.substring(previousEnd) : allText.substring(previousEnd, previousEnd + split.length + lookAheadAdditional); // assuming splits contain whitespace
     const match = fuzzyMatch(searchSpace, split.trim().toLowerCase());
 
     // skip textnode if distance is greater than 10% of the split
     // in this case we try to find the next position of the next textnode
     // TODO: see english_people wiki page. alternatively: use fastTextFind method
     if (match.distance >= split.length * 0.1) {
+        foundprevious = false;
         return null;
     }
+    foundprevious = true;
 
     const globalStart = previousEnd + match.start;
     const globalEnd = previousEnd + match.end;

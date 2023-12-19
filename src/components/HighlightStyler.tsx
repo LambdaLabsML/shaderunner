@@ -22,10 +22,10 @@ const HighlightStyler = ({tabId}) => {
 
     // adapt style dynamically according to classifier & topicStyles 
     useEffect(() => {
-        if (!classifierData || ((!Array.isArray(classifierData.classes_pos) || !Array.isArray(classifierData.classes_neg)) && !Array.isArray(classifierData.classes_retrieval)) || !styleEl) return;
-        const classes_pos = classifierData.classes_pos || [];
-        const classes_neg = classifierData.classes_neg || [];
-        const classes_retrieval = classifierData.classes_retrieval || [];
+        if (!styleEl) return;
+        const classes_pos = classifierData?.classes_pos || [];
+        const classes_neg = classifierData?.classes_neg || [];
+        const classes_retrieval = classifierData?.classes_retrieval || [];
 
         const mode = highlightMode || "highlight";
 
@@ -94,6 +94,55 @@ const HighlightStyler = ({tabId}) => {
             }
         `
 
+        // summary mode: hide summaries by default
+        const summaryStyle = `
+            div.shaderunner-summarized {
+                position: relative;
+                background: rgba(0,0,50,0.1);
+            }
+
+            @keyframes opacityAnimation {
+                0% { opacity: 1; }
+                50% { opacity: 0.5; }
+                100% { opacity: 1; }
+            }
+
+            div.shaderunner-summarized.loading {
+                padding: 0.25em 0.25em;
+                background: rgba(0,0,0,0.1);
+                border-radius: 4px;
+                animation: opacityAnimation 3s linear infinite;
+                color: #8136e2;
+            }
+
+            div.shaderunner-summarized div.logoContainer {
+                position: absolute;
+                margin-left: -2em;
+            }
+            div.shaderunner-summarized.loading div.logoContainer {
+                animation: opacityAnimation 3s linear infinite;
+            }
+
+            div.shaderunner-summarized div.logoContainer img {
+                width: 20px;
+            }
+
+            span.shaderunner-origtext {
+                display: none;
+            }
+
+            span.shaderunner-origtext.showoriginal {
+                display: inline;
+            }
+            div.shaderunner-summarized.showoriginal .summary {
+                display: none;
+            }
+
+            div.shaderunner-summarized .summary ul {
+                list-style: disc;
+            }
+        `
+
         const scrollFocusStyle = `
             span.shaderunner-highlight.transparent {
                 background: transparent;
@@ -126,7 +175,7 @@ const HighlightStyler = ({tabId}) => {
         ` 
 
         // apply styles
-        styleEl.textContent = focusModeStyle + colorStyle + scrollFocusStyle;
+        styleEl.textContent = focusModeStyle + colorStyle + scrollFocusStyle + summaryStyle;
     }, [classifierData, styleEl, highlightMode, highlightDefaultStyle, highlightRetrieval, activeTopic, topicStyles])
 
 

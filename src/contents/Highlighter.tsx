@@ -10,10 +10,19 @@ import TestsetHelper from '~components/TestsetHelper';
 import { sendToBackground } from '@plasmohq/messaging';
 import { MSG_QUERY2CLASS } from '~util/messages';
 import { random } from '~util/misc';
+import Logo from "data-base64:../assets/logo.png"
 
 const DEV = process.env.NODE_ENV == "development";
 
 const isPromise = obj => !!obj && (typeof obj === 'object' || typeof obj === 'function') && typeof obj.then === 'function';
+
+function splitMarkdownList(markdown) {
+  const lines = markdown.split('\n');
+  return lines
+      .filter(line => line.trim().startsWith('-'))
+      .map(line => line.trim().substring(2).trim());
+}
+
 
 const Highlighter = () => {
     const [ tabId, setTabId ] = useState(null);
@@ -32,9 +41,11 @@ const Highlighter = () => {
       [retrievalK],
       [classifierData, setClassifierData],
       [savedHighlightQuery],
+      [summarizeParagraphs],
       [setGlobalStorage, isSynced]
-    ] = useGlobalStorage(tabId, "active", "url", "title", "status_embedding", "status_highlight", "status_classifier", "classEmbeddings", "highlightAmount", "decisionEps", "highlightRetrieval", "highlightClassify", "retrievalK", "classifierData", "savedHighlightQuery");
+    ] = useGlobalStorage(tabId, "active", "url", "title", "status_embedding", "status_highlight", "status_classifier", "classEmbeddings", "highlightAmount", "decisionEps", "highlightRetrieval", "highlightClassify", "retrievalK", "classifierData", "savedHighlightQuery", "summarizeParagraphs");
     const [ pageEmbeddings, setPageEmbeddings ] = useState({mode: "sentences", splits: [], splitEmbeddings: {}});
+    const [ summaryInitalized, setSummaryInitalized ] = useState(false);
 
     // -------- //
     // settings //
@@ -111,19 +122,51 @@ const Highlighter = () => {
     }, [active, tabId])
 
 
+    // summarize if requested by user
+    useEffect(() => {
+      if(!tabId || !active || !isSynced || !summarizeParagraphs || summaryInitalized) return;
+      init_summary()
+    }, [tabId, active, isSynced, summarizeParagraphs]);
+
+
+    // summarize if requested by user
+    useEffect(() => {
+      if (!summaryInitalized) return;
+      const splits = summaryInitalized.splits;
+
+      async function summarize_and_replace(container, i) {
+        const split = splits[i];
+        const summary = await sendToBackground({name: "llm_summarize", body: {text: split}})
+        const summaries = splitMarkdownList(summary);
+        container.classList.remove("loading");
+        const el = document.querySelector("div.shaderunner-summarized[summaryid='"+i+"'] .summary");
+        el.innerHTML = "<ul>" + summaries.map(s => "<li>"+s+"</li>").join("\n") + "</ul>";
+      }
+      async function summarize() {
+        for(let i=0; i<splits.length; i++) {
+          const container = document.querySelector("div.shaderunner-summarized[summaryid='"+i+"']");
+          if (!container) continue;
+          summarize_and_replace(container, i);
+        }
+      }
+      summarize();
+    }, [summaryInitalized]);
+
+
     // on every classifier change, recompute highlights
     useEffect(() => {
-      if(!tabId || !active || !isSynced || (!classifierData?.classes_pos && !classifierData?.classes_retrieval)) return;
+      if(!tabId || !active || !isSynced) return;
 
       const applyHighlight = () => {
         try {
-          highlight()
+          if (!classifierData?.classes_pos && !classifierData?.classes_retrieval)
+            highlight()
         } catch (error) {
           console.error('Error in applyHighlight:', error);
         }
       }
       applyHighlight()
-    }, [pageEmbeddings, isSynced, classifierData, active, highlightAmount, highlightRetrieval, highlightClassify, decisionEpsAmount, classEmbeddings, retrievalK])
+    }, [pageEmbeddings, isSynced, classifierData, active, highlightAmount, highlightRetrieval, highlightClassify, decisionEpsAmount, classEmbeddings, retrievalK, summarizeParagraphs])
 
 
     // on every classifier change, recompute class embeddings
@@ -194,6 +237,61 @@ const Highlighter = () => {
     }
 
 
+    const init_summary = async () => {
+      const mainel = getMainContent();
+      const splits = extractSplits("paragraphs", mainel).filter(s => s.trim().endsWith(".") && s.length > 150)
+      let {splitDetails, textNodes} = mapSplitsToTextnodes(splits, mainel, -1);//2000)
+
+      // streamlined text highlighting
+      let currentTextNodes = textNodes.slice();
+      let node_offset = 0;
+      let textoffset = 0;
+      for (let i = 0; i < splits.length; i++) {
+        const details = splitDetails[i];
+        if (!details) continue;
+        let true_from_node_pos = details.from_text_node + node_offset;
+        let true_to_node_pos = details.to_text_node + node_offset;
+        const num_textnodes = 1 + details.to_text_node - details.from_text_node
+        const textNodesSubset = currentTextNodes.slice(true_from_node_pos, true_to_node_pos + 1);
+        const highlightClass = "hidden";
+        const relative_details = {
+          from_text_node_char_start: details.from_text_node_char_start - textoffset,
+          to_text_node_char_end: details.to_text_node_char_end - (details.from_text_node == details.to_text_node ? textoffset : 0),
+          from_text_node: 0,
+          to_text_node: details.to_text_node - details.from_text_node
+        }
+        const { replacedNodes, nextTextOffset } = highlightText(relative_details, textNodesSubset, highlightClass, (span) => {
+          span.setAttribute("summaryid", i);
+        }, "shaderunner-origtext");
+
+        const summarizedEl = document.createElement('div');
+        summarizedEl.innerHTML = `<div class='logoContainer'><img src='${Logo}'/></div><span class='summary'>Loading</span>`;
+        summarizedEl.classList.add("shaderunner-summarized");
+        summarizedEl.classList.add("loading");
+        summarizedEl.setAttribute("summaryid", i);
+        function toggleShowOriginal() {
+          this.parentElement.classList.toggle('showoriginal'); // 'this' now refers to 'logoContainer'
+          const summaryId = this.parentNode.getAttribute('summaryid'); // Get summaryid from parent
+          const sameIdElements = document.querySelectorAll(`.shaderunner-origtext[summaryid="${summaryId}"]`);
+          sameIdElements.forEach(elem => elem.classList.toggle('showoriginal'));
+        }
+        const logoContainer = summarizedEl.querySelector('.logoContainer');
+        logoContainer.addEventListener('click', toggleShowOriginal);
+        replacedNodes[0].parentElement.parentElement.insertBefore(summarizedEl, replacedNodes[0].parentElement);
+
+        currentTextNodes.splice(true_from_node_pos, num_textnodes, ...replacedNodes);
+        node_offset += replacedNodes.length - num_textnodes
+        if (i < splits.length - 1 && splitDetails[i + 1] && splitDetails[i + 1].from_text_node == details.to_text_node && nextTextOffset > 0) {
+          textoffset = nextTextOffset + (details.to_text_node == details.from_text_node ? textoffset : 0);
+        } else {
+          textoffset = 0;
+        }
+      }
+
+      setSummaryInitalized({splits});
+    };
+
+
     const highlight = async () => {
       const classes_pos = classifierData.classes_pos || [];
       const classes_neg = classifierData.classes_neg || [];
@@ -215,7 +313,7 @@ const Highlighter = () => {
       if (splits.length == 0) return;
       const mainel = getMainContent();
       resetHighlights()
-      let {splitDetails, textNodes} = mapSplitsToTextnodes(splits, mainel, mode)
+      let {splitDetails, textNodes} = mapSplitsToTextnodes(splits, mainel)
       splits = splits.filter((s,i) => splitDetails[i])
       splitDetails = splitDetails.filter((s,i) => splitDetails[i])
       setStatusHighlight(["checking", 0, "starting highlighting"]);
@@ -329,7 +427,7 @@ const Highlighter = () => {
         let true_to_node_pos = details.to_text_node + node_offset;
         const num_textnodes = 1 + details.to_text_node - details.from_text_node
         const textNodesSubset = currentTextNodes.slice(true_from_node_pos, true_to_node_pos + 1);
-        const highlightClass = class2Id[className];
+        const highlightClass = `highlightclass-${class2Id[className]}`;
         const relative_details = {
           from_text_node_char_start: details.from_text_node_char_start - textoffset,
           to_text_node_char_end: details.to_text_node_char_end - (details.from_text_node == details.to_text_node ? textoffset : 0),

@@ -31,7 +31,7 @@ const StatusIndicator = ({name, status, size=4}) => {
 // mount in sidepanel
 const Sidepanel = () => {
   const tabId = new URL(window.location.href).searchParams.get("tabId")
-  const [[active], [url], [statusEmbedding, setStatusEmbedding], [statusClassifier, setStatusClassifier], [statusHighlight, setStatusHighlight], [highlightMode], [highlightRetrieval], [highlightClassify], [classifierData], [, isSynced]] = useGlobalStorage(tabId, "active", "url", "status_embedding", "status_classifier", "status_highlight", "highlightMode", "highlightRetrieval", "highlightClassify", "classifierData")
+  const [[active], [url], [statusEmbedding, setStatusEmbedding], [statusClassifier, setStatusClassifier], [statusHighlight, setStatusHighlight], [highlightMode], [highlightRetrieval], [highlightClassify], [summarizeParagraphs], [classifierData], [, isSynced]] = useGlobalStorage(tabId, "active", "url", "status_embedding", "status_classifier", "status_highlight", "highlightMode", "highlightRetrieval", "highlightClassify", "summarizeParagraphs", "classifierData")
   const [apiworks] = useStorage('apiworks', (v) => v === undefined ? false : v)
 
 
@@ -111,11 +111,13 @@ const Sidepanel = () => {
       ) : ""}
       <StatusIndicator name="highlight" status={statusHighlight}/>
     </div>
-    <CollapsibleBox title="What to Highlight">
-      <MainInput tabId={tabId}/>
-      <Modes tabId={tabId}/>
-    </CollapsibleBox>
-    {highlightMode != "testset helper" && (highlightClassify || highlightRetrieval) ? (
+    <Modes tabId={tabId} />
+    {!summarizeParagraphs ? (
+      <CollapsibleBox title="What to Highlight">
+        <MainInput tabId={tabId} />
+      </CollapsibleBox>
+    ) : ""}
+    {!summarizeParagraphs && highlightMode != "testset helper" && (highlightClassify || highlightRetrieval) ? (
       <AmountHighlighted tabId={tabId} />
     ) : ""}
     {highlightMode == "testset helper" ? (
@@ -148,7 +150,7 @@ const Sidepanel = () => {
     ] : []}
     {!(Array.isArray(classifierData?.classes_pos) && Array.isArray(classifierData?.classes_neg)) ? (
     <div className="logoContainer">
-      <img src={Logo} alt="Some pretty cool image" />
+      <img src={Logo}/>
       <br/>
       <br/>
       version: {version}<br/>

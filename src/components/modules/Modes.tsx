@@ -9,9 +9,10 @@ const Modes = ({tabId}) => {
     [ highlightMode, setHighlightMode ],
     [ highlightRetrieval, setHighlightRetrieval ],
     [ highlightClassify, setHighlightClassify ],
+    [ , setSummarizeParagraphs ],
     [ classifierData],
     [ setGlobalSorage, isSynced ]
-    ] = useGlobalStorage(tabId, "highlightMode", "highlightRetrieval", "highlightClassify", "classifierData")
+    ] = useGlobalStorage(tabId, "highlightMode", "highlightRetrieval", "highlightClassify", "summarizeParagraphs", "classifierData")
 
   // TODO: use these defaults
   //const [ textclassifier ] = useStorage('textclassifier')
@@ -33,6 +34,7 @@ const Modes = ({tabId}) => {
 
   const findBtn = "Find Reference";
   const suggestBtn = "Related Topics";
+  const summarizeBtn = "Summarize Paragraphs";
   const bothBtn = "Both";
 
   const highlightBtn = "Highlight";
@@ -42,11 +44,12 @@ const Modes = ({tabId}) => {
   return <div className="Modes">
     <SwitchInput
         label=""
-        options={[findBtn, suggestBtn, bothBtn]}
-        selected={highlightRetrieval && highlightClassify ? bothBtn : highlightRetrieval ? findBtn : suggestBtn}
+        options={[findBtn, suggestBtn, summarizeBtn]}
+        selected={highlightRetrieval && highlightClassify ? bothBtn : highlightRetrieval ? findBtn : highlightClassify ? suggestBtn : summarizeBtn}
         onChange={(value: string) => {
-          setHighlightRetrieval(value != suggestBtn)
-          setHighlightClassify(value != findBtn)
+          setHighlightRetrieval(value != suggestBtn && value != summarizeBtn)
+          setHighlightClassify(value != findBtn && value != summarizeBtn)
+          setSummarizeParagraphs(value == summarizeBtn)
         }}
       />
     {highlightClassify && classifierData ? (

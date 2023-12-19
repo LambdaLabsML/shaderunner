@@ -72,7 +72,7 @@ function highlightText(details: { from_text_node_char_start: any; to_text_node_c
     const span = document.createElement('span');
     span.textContent = text;
     span.classList.add(markingClass); // Add a specific class for easy identification
-    span.classList.add(`highlightclass-${highlightClass}`); // Add a specific class for easy identification
+    span.classList.add(highlightClass); // Add a specific class for easy identification
     transform(span)
     node.parentNode.insertBefore(span, node);
     replacedNodes.push(span.childNodes[0] as Text);
