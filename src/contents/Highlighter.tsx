@@ -370,7 +370,8 @@ const Highlighter = () => {
         const isRetrieval = false;
         toHighlight.push({ index, closestClass, closestOtherClass, otherclassmod, highlight, isRetrieval })
 
-        setStatusHighlight(["computing", 100 * Number(i) / splits.length]);
+        if (i % 10 == 0 || i == splits.length - 1)
+          setStatusHighlight(["computing", 100 * Number(i) / splits.length]);
       }
 
       // retrieval
@@ -476,7 +477,8 @@ const Highlighter = () => {
         } else {
           textoffset = 0;
         }
-        setStatusHighlight(["computing", i / toHighlight.length * 100]) // bug: needs to be outside due to concurrency conflict of this variable
+        if (i % 10 == 0 || i == splits.length - 1)
+          setStatusHighlight(["computing", i / toHighlight.length * 100]) // bug: needs to be outside due to concurrency conflict of this variable
       }
 
       // finally, let's highlight all textnodes that are not highlighted
