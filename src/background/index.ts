@@ -1,6 +1,6 @@
 import defaults from "~defaults";
 import { Storage } from "@plasmohq/storage"
-import { getData, notifyListeners } from "~background/tabData";
+import { getData, notifyListeners, registerListener } from "~background/tabData";
 const storage = new Storage()
 
 const DEV = process.env.NODE_ENV == "development";
@@ -25,13 +25,6 @@ chrome.tabs.query({active: true, currentWindow: true}, async (tabs) => {
 });
 
 
-// tell content script about tabId
-chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse){
-    if (msg == "get_tabid"){
-        sendResponse(sender.tab.id)
-    }
-});
-
 
 
 
@@ -50,9 +43,9 @@ chrome.action.onClicked.addListener(async (tab) => {
 // toggle active status when sidePanel is opened/closed
 chrome.runtime.onConnect.addListener(function (port) {
     if (port.name.startsWith('shaderunnerSidePanel_tabId=')) {
-        const tabId = port.name.split("=")[1];
+        const tabId = Number(port.name.split("=")[1]);
         notifyListeners(tabId, {active: true})
-        port.onDisconnect.addListener(async () => notifyListeners(tabId, {active: false}));
+        port.onDisconnect.addListener(() => notifyListeners(tabId, {active: false}));
     }
 });
 
@@ -107,4 +100,27 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
             url: url
        });
     }
+});
+
+
+// ======== //
+// messages //
+// ======== //
+
+// tell content script about tabId
+chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse){
+    if (msg == "get_tabid")
+        sendResponse(sender.tab.id)
+});
+
+// register components
+chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse){
+    if (msg.action == "storage_listener_register")
+        registerListener(msg.tabId, msg.variables, msg.listenerId);
+});
+
+// notify components on a change
+chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse){
+    if (msg.action == "storage_variable_changed")
+        notifyListeners(msg.tabId, msg.update);
 });

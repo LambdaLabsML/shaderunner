@@ -30,7 +30,7 @@ const StatusIndicator = ({name, status, size=4}) => {
 
 // mount in sidepanel
 const Sidepanel = () => {
-  const tabId = new URL(window.location.href).searchParams.get("tabId")
+  const tabId = Number(new URL(window.location.href).searchParams.get("tabId"))
   const [[active], [url], [statusEmbedding, setStatusEmbedding], [statusClassifier, setStatusClassifier], [statusHighlight, setStatusHighlight], [highlightMode], [highlightRetrieval], [highlightClassify], [summarizeParagraphs], [classifierData], [, isSynced]] = useGlobalStorage(tabId, "active", "url", "status_embedding", "status_classifier", "status_highlight", "highlightMode", "highlightRetrieval", "highlightClassify", "summarizeParagraphs", "classifierData")
   const [apiworks] = useStorage('apiworks', (v) => v === undefined ? false : v)
 

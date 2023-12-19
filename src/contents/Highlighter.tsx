@@ -157,10 +157,10 @@ const Highlighter = () => {
     useEffect(() => {
       if(!tabId || !active || !isSynced) return;
 
-      const applyHighlight = () => {
+      const applyHighlight = async () => {
+        if (!classifierData?.classes_pos && !classifierData?.classes_retrieval) return;
         try {
-          if (!classifierData?.classes_pos && !classifierData?.classes_retrieval)
-            highlight()
+          await highlight()
         } catch (error) {
           console.error('Error in applyHighlight:', error);
         }

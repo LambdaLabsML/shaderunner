@@ -1,71 +1,69 @@
-import { usePort } from "@plasmohq/messaging/hook";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { generateRandomHash } from "./misc";
-import { sendToBackground } from "@plasmohq/messaging";
-
-
 
 
 const useGlobalStorage = (_tabId: Number | string, ...names: string[]) => {
-    const listener = usePort("listener")
-    const controller = usePort("controller")
-    const [_who] = useState(generateRandomHash(32))
-    const [storageSynced, setStatus] = useState(false)
+    const [storageData, setStorageData] = useState({});
+    const [isStorageSynced, setIsStorageSynced] = useState(false);
+    const listenerId = useMemo(() => generateRandomHash(32), []);
 
-    async function updateData() {
-        const data = await sendToBackground({ name: "data_get", body: { tabId: _tabId, variables: names } })
-        stateVarsReact.forEach(([_, setName, name]) => {
-            if (name in data) setName(data[name]);
-        })
-    }
-
-    // register as a listener of tabId results
+    // register variables to listen to + apply updates
     useEffect(() => {
+        if(!_tabId) return;
 
-        // wait for true _tabId if not initialized, yet
-        if (!_tabId) return;
+        // listen for changes
+        const handleMessage = (message) => {
+            if (message.action != "storage_listener_notify" || message.tabId !== _tabId || message.listenerId !== listenerId) return;
 
-        listener.send({
-            cmd: "register",
-            tabId: _tabId
-        });
-
-        updateData();
-    }, [_tabId])
-
-    // create state getter/setter for each name
-    const stateVarsReact = names.map(name => [...useState(null), name]);
-
-    // whenever listener changes message, we know we got something new
-    useEffect(() => {
-        const data = listener.data;
-        if (data !== undefined) setStatus(true);
-        if (!data) return;
-        if (data._who == _who) return;
-        stateVarsReact.forEach(([_, setName, name]) => {
-            if (name in data) setName(data[name]);
-        })
-    }, [listener.data]);
-
-    const stateVars = stateVarsReact.map(([getName, setName, name]) => {
-
-        // when saving, we also send the update to the controller
-        function setWrapper(val: any) {
-            setName(old => {
-                val = (typeof val === 'function') ? val(old) : val;
-                controller.send({ [name]: val, _who, _tabId })
-                return val;
+            setStorageData(prevData => {
+                setIsStorageSynced(true);
+                return {...prevData, ...message.update};
             });
-        }
-        return [getName, setWrapper];
+        };
+        chrome.runtime.onMessage.addListener(handleMessage);
+
+        // register this component with the backend to listen for changes
+        chrome.runtime.sendMessage({ action: "storage_listener_register", tabId: _tabId, variables: names, listenerId });
+
+        // cleanup listener
+        return () => chrome.runtime.onMessage.removeListener(handleMessage);
+
+    }, [_tabId, names.join(','), listenerId]);
+
+    // generate + update frontend value/setValue pairs
+    const stateVars = names.map(name => {
+        const [value, setValue] = useState(null);
+
+        // update value when storageData changes
+        useEffect(() => {
+            if (name in storageData) {
+                setValue(storageData[name]);
+            }
+        }, [storageData, name]);
+
+        // setter function that can handle both values and update functions
+        const updateValue = newValue => {
+            setValue(prevValue => {
+                // Determine whether newValue is a function and calculate the next value accordingly
+                const nextValue = newValue instanceof Function ? newValue(prevValue) : newValue;
+
+                // Send update to backend
+                chrome.runtime.sendMessage({ action: "storage_variable_changed", tabId: _tabId, update: { [name]: nextValue } });
+                return nextValue;
+            });
+        };
+
+        return [value, updateValue];
     });
 
+    // TODO: remove
     function setGlobalStorage(obj) {
-        controller.send({ _tabId, ...obj })
+        chrome.runtime.sendMessage({ action: "storage_variable_changed", tabId: _tabId, update: obj });
+        setStorageData(prev => ({...prev, ...obj}))
     }
 
-    return [...stateVars, [setGlobalStorage, storageSynced]];
-}
+    return [...stateVars, [setGlobalStorage, isStorageSynced]];
+};
 
 
 export { useGlobalStorage };
