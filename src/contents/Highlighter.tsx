@@ -380,6 +380,7 @@ const Highlighter = () => {
           const c = classes_retrieval[i] as string;
           class2Id[c] = numClasses + i;
           const query_embedding = classEmbeddings[c];
+          if (!query_embedding) continue;
           const retrievalStore = VectorStore_fromClass2Embedding(splitEmbeddings)
           const closestRetrieved = await retrievalStore.similaritySearchVectorWithScore(query_embedding, retrievalK || 1)
           closestRetrieved.forEach(retrieved => {
