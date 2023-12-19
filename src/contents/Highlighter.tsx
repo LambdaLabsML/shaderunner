@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { getMainContent, extractSplits, mapSplitsToTextnodes } from '~util/extractContent'
 import { highlightText, resetHighlights, textNodesNotUnderHighlight, surroundTextNode } from '~util/DOM'
 import { computeEmbeddingsCached, embeddingExists, VectorStore_fromClass2Embedding, type Metadata } from '~util/embedding'
@@ -46,6 +46,9 @@ const Highlighter = () => {
     ] = useGlobalStorage(tabId, "active", "url", "title", "status_embedding", "status_highlight", "status_classifier", "classEmbeddings", "highlightAmount", "decisionEps", "highlightRetrieval", "highlightClassify", "retrievalK", "classifierData", "savedHighlightQuery", "summarizeParagraphs");
     const [ pageEmbeddings, setPageEmbeddings ] = useState({mode: "sentences", splits: [], splitEmbeddings: {}});
     const [ summaryInitalized, setSummaryInitalized ] = useState(false);
+    const [isHighlightRunning, setIsHighlightRunning] = useState(false);
+    const queuedHighlightRef = useRef(false);
+
 
     // -------- //
     // settings //
@@ -159,12 +162,29 @@ const Highlighter = () => {
 
       const applyHighlight = async () => {
         if (!classifierData?.classes_pos && !classifierData?.classes_retrieval) return;
-        try {
-          await highlight()
-        } catch (error) {
-          console.error('Error in applyHighlight:', error);
+
+        if (isHighlightRunning) {
+            // Mark that a new highlight call is queued
+            queuedHighlightRef.current = true;
+            return;
         }
-      }
+
+        setIsHighlightRunning(true);
+
+        try {
+            await highlight();
+        } catch (error) {
+            console.error('Error in highlight function:', error);
+        } finally {
+            setIsHighlightRunning(false);
+
+            // Check if a new highlight call was queued during execution
+            if (queuedHighlightRef.current) {
+                queuedHighlightRef.current = false;
+                applyHighlight(); // Start the queued highlight call
+            }
+        }
+    };
       applyHighlight()
     }, [pageEmbeddings, isSynced, classifierData, active, highlightAmount, highlightRetrieval, highlightClassify, decisionEpsAmount, classEmbeddings, retrievalK, summarizeParagraphs])
 
