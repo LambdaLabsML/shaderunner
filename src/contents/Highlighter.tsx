@@ -48,6 +48,7 @@ const Highlighter = () => {
     const [ summaryInitalized, setSummaryInitalized ] = useState(false);
     const [isHighlightRunning, setIsHighlightRunning] = useState(false);
     const queuedHighlightRef = useRef(false);
+    const classifierDataStr = JSON.stringify(classifierData);
 
 
     // -------- //
@@ -100,7 +101,7 @@ const Highlighter = () => {
     useEffect(() => {
       if (!isSynced || !classifierData) return;
       setStatusClassifier(classifierData && classifierData.classes_pos && classifierData.classes_neg ? ["loaded", 100] : null)
-    }, [isSynced, classifierData]);
+    }, [isSynced, classifierDataStr]);
         
 
     // start directly by getting page embeddings
@@ -158,7 +159,7 @@ const Highlighter = () => {
 
     // on every classifier change, recompute highlights
     useEffect(() => {
-      if(!tabId || !active || !isSynced) return;
+      if(!tabId || !active || !isSynced || !classEmbeddings || Object.entries(classEmbeddings).filter(([c,v]) => classifierData.classes_retrieval?.includes(c) || classifierData.classes_pos?.includes(c)).length == 0) return;
 
       const applyHighlight = async () => {
         if (!classifierData?.classes_pos && !classifierData?.classes_retrieval) return;
@@ -186,7 +187,7 @@ const Highlighter = () => {
         }
     };
       applyHighlight()
-    }, [pageEmbeddings, isSynced, classifierData, active, highlightAmount, highlightRetrieval, highlightClassify, decisionEpsAmount, classEmbeddings, retrievalK, summarizeParagraphs])
+    }, [pageEmbeddings, isSynced, classifierDataStr, active, highlightAmount, highlightRetrieval, highlightClassify, decisionEpsAmount, classEmbeddings ? Object.keys(classEmbeddings).join(",") : "null", retrievalK, summarizeParagraphs])
 
 
     // on every classifier change, recompute class embeddings
@@ -213,7 +214,7 @@ const Highlighter = () => {
         }
       }
       computeClassEmbeddings()
-    }, [active, isSynced, classifierData])
+    }, [active, isSynced, classifierDataStr])
 
 
 
