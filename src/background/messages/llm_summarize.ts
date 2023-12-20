@@ -47,7 +47,8 @@ const llmSummarize = async (texts: string) => {
 - Key Elements: Use <strong> and <emph> tags for emphasis.
 - Organization: Format multiple points with <ul> and <li> tags; for single points, no tags.
 - Simplification: Break down complex sentences into shorter segments.
-- Links and Images: Keep essential links/images, with concise text.
+- Links and Images: Keep links and essential images, with concise text.
+- CSS Classes: Keep css classes if appropriate (e.g. for links and images)
 
 ### Constraints:
 - Brevity: Aim for concise responses.
@@ -55,10 +56,10 @@ const llmSummarize = async (texts: string) => {
 - Context Preservation: Retain the essence of the original text.
 
 ### Example:
-Original Text: "Our company has seen remarkable growth in the last quarter, with a 25% increase in sales, due to our new marketing strategy..."
+Original Text: "Our company has seen <a class="directlink" href="./stats">remarkable growth</a> in the last quarter, with a 25% increase in sales, due to our new marketing strategy..."
 
 Transformed HTML:
-<strong>Remarkable growth</strong> last quarter - <emph>25% sales increase</emph>, due to <strong>new marketing strategy</strong>...
+<a class="directlink" href="./stats"><strong>Remarkable growth</strong></a> last quarter - <emph>25% sales increase</emph>, due to <strong>new marketing strategy</strong>...
 `
 
   if (!chat) {
@@ -70,7 +71,6 @@ Transformed HTML:
     ])
     const chain = promptTemplate.pipe(llm);
     const llmResults = await chain.batch(texts.map(t => ({text: t})));
-    console.log(llmResults)
     return llmResults.map(result => result.content)
   }
 }
