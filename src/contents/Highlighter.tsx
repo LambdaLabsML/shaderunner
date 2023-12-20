@@ -156,7 +156,7 @@ const Highlighter = () => {
       setStatusHighlight(["ready", 0]);
     } else {
       setStatusHighlight(["checking", 0, "embedding classes"]);
-      const class2Embedding = await computeEmbeddingsCached(classCollection, allclasses, "shaderunner-classes");
+      const class2Embedding = await computeEmbeddingsCached(classCollection, allclasses, null);//"shaderunner-classes");
       setClassEmbeddings(class2Embedding)
       setStatusHighlight(["ready", 0]);
     }

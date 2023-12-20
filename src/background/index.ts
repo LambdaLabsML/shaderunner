@@ -1,9 +1,15 @@
 import defaults from "~defaults";
 import { Storage } from "@plasmohq/storage"
 import { getData, notifyListeners, registerListener } from "~background/tabData";
+import { autoDeleteOldStores } from "~util/embedding";
 const storage = new Storage()
 
 const DEV = process.env.NODE_ENV == "development";
+
+
+// clear old embedding stores from db
+autoDeleteOldStores();
+
 
 const tabUpdated = tabId => {
     chrome.tabs.get(tabId, async function(tab) {

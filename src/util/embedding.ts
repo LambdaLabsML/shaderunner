@@ -2,17 +2,102 @@ import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { Storage } from "@plasmohq/storage"
 import { Document } from "langchain/document";
-import type { Embeddings, EmbeddingsParams } from "langchain/dist/embeddings/base";
 import { extractSplits } from "./extractContent";
 const storage = new Storage()
 const modelName = 'text-embedding-ada-002'
-// TODO: turn off anonymized_telemetry here
-
 
 export type Metadata = { "data-type": string, "url": string };
 
 const DBNAME = "shaderunner";
+const ACCESS_STORE = 'DB_RECORDS';
 
+
+// given a list of sentences & metadata compute embeddings, retrieve / store them
+async function updateLastAcessDate(collectionName: string) {
+  try {
+    let { storeExists, dbVersion } = await collection_exists(DBNAME, ACCESS_STORE)
+    const db = await openDatabase(DBNAME, ACCESS_STORE, dbVersion + (storeExists ? 0 : 1))
+    const transaction = db.transaction([ACCESS_STORE], 'readwrite');
+    const store = transaction.objectStore(ACCESS_STORE);
+    await promisifyRequest(store.put(new Date(), collectionName));
+  } catch (error) {
+    console.error("Error updating metadata database:", error, collectionName);
+  }
+}
+
+
+let storesToDelete = [];
+
+async function deleteOldStores() {
+  const db = await openDatabase(DBNAME, ACCESS_STORE);
+  const transaction = db.transaction([ACCESS_STORE], 'readonly');
+  const store = transaction.objectStore(ACCESS_STORE);
+
+  store.openCursor().onsuccess = async (event) => {
+    const cursor = event.target.result;
+    if (cursor) {
+      const storeName = cursor.key;
+      const lastAccessedDate = cursor.value;
+
+      if (!lastAccessedDate || isOlderThan7Days(lastAccessedDate)) {
+        storesToDelete.push(storeName);
+        console.log(`Marked for deletion: ${storeName}`);
+      }
+
+      cursor.continue();
+    } else {
+      // Once all stores are checked, proceed to delete marked stores
+      if (storesToDelete.length > 0) {
+        await deleteMarkedStores();
+      }
+    }
+  };
+}
+
+
+async function deleteMarkedStores() {
+  console.log("Stores scheduled for removal", storesToDelete);
+
+  const db = await openDatabase(DBNAME, ACCESS_STORE);
+  db.close();
+
+  // Increment the database version to trigger an upgrade
+  const newVersion = db.version + 1;
+
+  const request = indexedDB.open(DBNAME, newVersion);
+  request.onupgradeneeded = function(event) {
+    const db = event.target.result;
+    storesToDelete.forEach(storeName => {
+      if (db.objectStoreNames.contains(storeName)) {
+        db.deleteObjectStore(storeName);
+        console.log(`Deleted store: ${storeName}`);
+      }
+    });
+  };
+
+  request.onerror = function(event) {
+    console.error("Error during database upgrade:", event.target.error);
+  };
+
+  // Clear the list of stores to delete
+  storesToDelete = [];
+}
+
+
+async function autoDeleteOldStores() {
+  await deleteOldStores();
+  setInterval(async () => {
+    await deleteOldStores();
+  }, 6 * 60 * 60 * 1000); // 6 hours in milliseconds
+}
+
+
+// Helper function to check if a date is older than 7 days
+function isOlderThan7Days(date) {
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  return date < sevenDaysAgo;
+}
 
 
 // Utilize async/await syntax for cleaner code
@@ -90,6 +175,8 @@ async function retrieveMultipleData(dbName, storeName, keys) {
         };
       })
     ));
+    if (dbName == DBNAME)
+      updateLastAcessDate(storeName);
 
     return results;
   } catch (error) {
@@ -131,8 +218,13 @@ async function embeddingExists(collectionName: string) {
 
 // given a list of sentences & metadata compute embeddings, retrieve / store them
 async function computeEmbeddingsCached(collectionName: string, splits: string[], dbname=DBNAME) {
+  if (!collectionName) return;
   const api_key = await storage.get("OPENAI_API_KEY");
   const openaiembedding = new OpenAIEmbeddings({ openAIApiKey: api_key, modelName: modelName })
+
+  // save that we have accessed the db first
+  if (dbname == DBNAME)
+    updateLastAcessDate(collectionName);
 
   // first try to get an existing collection
   let { storeExists, dbVersion } = dbname ? await collection_exists(dbname, collectionName) : {storeExists: false, dbVersion: "ignore"}
@@ -200,4 +292,4 @@ const getPageEmbeddings = async (mainelement, url, mode = "sentences", onStatus 
 }
 
 
-export { embeddingExists, computeEmbeddingsCached, VectorStore_fromClass2Embedding, getPageEmbeddings };
+export { embeddingExists, computeEmbeddingsCached, VectorStore_fromClass2Embedding, getPageEmbeddings, autoDeleteOldStores };
