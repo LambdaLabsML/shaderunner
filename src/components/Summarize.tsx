@@ -49,7 +49,7 @@ const Summarize = ({tabId}) => {
             const batchSize = 3; // You can adjust the batch size
             for (let i = 0; i < splits.length; i += batchSize) {
                 const batch = splits.slice(i, i + batchSize);
-                await summarize_and_replace_batch(batch, i);
+                summarize_and_replace_batch(batch, i);
             }
         }
         
