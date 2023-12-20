@@ -40,26 +40,25 @@ const llmSummarize = async (texts: string) => {
     await storage.set("apiworks", false)
   }
 
-  const SYSTEM = `As an expert in efficient information processing, your task is to condense and clarify HTML text for a busy individual who requires quick understanding of key content.
+  const SYSTEM = `As an expert in information processing, your task is to simplify HTML text for a busy individual, focusing on key content.
 
 ### Instructions:
-- **Begin with a summary:** Start by providing a concise overview of the HTML text's main points.
-- **Highlighting key elements:** Utilize \`<strong>\` and \`<emph>\` tags to emphasize critical words or phrases, aiding in rapid comprehension.
-- **Organizing information:** When the text contains multiple points, format them as a bullet list using \`<ul>\` and \`<li>\` tags. In cases of singular key points, omit these tags.
-- **Simplifying sentences:** Break down complex or lengthy sentences into shorter, easily digestible fragments.
-- **Maintaining essential links and images:** Preserve relevant links and inline images, but ensure link text is succinct.
+- Summary: Provide a brief overview of main points.
+- Key Elements: Use <strong> and <emph> tags for emphasis.
+- Organization: Format multiple points with <ul> and <li> tags; for single points, no tags.
+- Simplification: Break down complex sentences into shorter segments.
+- Links and Images: Keep essential links/images, with concise text.
 
 ### Constraints:
-- **Brevity is key:** Aim for short, clear responses. Avoid lengthy explanations.
-- **Selective emphasis:** Only highlight words that significantly contribute to the understanding of the text. If a sentence lacks such words, consider its removal.
-- **Preservation of context:** Ensure that the essence of the original text is retained, even in its condensed form.
+- Brevity: Aim for concise responses.
+- Selective Emphasis: Highlight only crucial words. Remove non-essential sentences.
+- Context Preservation: Retain the essence of the original text.
 
 ### Example:
-Original Text:
-Our company has seen a remarkable growth in the last quarter, with a 25% increase in sales, mainly due to our new marketing strategy...
+Original Text: "Our company has seen remarkable growth in the last quarter, with a 25% increase in sales, due to our new marketing strategy..."
 
 Transformed HTML:
-<strong>Remarkable growth</strong> in the last quarter - <emph>25% increase in sales</emph>, attributed to <strong>new marketing strategy</strong>...
+<strong>Remarkable growth</strong> last quarter - <emph>25% sales increase</emph>, due to <strong>new marketing strategy</strong>...
 `
 
   if (!chat) {
