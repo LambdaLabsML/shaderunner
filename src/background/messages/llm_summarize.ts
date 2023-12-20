@@ -4,6 +4,7 @@ import { OpenAI } from "langchain/llms/openai";
 import { Storage } from "@plasmohq/storage"
 import { HumanMessage, SystemMessage } from "langchain/dist/schema";
 import { eval_prompt, getCurrentModel } from "~llm_classify_prompt copy";
+import { ChatPromptTemplate } from "langchain/prompts";
 const storage = new Storage()
 
 
@@ -16,7 +17,7 @@ function splitMarkdownList(markdown) {
 
 
 
-const llmSummarize = async (text: string) => {
+const llmSummarize = async (texts: string) => {
   const api_key = await storage.get("OPENAI_API_KEY");
   const openchat_api_base = await storage.get("OPENCHAT_API_BASE");
 
@@ -54,43 +55,37 @@ const llmSummarize = async (text: string) => {
 - **Preservation of context:** Ensure that the essence of the original text is retained, even in its condensed form.
 
 ### Example:
-Original Text: "Our company has seen a remarkable growth in the last quarter, with a 25% increase in sales, mainly due to our new marketing strategy..."
+Original Text:
+Our company has seen a remarkable growth in the last quarter, with a 25% increase in sales, mainly due to our new marketing strategy...
 
 Transformed HTML:
-"<strong>Remarkable growth</strong> in the last quarter - <emph>25% increase in sales</emph>, attributed to <strong>new marketing strategy</strong>..."
+<strong>Remarkable growth</strong> in the last quarter - <emph>25% increase in sales</emph>, attributed to <strong>new marketing strategy</strong>...
 `
-  const USER =`${text}`;
 
-  try {
-    if (!chat) {
-      llmResult = await llm.predict(SYSTEM + "\n" + USER);
-    } else {
-      llmResult = (await llm.call([
-        new SystemMessage(SYSTEM),
-        new HumanMessage(USER)
-      ])).content;
-    }
-  } catch (e) {
-    console.error(e);
-    console.error("Error code:", e.code);
-    if (e.code == "invalid_api_key")
-      await storage.set("apiworks", false)
+  if (!chat) {
+    new Error("not implemented, yet")
+  } else {
+    const promptTemplate = ChatPromptTemplate.fromMessages([
+      ["system", SYSTEM],
+      ["human", "{text}"],
+    ])
+    const chain = promptTemplate.pipe(llm);
+    const llmResults = await chain.batch(texts.map(t => ({text: t})));
+    console.log(llmResults)
+    return llmResults.map(result => result.content)
   }
-
-  return llmResult;
-    //return splitMarkdownList(llmResult);
 }
 
 
 type RequestBody = {
-  text: string
+  texts: string[]
 };
 
  
 const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
     const body = req.body as RequestBody;
     console.log(body)
-    const llmResult = await llmSummarize(body.text)
+    const llmResult = await llmSummarize(body.texts)
     console.log("response", llmResult)
     res.send(llmResult)
   }

@@ -18,23 +18,33 @@ const Summarize = ({tabId}) => {
     useEffectWhenReady([summaryInitalized], async () => {
         const splits = summaryInitalized.splits;
 
-        async function summarize_and_replace(container, i) {
-            const split = splits[i];
-            const summarized = await sendToBackground({ name: "llm_summarize", body: { text: split } })
-            container.classList.remove("loading");
-            container.classList.add("showsummarized");
-            const sameIdElements = document.querySelectorAll(`p.original-text[summaryid="${i}"]`);
-            sameIdElements.forEach(elem => elem.classList.add('showsummarized'));
-            const el = document.querySelector("p.shaderunner-summarized[summaryid='" + i + "'] .summary");
-            //el.innerHTML = "<ul>" + summaries.map(s => "<li>" + s + "</li>").join("\n") + "</ul>";
-            el.innerHTML = summarized;
+        async function summarize_and_replace_batch(batch, startIndex) {
+            const summaries = await sendToBackground({ name: "llm_summarize", body: { texts: batch } })
+            summaries.forEach((summarized, index) => {
+                const actualIndex = startIndex + index;
+                const container = document.querySelector(`p.shaderunner-summarized[summaryid='${actualIndex}']`);
+                if (!container) return;
+        
+                container.classList.remove("loading");
+                container.classList.add("showsummarized");
+        
+                const sameIdElements = document.querySelectorAll(`p.original-text[summaryid="${actualIndex}"]`);
+                sameIdElements.forEach(elem => elem.classList.add('showsummarized'));
+        
+                const el = container.querySelector(".summary");
+                el.innerHTML = summarized;
+            });
         }
-
-        for (let i = 0; i < splits.length; i++) {
-            const container = document.querySelector("p.shaderunner-summarized[summaryid='" + i + "']");
-            if (!container) continue;
-            await summarize_and_replace(container, i);
+        
+        async function process_in_batches() {
+            const batchSize = 3; // You can adjust the batch size
+            for (let i = 0; i < splits.length; i += batchSize) {
+                const batch = splits.slice(i, i + batchSize);
+                await summarize_and_replace_batch(batch, i);
+            }
         }
+        
+        process_in_batches();
     }, []);
 
 
