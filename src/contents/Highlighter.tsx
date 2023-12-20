@@ -10,18 +10,12 @@ import TestsetHelper from '~components/TestsetHelper';
 import { sendToBackground } from '@plasmohq/messaging';
 import { MSG_QUERY2CLASS } from '~util/messages';
 import { random } from '~util/misc';
-import Logo from "data-base64:../assets/logo.png"
+import Summarize from '~components/Summarize';
 
 const DEV = process.env.NODE_ENV == "development";
 
 const isPromise = obj => !!obj && (typeof obj === 'object' || typeof obj === 'function') && typeof obj.then === 'function';
 
-function splitMarkdownList(markdown) {
-  const lines = markdown.split('\n');
-  return lines
-      .filter(line => line.trim().startsWith('-'))
-      .map(line => line.trim().substring(2).trim());
-}
 
 
 const Highlighter = () => {
@@ -41,11 +35,9 @@ const Highlighter = () => {
       [retrievalK],
       [classifierData, setClassifierData],
       [savedHighlightQuery],
-      [summarizeParagraphs],
       [setGlobalStorage, isSynced]
-    ] = useGlobalStorage(tabId, "active", "url", "title", "status_embedding", "status_highlight", "status_classifier", "classEmbeddings", "highlightAmount", "decisionEps", "highlightRetrieval", "highlightClassify", "retrievalK", "classifierData", "savedHighlightQuery", "summarizeParagraphs");
+    ] = useGlobalStorage(tabId, "active", "url", "title", "status_embedding", "status_highlight", "status_classifier", "classEmbeddings", "highlightAmount", "decisionEps", "highlightRetrieval", "highlightClassify", "retrievalK", "classifierData", "savedHighlightQuery");
     const [ pageEmbeddings, setPageEmbeddings ] = useState({mode: "sentences", splits: [], splitEmbeddings: {}});
-    const [ summaryInitalized, setSummaryInitalized ] = useState(false);
     const [isHighlightRunning, setIsHighlightRunning] = useState(false);
     const queuedHighlightRef = useRef(false);
     const classifierDataStr = JSON.stringify(classifierData);
@@ -126,36 +118,6 @@ const Highlighter = () => {
     }, [active, tabId])
 
 
-    // summarize if requested by user
-    useEffect(() => {
-      if(!tabId || !active || !isSynced || !summarizeParagraphs || summaryInitalized) return;
-      init_summary()
-    }, [tabId, active, isSynced, summarizeParagraphs]);
-
-
-    // summarize if requested by user
-    useEffect(() => {
-      if (!summaryInitalized) return;
-      const splits = summaryInitalized.splits;
-
-      async function summarize_and_replace(container, i) {
-        const split = splits[i];
-        const summary = await sendToBackground({name: "llm_summarize", body: {text: split}})
-        const summaries = splitMarkdownList(summary);
-        container.classList.remove("loading");
-        const el = document.querySelector("p.shaderunner-summarized[summaryid='"+i+"'] .summary");
-        el.innerHTML = "<ul>" + summaries.map(s => "<li>"+s+"</li>").join("\n") + "</ul>";
-      }
-      async function summarize() {
-        for(let i=0; i<splits.length; i++) {
-          const container = document.querySelector("p.shaderunner-summarized[summaryid='"+i+"']");
-          if (!container) continue;
-          await summarize_and_replace(container, i);
-        }
-      }
-      summarize();
-    }, [summaryInitalized]);
-
 
     // on every classifier change, recompute highlights
     useEffect(() => {
@@ -187,7 +149,7 @@ const Highlighter = () => {
         }
     };
       applyHighlight()
-    }, [pageEmbeddings, isSynced, classifierDataStr, active, highlightAmount, highlightRetrieval, highlightClassify, decisionEpsAmount, classEmbeddings ? Object.keys(classEmbeddings).join(",") : "null", retrievalK, summarizeParagraphs])
+    }, [pageEmbeddings, isSynced, classifierDataStr, active, highlightAmount, highlightRetrieval, highlightClassify, decisionEpsAmount, classEmbeddings ? Object.keys(classEmbeddings).join(",") : "null", retrievalK])
 
 
     // on every classifier change, recompute class embeddings
@@ -256,42 +218,6 @@ const Highlighter = () => {
       }
       await onStatus(["loaded", 100])
     }
-
-
-    const init_summary = async () => {
-      const mainel = getMainContent();
-      const pElements = mainel.querySelectorAll('p');
-      const splits = [];
-      const textNodes = [];
-    
-      pElements.forEach((pElement, index) => {
-        // Prepend the shaderunner-summarized div
-        const summarizedEl = document.createElement('p');
-        summarizedEl.innerHTML = `<div class='logoContainer'><img src='${Logo}'/></div><span class='summary'>Loading</span>`;
-        summarizedEl.classList.add("shaderunner-summarized", "loading");
-        summarizedEl.setAttribute("summaryid", index);
-        pElement.parentNode.insertBefore(summarizedEl, pElement);
-    
-        // Adjust mapSplitsToTextNodes and text highlighting for each <p> element
-        const split = pElement.textContent
-        splits.push(split);
-        textNodes.push(getTextNodesIn(pElement));
-
-        function toggleShowOriginal() {
-          this.parentElement.classList.toggle('showoriginal'); // 'this' now refers to 'logoContainer'
-          const summaryId = this.parentNode.getAttribute('summaryid'); // Get summaryid from parent
-          const sameIdElements = document.querySelectorAll(`p.original-text[summaryid="${summaryId}"]`);
-          sameIdElements.forEach(elem => elem.classList.toggle('showoriginal'));
-        }
-        const logoContainer = summarizedEl.querySelector('.logoContainer');
-        logoContainer.addEventListener('click', toggleShowOriginal);
-
-        pElement.setAttribute("summaryid", index)
-        pElement.classList.add("original-text")
-      });
-
-      setSummaryInitalized({splits});
-    };
 
 
     const highlight = async () => {
@@ -488,6 +414,7 @@ const Highlighter = () => {
 
     return [
       <HighlightStyler key="styler" tabId={tabId}/>,
+      <Summarize key="summarize" tabId={tabId}/>,
       <Scroller key="scroller" tabId={tabId}/>,
       DEV ? <TestsetHelper key="testsethelper" tabId={tabId}/> : "",
     ]

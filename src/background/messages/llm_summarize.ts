@@ -5,6 +5,15 @@ import { Storage } from "@plasmohq/storage"
 const storage = new Storage()
 
 
+function splitMarkdownList(markdown) {
+  const lines = markdown.split('\n');
+  return lines
+      .filter(line => line.trim().startsWith('-'))
+      .map(line => line.trim().substring(2).trim());
+}
+
+
+
 const llmSummarize = async (text: string) => {
 
     const api_key = await storage.get("OPENAI_API_KEY");
@@ -31,10 +40,7 @@ ${text}
 
     const llmResult = await llm.predict(PROMPT);
     console.log("using", gptversion, chatgpt ? "ChatGPT" : "InstructGPT")
-    console.log(PROMPT, llmResult)
-
-    const newTopic = String(llmResult)
-    return newTopic;
+    return splitMarkdownList(llmResult);
 }
 
 
