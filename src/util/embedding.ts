@@ -3,6 +3,7 @@ import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { Storage } from "@plasmohq/storage"
 import { Document } from "langchain/document";
 import type { Embeddings, EmbeddingsParams } from "langchain/dist/embeddings/base";
+import { extractSplits } from "./extractContent";
 const storage = new Storage()
 const modelName = 'text-embedding-ada-002'
 // TODO: turn off anonymized_telemetry here
@@ -174,8 +175,29 @@ function VectorStore_fromClass2Embedding(class2Embedding: { [s: string]: Number[
   return classStore;
 }
 
-// method: retrieval
-// return await vectorStore.similaritySearchWithScore(method_data.query, method_data.k)
+
+// ensure page embeddings exist
+const getPageEmbeddings = async (mainelement, url, mode = "sentences", onStatus = (status: [string, Number, string?]) => { }, onEmbeddingUpdate = (embeddingData) => {}) => {
+
+  // if not in cache, check if database has embeddings
+  const exists = await embeddingExists(url as string)
+  const status_msg = exists ? "found database" : "";
+  await onStatus(["computing", 0, status_msg])
+
+  // extract main content & generate splits
+  const splits = extractSplits(mode, mainelement)
+
+  // retrieve embedding (either all at once or batch-wise)
+  let splitEmbeddings = {};
+  const batchSize = exists ? 256 : 64;
+  for (let i = 0; i < splits.length; i += batchSize) {
+    const splitEmbeddingsBatch = await computeEmbeddingsCached(url as string, splits.slice(i, i + batchSize))
+    splitEmbeddings = { ...splitEmbeddings, ...splitEmbeddingsBatch };
+    await onStatus(["computing", Math.floor(i / splits.length * 100), status_msg])
+    onEmbeddingUpdate({ splits: splits.slice(0, i + batchSize), splitEmbeddings, mode });
+  }
+  await onStatus(["loaded", 100])
+}
 
 
-export { embeddingExists, computeEmbeddingsCached, VectorStore_fromClass2Embedding };
+export { embeddingExists, computeEmbeddingsCached, VectorStore_fromClass2Embedding, getPageEmbeddings };

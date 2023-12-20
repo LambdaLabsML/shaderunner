@@ -3,6 +3,7 @@ import * as d3 from 'd3';
 import { useGlobalStorage } from '~util/useGlobalStorage';
 import { consistentColor } from '~util/DOM';
 import { VectorStore_fromClass2Embedding } from '~util/embedding';
+import useEffectWhenReady from '~util/useEffectWhenReady';
 
 
 
@@ -13,41 +14,34 @@ const ClassDimRed = ({ tabId }) => {
   const maxTicks = 300;
 
 
-  useEffect(() => {
-    if (!classEmbeddings) return;
+  useEffectWhenReady([classEmbeddings, classifierData], async () => {
+    const allclasses = [...classifierData.classes_pos, ...classifierData.classes_neg];
+    const classStore = VectorStore_fromClass2Embedding(classEmbeddings)
+    const class2Id = Object.fromEntries(allclasses.map((c, i) => [c, i]));
 
-    async function init() {
-        const allclasses = [...classifierData.classes_pos, ...classifierData.classes_neg];
-        const classStore = VectorStore_fromClass2Embedding(classEmbeddings)
-        const class2Id = Object.fromEntries(allclasses.map((c, i) => [c, i]));
-
-        const similarities = [];
-        let [min, max] = [Infinity, 0];
-        for(let i=0; i<allclasses.length; i++) {
-            const similarities_c = new Array(allclasses.length).fill(0);
-            const closest = await classStore.similaritySearchVectorWithScore(classStore.embeddings[i], allclasses.length);
-            closest.forEach(c => {
-                const cname = c[0].pageContent;
-                const cscore = c[1];
-                //similarities_c[class2Id[cname]] = -Math.log(cscore)*3;
-                similarities_c[class2Id[cname]] = cscore;
-                if (cscore < min)
-                    min = cscore;
-                if (cscore > max)
-                    max = cscore;
-            })
-            similarities.push(similarities_c)
-        }
-
-        setSettings([similarities, allclasses, min, max]);
+    const similarities = [];
+    let [min, max] = [Infinity, 0];
+    for (let i = 0; i < allclasses.length; i++) {
+      const similarities_c = new Array(allclasses.length).fill(0);
+      const closest = await classStore.similaritySearchVectorWithScore(classStore.embeddings[i], allclasses.length);
+      closest.forEach(c => {
+        const cname = c[0].pageContent;
+        const cscore = c[1];
+        //similarities_c[class2Id[cname]] = -Math.log(cscore)*3;
+        similarities_c[class2Id[cname]] = cscore;
+        if (cscore < min)
+          min = cscore;
+        if (cscore > max)
+          max = cscore;
+      })
+      similarities.push(similarities_c)
     }
-    init();
-  }, [classEmbeddings, classifierData])
+
+    setSettings([similarities, allclasses, min, max]);
+  }, []);
 
 
-  useEffect(() => {
-    if (!settings) return;
-
+  useEffectWhenReady([settings], () => {
     const names = settings[1];
     const similarities = settings[0];
     const min = settings[2];
@@ -107,10 +101,6 @@ const ClassDimRed = ({ tabId }) => {
               labels.style("opacity", 1);
           });
 
-
-    
-
-
       // Manually run the simulation for a fixed number of steps
       for (let i = 0; i < maxTicks; i++) {
           simulation.tick();
@@ -130,7 +120,7 @@ const ClassDimRed = ({ tabId }) => {
     
       // Stop the simulation
       simulation.stop();
-  }, [settings]);
+  }, []);
 
   return <svg ref={svgRef} width={"100%"} height={300} />;
 };

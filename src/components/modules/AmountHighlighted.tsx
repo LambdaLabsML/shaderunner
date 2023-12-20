@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import useEffectWhenReady from '~util/useEffectWhenReady';
 import { useGlobalStorage } from '~util/useGlobalStorage';
 
 const AmountHighlighted = ({tabId}) => {
@@ -8,12 +9,11 @@ const AmountHighlighted = ({tabId}) => {
   const [quality_slider, set_quality_slider] = useState(50);
   const [retrieval_slider, set_retrieval_slider] = useState(1);
 
-  useEffect(() => {
-    if (!isSynced) return;
+  useEffectWhenReady([isSynced], () => {
     if(decisionEps != null) set_quality_slider(decisionEps * 100);
     if(retrievalK != null) set_retrieval_slider(retrievalK);
     if(highlightAmount != null) set_amount_slider(highlightAmount * 100);
-  }, [isSynced])
+  }, []);
 
   const handleAmountSlider = (event) => {
     set_amount_slider(event.target.value);

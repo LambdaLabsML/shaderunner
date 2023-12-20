@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useGlobalStorage } from '~util/useGlobalStorage';
 import SwitchInput from "~components/basic/SwitchInput";
+import useEffectWhenReady from '~util/useEffectWhenReady';
 
 const DEV = process.env.NODE_ENV == "development";
 
@@ -18,15 +19,13 @@ const Modes = ({tabId}) => {
   //const [ textclassifier ] = useStorage('textclassifier')
   //const [ textretrieval ] = useStorage('textretrieval')
 
-  useEffect(() => {
-    if (!isSynced) return;
-
+  useEffectWhenReady([isSynced], () => {
     setGlobalSorage({
       highlightClassify: highlightClassify || false,
       highlightRetrieval: highlightRetrieval || true,
       summarizeParagraphs: false
     })
-  }, [isSynced]);
+  }, []);
 
 
   // ------ //

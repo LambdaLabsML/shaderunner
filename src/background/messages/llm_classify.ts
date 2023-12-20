@@ -1,4 +1,4 @@
-import type { PlasmoMessaging } from "@plasmohq/messaging"
+import { sendToBackground, type PlasmoMessaging } from "@plasmohq/messaging"
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { OpenAI } from "langchain/llms/openai";
 import { ChatPromptTemplate, PromptTemplate, SystemMessagePromptTemplate } from "langchain/prompts";
@@ -6,6 +6,17 @@ import { HumanMessage, SystemMessage } from "langchain/dist/schema";
 import { eval_prompt, getCurrentModel, parseInput } from "~llm_classify_prompt";
 import { Storage } from "@plasmohq/storage"
 const storage = new Storage()
+
+
+
+// ask llm for classes
+export async function getQueryClasses({query, url, title}, onLLM = () => { }, onLLMDone = () => { }) {
+  onLLM()
+  const result = await sendToBackground({ name: "llm_classify", body: { query, url, title } })
+  onLLMDone()
+  return result;
+}
+
 
 
 export async function llm2classes(url: string, title: string, query: string) {
