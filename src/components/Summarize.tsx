@@ -8,7 +8,7 @@ import useEffectWhenReady from '~util/useEffectWhenReady';
 
 
 const Summarize = ({tabId}) => {
-    const [[active], [summarizeParagraphs], [, isSynced]] = useGlobalStorage(tabId, "active", "summarizeParagraphs");
+    const [[active], [summarizeParagraphs], [, setStatusSummarize], [, isSynced]] = useGlobalStorage(tabId, "active", "summarizeParagraphs", "statusSummarize");
     const [summaryInitalized, setSummaryInitalized] = useState(false);
 
     // show/hide 

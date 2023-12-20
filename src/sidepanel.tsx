@@ -31,7 +31,7 @@ const StatusIndicator = ({name, status, size=4}) => {
 // mount in sidepanel
 const Sidepanel = () => {
   const tabId = Number(new URL(window.location.href).searchParams.get("tabId"))
-  const [[active], [url], [statusEmbedding, setStatusEmbedding], [statusClassifier, setStatusClassifier], [statusHighlight, setStatusHighlight], [highlightMode], [highlightRetrieval], [highlightClassify], [summarizeParagraphs], [classifierData], [, isSynced]] = useGlobalStorage(tabId, "active", "url", "status_embedding", "status_classifier", "status_highlight", "highlightMode", "highlightRetrieval", "highlightClassify", "summarizeParagraphs", "classifierData")
+  const [[active], [url], [statusEmbedding, setStatusEmbedding], [statusClassifier, setStatusClassifier], [statusHighlight, setStatusHighlight], [statusSummarize, setStatusSummarize], [highlightMode], [highlightRetrieval], [highlightClassify], [summarizeParagraphs], [classifierData], [, isSynced]] = useGlobalStorage(tabId, "active", "url", "status_embedding", "status_classifier", "status_highlight", "statusSummarize", "highlightMode", "highlightRetrieval", "highlightClassify", "summarizeParagraphs", "classifierData")
   const [apiworks] = useStorage('apiworks', (v) => v === undefined ? false : v)
 
 
@@ -66,6 +66,7 @@ const Sidepanel = () => {
     setStatusHighlight(null);
     setStatusClassifier(null);
     setStatusEmbedding(null);
+    setStatusSummarize(null);
   }, [apiworks])
 
   // ====== //
@@ -109,7 +110,11 @@ const Sidepanel = () => {
       {highlightClassify ? (
         <StatusIndicator name="classifier" status={statusClassifier}/>
       ) : ""}
-      <StatusIndicator name="highlight" status={statusHighlight}/>
+      {summarizeParagraphs ? (
+        <StatusIndicator name="summarize" status={statusSummarize}/>
+      ) : (
+        <StatusIndicator name="highlight" status={statusHighlight}/>
+      )}
     </div>
     <Modes tabId={tabId} />
     {!summarizeParagraphs ? (
