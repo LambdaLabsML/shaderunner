@@ -20,10 +20,11 @@ const Summarize = ({tabId}) => {
 
         async function summarize_and_replace(container, i) {
             const split = splits[i];
-            const summaries = await sendToBackground({ name: "llm_summarize", body: { text: split } })
+            const summarized = await sendToBackground({ name: "llm_summarize", body: { text: split } })
             container.classList.remove("loading");
             const el = document.querySelector("p.shaderunner-summarized[summaryid='" + i + "'] .summary");
-            el.innerHTML = "<ul>" + summaries.map(s => "<li>" + s + "</li>").join("\n") + "</ul>";
+            //el.innerHTML = "<ul>" + summaries.map(s => "<li>" + s + "</li>").join("\n") + "</ul>";
+            el.innerHTML = summarized;
         }
 
         for (let i = 0; i < splits.length; i++) {
@@ -50,8 +51,8 @@ const Summarize = ({tabId}) => {
             pElement.parentNode.insertBefore(summarizedEl, pElement);
 
             // Adjust mapSplitsToTextNodes and text highlighting for each <p> element
-            const split = pElement.textContent
-            splits.push(split);
+            // splits.push(pElement.textContent);
+            splits.push(pElement.innerHTML);
             textNodes.push(getTextNodesIn(pElement));
 
             function toggleShowOriginal() {

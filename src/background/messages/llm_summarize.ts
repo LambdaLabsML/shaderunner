@@ -2,6 +2,8 @@ import type { PlasmoMessaging } from "@plasmohq/messaging"
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { OpenAI } from "langchain/llms/openai";
 import { Storage } from "@plasmohq/storage"
+import { HumanMessage, SystemMessage } from "langchain/dist/schema";
+import { eval_prompt, getCurrentModel } from "~llm_classify_prompt copy";
 const storage = new Storage()
 
 
@@ -15,32 +17,62 @@ function splitMarkdownList(markdown) {
 
 
 const llmSummarize = async (text: string) => {
+  const api_key = await storage.get("OPENAI_API_KEY");
+  const openchat_api_base = await storage.get("OPENCHAT_API_BASE");
 
-    const api_key = await storage.get("OPENAI_API_KEY");
-    const openchat_api_base = await storage.get("OPENCHAT_API_BASE");
-    const gptversion = await storage.get("gpt_version");
-    const chatgpt = true; //await storage.get("gpt_chat");
-    const gpttemperature = await storage.get("gpt_temperature") as number;
+  const { model, temperature, chat } = await getCurrentModel();
 
-    console.log("using llm:", gptversion, "with temperature", gpttemperature, "as", chatgpt ? "chat model" : "instruct model")
-    const llm_params = {
-        temperature: gpttemperature,
-        modelName: gptversion,
-        //verbose: true,
-        ...(gptversion.startsWith("gpt-") ? {openAIApiKey: api_key} :  {openAIApiKey: "EMPTY"})
+  console.log("using llm:", model, "with temperature", temperature, "as", chat ? "chat model" : "instruct model")
+  const llm_params = {
+    temperature: temperature,
+    modelName: model,
+    //verbose: true,
+    ...(model.startsWith("gpt-") ? { openAIApiKey: api_key } : { openAIApiKey: "EMPTY" })
+  }
+  const llm_config = model.startsWith("gpt-") ? null : { baseURL: openchat_api_base, modelName: model }
+
+  let llm, llmResult;
+  try {
+    llm = chat ? new ChatOpenAI(llm_params, llm_config) : new OpenAI(llm_params, llm_config)
+  } catch (e) {
+    console.error(e);
+    await storage.set("apiworks", false)
+  }
+
+  const SYSTEM = `You work as a assistant for an important person who doesn't have much time to read, but needs to know the essence of what's going on.
+Your task is to break down text passages given by html text into the key points.
+Make the text as digestible as possible while keeping the essence of the text.
+Your answer shall only provide the transformed html.
+
+USE <strong> and <emph> html tags to highlight important words (to make reading easier). if a sentence does not contain such, consider removing that, otherwise make sure that important words are marked.
+
+USE <ul> and <li> tags if the text given has multiple key points, otherwise don't use any surrounding tags at all.
+
+DO NOT create long texts as these take time to be read. instead break down long sentences into digestable chunks
+
+
+KEEP links and inline-images if appropriate, but shorten the link text
+`
+  const USER =`${text}`;
+
+  try {
+    if (!chat) {
+      llmResult = await llm.predict(SYSTEM + "\n" + USER);
+    } else {
+      llmResult = (await llm.call([
+        new SystemMessage(SYSTEM),
+        new HumanMessage(USER)
+      ])).content;
     }
-    const llm_config = gptversion.startsWith("gpt-") ? null : {baseURL: openchat_api_base, modelName: gptversion}
-    const llm = chatgpt ? new ChatOpenAI(llm_params, llm_config) : new OpenAI(llm_params, llm_config)
+  } catch (e) {
+    console.error(e);
+    console.error("Error code:", e.code);
+    if (e.code == "invalid_api_key")
+      await storage.set("apiworks", false)
+  }
 
-    const PROMPT = `Summarize the following paragraph as concise as possible for a knowledgable person. Use normally one bullet point to reduce the text text as much as possible while keeping the gist. For very long paragraphs you may use up to three bullet points.
-Make sure to use only bullet points of up to 8 words.
-
-${text}
-`;
-
-    const llmResult = await llm.predict(PROMPT);
-    console.log("using", gptversion, chatgpt ? "ChatGPT" : "InstructGPT")
-    return splitMarkdownList(llmResult);
+  return llmResult;
+    //return splitMarkdownList(llmResult);
 }
 
 
