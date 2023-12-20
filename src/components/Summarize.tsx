@@ -22,6 +22,9 @@ const Summarize = ({tabId}) => {
             const split = splits[i];
             const summarized = await sendToBackground({ name: "llm_summarize", body: { text: split } })
             container.classList.remove("loading");
+            container.classList.add("showsummarized");
+            const sameIdElements = document.querySelectorAll(`p.original-text[summaryid="${i}"]`);
+            sameIdElements.forEach(elem => elem.classList.add('showsummarized'));
             const el = document.querySelector("p.shaderunner-summarized[summaryid='" + i + "'] .summary");
             //el.innerHTML = "<ul>" + summaries.map(s => "<li>" + s + "</li>").join("\n") + "</ul>";
             el.innerHTML = summarized;
@@ -56,10 +59,10 @@ const Summarize = ({tabId}) => {
             textNodes.push(getTextNodesIn(pElement));
 
             function toggleShowOriginal() {
-                this.parentElement.classList.toggle('showoriginal'); // 'this' now refers to 'logoContainer'
+                this.parentElement.classList.toggle('showsummarized'); // 'this' now refers to 'logoContainer'
                 const summaryId = this.parentNode.getAttribute('summaryid'); // Get summaryid from parent
                 const sameIdElements = document.querySelectorAll(`p.original-text[summaryid="${summaryId}"]`);
-                sameIdElements.forEach(elem => elem.classList.toggle('showoriginal'));
+                sameIdElements.forEach(elem => elem.classList.toggle('showsummarized'));
             }
             const logoContainer = summarizedEl.querySelector('.logoContainer');
             logoContainer.addEventListener('click', toggleShowOriginal);

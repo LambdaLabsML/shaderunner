@@ -126,15 +126,18 @@ const HighlightStyler = ({tabId}) => {
                 width: 20px;
             }
 
-            p.original-text[summaryid] {
-                display: none;
+            p.shaderunner-summarized {
+                margin-top: 1em;
             }
 
-            p.original-text[summaryid].showoriginal {
-                display: inline;
-            }
-            p.shaderunner-summarized.showoriginal .summary {
+            p.shaderunner-summarized .summary {
                 display: none;
+            }
+            p.original-text[summaryid].showsummarized {
+                display: none;
+            }
+            p.shaderunner-summarized.showsummarized .summary {
+                display: inline;
             }
 
             p.shaderunner-summarized .summary ul {
