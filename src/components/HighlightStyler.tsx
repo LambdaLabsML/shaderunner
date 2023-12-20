@@ -120,10 +120,17 @@ const HighlightStyler = ({tabId}) => {
             }
             p.shaderunner-summarized.loading div.logoContainer {
                 animation: opacityAnimation 3s linear infinite;
+                filter: none;
             }
 
             p.shaderunner-summarized div.logoContainer img {
                 width: 20px;
+                filter: grayscale(1);
+                opacity: 0.7;
+            }
+            p.shaderunner-summarized.showsummarized div.logoContainer img {
+                filter: none;
+                opacity: 1.0;
             }
 
             p.shaderunner-summarized {
