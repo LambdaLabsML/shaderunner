@@ -22,7 +22,7 @@ ShadeRunner
 
 <p align="center">
   Jump To:
-  <a href="#about----improve-your-online-research">About</a>,
+  <a href="#about----improve-your-online-research-">About</a>,
   <a href="#features">Features</a>,
   <a href="#getting-started">Getting Started</a>,
   <a href="#contributing">Contributing</a>,
