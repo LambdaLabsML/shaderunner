@@ -1,6 +1,29 @@
 
 
 
+## ShadeRunner Version 0.8.0
+
+**Features**:
+- **new feature**: summarize all paragraphs on a page
+- **new feature**: jump/scroll to first result after highlight has been applied
+- **defaults**: find source / retrieval is now the default option (and much faster)
+- automatic removal of old embedding databases
+
+**Minor**:
+- faster / more stable message passing of all plugin components
+- simplified sidepanel ui appearance by hiding/showing switches depending on mode
+- new active status: plugin is now active when sidepanel is open
+- adapted background color to match new chrome version
+- replaced localStorage with background script storage
+
+**Bugfixes**:
+- throttled calls to highlight (when user changes setting during computations)
+- minified calls to highlight
+- fixed error regarding missing class embeddings
+
+
+-------
+
 
 
 ## ShadeRunner Version 0.7.0
