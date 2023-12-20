@@ -39,19 +39,25 @@ const llmSummarize = async (text: string) => {
     await storage.set("apiworks", false)
   }
 
-  const SYSTEM = `You work as a assistant for an important person who doesn't have much time to read, but needs to know the essence of what's going on.
-Your task is to break down text passages given by html text into the key points.
-Make the text as digestible as possible while keeping the essence of the text.
-Your answer shall only provide the transformed html.
+  const SYSTEM = `As an expert in efficient information processing, your task is to condense and clarify HTML text for a busy individual who requires quick understanding of key content.
 
-USE <strong> and <emph> html tags to highlight important words (to make reading easier). if a sentence does not contain such, consider removing that, otherwise make sure that important words are marked.
+### Instructions:
+- **Begin with a summary:** Start by providing a concise overview of the HTML text's main points.
+- **Highlighting key elements:** Utilize \`<strong>\` and \`<emph>\` tags to emphasize critical words or phrases, aiding in rapid comprehension.
+- **Organizing information:** When the text contains multiple points, format them as a bullet list using \`<ul>\` and \`<li>\` tags. In cases of singular key points, omit these tags.
+- **Simplifying sentences:** Break down complex or lengthy sentences into shorter, easily digestible fragments.
+- **Maintaining essential links and images:** Preserve relevant links and inline images, but ensure link text is succinct.
 
-USE <ul> and <li> tags if the text given has multiple key points, otherwise don't use any surrounding tags at all.
+### Constraints:
+- **Brevity is key:** Aim for short, clear responses. Avoid lengthy explanations.
+- **Selective emphasis:** Only highlight words that significantly contribute to the understanding of the text. If a sentence lacks such words, consider its removal.
+- **Preservation of context:** Ensure that the essence of the original text is retained, even in its condensed form.
 
-DO NOT create long texts as these take time to be read. instead break down long sentences into digestable chunks
+### Example:
+Original Text: "Our company has seen a remarkable growth in the last quarter, with a 25% increase in sales, mainly due to our new marketing strategy..."
 
-
-KEEP links and inline-images if appropriate, but shorten the link text
+Transformed HTML:
+"<strong>Remarkable growth</strong> in the last quarter - <emph>25% increase in sales</emph>, attributed to <strong>new marketing strategy</strong>..."
 `
   const USER =`${text}`;
 
