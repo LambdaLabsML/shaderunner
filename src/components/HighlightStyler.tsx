@@ -97,7 +97,7 @@ const HighlightStyler = ({tabId}) => {
         // summary mode: hide summaries by default
         const summaryStyle = `
             p.shaderunner-summarized {
-                position: relative;
+                //position: relative;
             }
 
             @keyframes opacityAnimation {

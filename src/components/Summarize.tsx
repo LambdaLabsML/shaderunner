@@ -11,6 +11,15 @@ const Summarize = ({tabId}) => {
     const [[active], [summarizeParagraphs], [, isSynced]] = useGlobalStorage(tabId, "active", "summarizeParagraphs");
     const [summaryInitalized, setSummaryInitalized] = useState(false);
 
+    // show/hide 
+    useEffectWhenReady([isSynced], () => {
+        const sameIdElements = document.querySelectorAll(`p[summaryid]`);
+        if (active && summarizeParagraphs)
+            sameIdElements.forEach(elem => elem.classList.add('showsummarized'));
+        else
+            sameIdElements.forEach(elem => elem.classList.remove('showsummarized'));
+    }, [active, summarizeParagraphs]);
+
     // summarize if requested by user
     useEffectWhenReady([isSynced, tabId, active, summarizeParagraphs], () => {initializeSummaryElements()}, []);
 
