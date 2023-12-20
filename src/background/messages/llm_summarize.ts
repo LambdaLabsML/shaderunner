@@ -2,8 +2,7 @@ import type { PlasmoMessaging } from "@plasmohq/messaging"
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { OpenAI } from "langchain/llms/openai";
 import { Storage } from "@plasmohq/storage"
-import { HumanMessage, SystemMessage } from "langchain/dist/schema";
-import { eval_prompt, getCurrentModel } from "~llm_classify_prompt copy";
+import { getCurrentModel } from "~llm_classify_prompt";
 import { ChatPromptTemplate } from "langchain/prompts";
 const storage = new Storage()
 
