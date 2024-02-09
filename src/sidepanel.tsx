@@ -78,7 +78,7 @@ const Sidepanel = () => {
   return (<div className="ShadeRunner-Sidepanel">
     <div className="statusContainer">
       <StatusIndicator name="classifier" status={statusClassifier} />
-      <StatusIndicator name="embedding" status={statusEmbedding} />
+      {true || highlightClassify || highlightRetrieval ? <StatusIndicator name="embedding" status={statusEmbedding} /> : <></>}
       <StatusIndicator name="highlight" status={statusHighlight} />
     </div>
     <CollapsibleBox title="Error">
@@ -95,7 +95,7 @@ const Sidepanel = () => {
     return (<div className="ShadeRunner-Sidepanel">
       <div className="statusContainer">
         <StatusIndicator name="classifier" status={statusClassifier} />
-        <StatusIndicator name="embedding" status={statusEmbedding} />
+        {true || highlightClassify || highlightRetrieval ? <StatusIndicator name="embedding" status={statusEmbedding} /> : <></>}
         <StatusIndicator name="highlight" status={statusHighlight} />
       </div>
       <CollapsibleBox title="Error">
@@ -107,7 +107,7 @@ const Sidepanel = () => {
 
   return <div className="ShadeRunner ShadeRunner-Sidepanel">
     <div className="statusContainer">
-      <StatusIndicator name="embedding" status={statusEmbedding}/>
+      {true || highlightClassify || highlightRetrieval ? <StatusIndicator name="embedding" status={statusEmbedding} /> : <></>}
       {highlightClassify ? (
         <StatusIndicator name="classifier" status={statusClassifier}/>
       ) : ""}
@@ -118,7 +118,7 @@ const Sidepanel = () => {
       )}
     </div>
     <Modes tabId={tabId} />
-    {!summarizeParagraphs ? (
+    {highlightRetrieval || highlightClassify ? (
       <CollapsibleBox title="What to Highlight">
         <MainInput tabId={tabId} />
       </CollapsibleBox>

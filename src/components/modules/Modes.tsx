@@ -10,7 +10,7 @@ const Modes = ({tabId}) => {
     [ highlightMode, setHighlightMode ],
     [ highlightRetrieval, setHighlightRetrieval ],
     [ highlightClassify, setHighlightClassify ],
-    [ , setSummarizeParagraphs ],
+    [ summarizeParagraph, setSummarizeParagraphs ],
     [ classifierData],
     [ setGlobalSorage, isSynced ]
     ] = useGlobalStorage(tabId, "highlightMode", "highlightRetrieval", "highlightClassify", "summarizeParagraphs", "classifierData")
@@ -22,7 +22,7 @@ const Modes = ({tabId}) => {
   useEffectWhenReady([isSynced], () => {
     setGlobalSorage({
       highlightClassify: highlightClassify || false,
-      highlightRetrieval: highlightRetrieval || true,
+      highlightRetrieval: highlightRetrieval || false,
       summarizeParagraphs: false
     })
   }, []);
@@ -45,7 +45,7 @@ const Modes = ({tabId}) => {
     <SwitchInput
         label=""
         options={[findBtn, suggestBtn, summarizeBtn]}
-        selected={highlightRetrieval && highlightClassify ? bothBtn : highlightRetrieval ? findBtn : highlightClassify ? suggestBtn : summarizeBtn}
+        selected={highlightRetrieval && highlightClassify ? bothBtn : highlightRetrieval ? findBtn : highlightClassify ? suggestBtn : summarizeParagraph ? summarizeBtn : "none"}
         onChange={(value: string) => {
           setHighlightRetrieval(value != suggestBtn && value != summarizeBtn)
           setHighlightClassify(value != findBtn && value != summarizeBtn)

@@ -64,7 +64,7 @@ const Highlighter = () => {
     const url_ = window.location.hostname + window.location.pathname + window.location.search;
     setGlobalStorage({
       message: "",
-      status_embedding: ["checking", 0],
+      status_embedding: highlightClassify || highlightRetrieval ? ["checking", 0] : ["off", 0],
       title: document.title,
       url: url_,
       _tabId: tabId
@@ -73,11 +73,11 @@ const Highlighter = () => {
     // start directly by getting page embeddings
     // (uses cache if already computed)
     const mode = "sentences";
-    if (pageEmbeddings.mode != mode || !pageEmbeddings.finished) {
+    if ((highlightClassify || highlightRetrieval) && (pageEmbeddings.mode != mode || !pageEmbeddings.finished)) {
       const mainel = getMainContent();
       await getPageEmbeddings(mainel, url_, mode, setStatusEmbeddings, setPageEmbeddings);
     }
-  }, [active, tabId, url])
+  }, [active, tabId, url, highlightClassify, highlightRetrieval])
 
 
   // user sends input
