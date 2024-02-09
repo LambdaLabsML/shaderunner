@@ -1,6 +1,22 @@
 
 
 
+## ShadeRunner Version 0.9.0
+
+**Features**:
+- opening plugin does nothing -- let's user decide on mode to use
+
+**Refactor**:
+- streamlined IndexedDB database (using dexie)
+
+**Bugfixes**:
+- embedding not computed on startup
+
+
+-------
+
+
+
 ## ShadeRunner Version 0.8.0
 
 **Features**:
