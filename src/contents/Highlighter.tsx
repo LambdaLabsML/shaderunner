@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { getMainContent, extractSplits, mapSplitsToTextnodes } from '~util/extractContent';
+import React, { useState, useRef  } from 'react';
+import { getMainContent, mapSplitsToTextnodes } from '~util/extractContent';
 import { highlightText, resetHighlights, textNodesNotUnderHighlight, surroundTextNode } from '~util/DOM';
-import { computeEmbeddingsCached, embeddingExists, getPageEmbeddings, VectorStore_fromClass2Embedding } from '~util/embedding';
+import { computeEmbeddingsCached, getPageEmbeddings, VectorStore_fromClass2Embedding } from '~util/embedding';
 import { useStorage } from "@plasmohq/storage/hook";
 import { useGlobalStorage } from '~util/useGlobalStorage';
 import HighlightStyler from '~components/HighlightStyler';
@@ -61,11 +61,12 @@ const Highlighter = () => {
   useEffectWhenReady([isSynced, active, tabId], async () => {
 
     // initialize tab/document info
+    const url_ = window.location.hostname + window.location.pathname + window.location.search;
     setGlobalStorage({
       message: "",
       status_embedding: ["checking", 0],
       title: document.title,
-      url: window.location.hostname + window.location.pathname + window.location.search,
+      url: url_,
       _tabId: tabId
     })
 
@@ -74,9 +75,9 @@ const Highlighter = () => {
     const mode = "sentences";
     if (pageEmbeddings.mode != mode || !pageEmbeddings.finished) {
       const mainel = getMainContent();
-      await getPageEmbeddings(mainel, url, mode, setStatusEmbeddings, setPageEmbeddings);
+      await getPageEmbeddings(mainel, url_, mode, setStatusEmbeddings, setPageEmbeddings);
     }
-  }, [active, tabId])
+  }, [active, tabId, url])
 
 
   // user sends input

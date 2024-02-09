@@ -33,6 +33,7 @@ const Sidepanel = () => {
   const tabId = Number(new URL(window.location.href).searchParams.get("tabId"))
   const [[active], [url], [statusEmbedding, setStatusEmbedding], [statusClassifier, setStatusClassifier], [statusHighlight, setStatusHighlight], [statusSummarize, setStatusSummarize], [highlightMode], [highlightRetrieval], [highlightClassify], [summarizeParagraphs], [classifierData], [, isSynced]] = useGlobalStorage(tabId, "active", "url", "status_embedding", "status_classifier", "status_highlight", "statusSummarize", "highlightMode", "highlightRetrieval", "highlightClassify", "summarizeParagraphs", "classifierData")
   const [apiworks] = useStorage('apiworks', (v) => v === undefined ? false : v)
+  console.log(url);
 
 
   // ======= //

@@ -1,13 +1,19 @@
 import defaults from "~defaults";
 import { Storage } from "@plasmohq/storage"
 import { getData, notifyListeners, registerListener } from "~background/tabData";
-import { autoDeleteOldStores } from "~util/embedding";
+import { db } from "~db";
 const storage = new Storage()
 
 const DEV = process.env.NODE_ENV == "development";
 
 
 // clear old embedding stores from db
+async function autoDeleteOldStores() {
+    await db.deleteOldEmbeddings();
+    setInterval(async () => {
+        await db.deleteOldEmbeddings();
+    }, 6 * 60 * 60 * 1000); // 6 hours in milliseconds
+}
 autoDeleteOldStores();
 
 
