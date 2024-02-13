@@ -93,7 +93,7 @@ Hit the "Summarize Paragraphs" button, and watch as the LLM munches through leng
 ## Getting Started
 
 **Installation Instructions**:
-1. Download the [latest release](https://github.com/LambdaLabsML/shaderunner/releases/latest/build.zip).
+1. Download the [latest release](https://github.com/LambdaLabsML/shaderunner/releases/latest/download/build.zip).
 2. Unpack the zip file.
 3. In Chrome go to "Manage Extensions > Load Unpacked" and choose the unpacked folder.
 4. Activate the plugin.
