@@ -77,7 +77,7 @@ That's where our Topic Explorer shines!
 
 See it in action below.  
 (Note: Footage sped-up as LLM response may take very long - but the Highlighting is fast 😅).
-![sr_topic](https://github.com/LambdaLabsML/shaderunner/assets/142889449/381f32fe-8e48-4acc-9f56-b58ffcc6b43f)
+![topic_explorer](https://github.com/LambdaLabsML/shaderunner/assets/142889449/bc3794a2-56cf-4202-99b8-fd56bf1e5245)
 
 
 ### Dynamic Summarizer 📚
