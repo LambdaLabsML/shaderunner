@@ -98,7 +98,7 @@ Hit the "Summarize Paragraphs" button, and watch as the LLM munches through leng
 3. In Chrome go to "Manage Extensions > Load Unpacked" and choose the unpacked folder.
 4. Activate the plugin.
 5. Add your openai api-key in the plugin settings.
-6. (Optional:) Pin shaderunner to your toolbar bar.
+6. (Optional:) Pin shaderunner to your toolbar.
 
 Or, if you want to **build From Source** yourself:  
 To create a production build, run the following:
@@ -110,10 +110,12 @@ pnpm build
 npm run build
 ```
 
-Open your browser and load the appropriate development build. For example, if you are developing for the chrome browser, using manifest v3, use: `build/chrome-mv3-dev`.
+Open your browser and load the appropriate development build. For example, if you are developing for the chrome browser, using manifest v3, use: `build/chrome-mv3-prod`.
 
 
 ## Contributing
+Want to make a feature suggestion? 
+
 First, run the development server:
 
 ```bash
@@ -123,11 +125,9 @@ npm run dev
 ```
 
 Open your browser and load the appropriate development build. For example, if you are developing for the chrome browser, using manifest v3, use: `build/chrome-mv3-dev`.
+You can start editing the files - It should auto-update as you make changes. Check out the documentation for the used framework: https://docs.plasmo.com/.
 
-You can start editing the popup by modifying `popup.tsx`. It should auto-update as you make changes. To add an options page, simply add a `options.tsx` file to the root of the project, with a react component default exported. Likewise to add a content page, add a `content.ts` file to the root of the project, importing some module and do some logic, then reload the extension on your browser.
-
-
-Now restart the development server.
+Your contributions are welcome!
 
 ## License
 MIT License
