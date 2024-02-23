@@ -1,6 +1,15 @@
 
 
 
+## ShadeRunner Version 0.10.0
+
+**Features**:
+- changed `ada-002` -> `3-small` embedding method
+- summarization of hackernews comments
+
+-------
+
+
 ## ShadeRunner Version 0.9.0
 
 **Features**:
