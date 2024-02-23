@@ -96,7 +96,7 @@ const HighlightStyler = ({tabId}) => {
 
         // summary mode: hide summaries by default
         const summaryStyle = `
-            p.shaderunner-summarized {
+            .shaderunner-summarized {
                 //position: relative;
             }
 
@@ -106,7 +106,7 @@ const HighlightStyler = ({tabId}) => {
                 100% { opacity: 1; }
             }
 
-            p.shaderunner-summarized.loading {
+            .shaderunner-summarized.loading {
                 padding: 0.25em 0.25em;
                 background: rgba(0,0,0,0.1);
                 border-radius: 4px;
@@ -114,40 +114,41 @@ const HighlightStyler = ({tabId}) => {
                 color: #8136e2;
             }
 
-            p.shaderunner-summarized div.logoContainer {
+            .shaderunner-summarized div.logoContainer {
                 position: absolute;
                 margin-left: -2em;
             }
-            p.shaderunner-summarized.loading div.logoContainer {
+            .shaderunner-summarized.loading div.logoContainer {
                 animation: opacityAnimation 3s linear infinite;
                 filter: none;
             }
 
-            p.shaderunner-summarized div.logoContainer img {
+            .shaderunner-summarized div.logoContainer img {
                 width: 20px;
                 filter: grayscale(1);
                 opacity: 0.7;
             }
-            p.shaderunner-summarized.showsummarized div.logoContainer img {
+            .shaderunner-summarized.showsummarized div.logoContainer img {
                 filter: none;
                 opacity: 1.0;
             }
 
-            p.shaderunner-summarized {
+            .shaderunner-summarized {
                 margin-top: 1em;
             }
 
-            p.shaderunner-summarized .summary {
+            .shaderunner-summarized .summary {
                 display: none;
             }
-            p.original-text[summaryid].showsummarized {
+            .original-text[summaryid].showsummarized {
                 display: none;
             }
-            p.shaderunner-summarized.showsummarized .summary {
+            .shaderunner-summarized.showsummarized .summary {
                 display: inline;
+                font-family: sans-serif;
             }
 
-            p.shaderunner-summarized .summary ul {
+            .shaderunner-summarized .summary ul {
                 list-style: disc;
             }
         `

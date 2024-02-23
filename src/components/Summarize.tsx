@@ -31,13 +31,13 @@ const Summarize = ({tabId}) => {
             const summaries = await sendToBackground({ name: "llm_summarize", body: { texts: batch } })
             summaries.forEach((summarized, index) => {
                 const actualIndex = startIndex + index;
-                const container = document.querySelector(`p.shaderunner-summarized[summaryid='${actualIndex}']`);
+                const container = document.querySelector(`.shaderunner-summarized[summaryid='${actualIndex}']`);
                 if (!container) return;
         
                 container.classList.remove("loading");
                 container.classList.add("showsummarized");
         
-                const sameIdElements = document.querySelectorAll(`p.original-text[summaryid="${actualIndex}"]`);
+                const sameIdElements = document.querySelectorAll(`.original-text[summaryid="${actualIndex}"]`);
                 sameIdElements.forEach(elem => elem.classList.add('showsummarized'));
         
                 const el = container.querySelector(".summary");
@@ -60,11 +60,18 @@ const Summarize = ({tabId}) => {
     const initializeSummaryElements = async () => {
         if (summaryInitalized) return;
         const mainel = getMainContent();
-        const pElements = mainel.querySelectorAll('p');
+        console.log("blub")
+        let elements;
+        if (window.location.hostname === 'news.ycombinator.com') {
+            elements = mainel.querySelectorAll('div.comment');
+        } else {
+            elements = mainel.querySelectorAll('p');
+        }
+
         const splits = [];
         const textNodes = [];
 
-        pElements.forEach((pElement, index) => {
+        elements.forEach((pElement, index) => {
             // Prepend the shaderunner-summarized div
             const summarizedEl = document.createElement('p');
             summarizedEl.innerHTML = `<div class='logoContainer'><img src='${Logo}'/></div><span class='summary'>Loading</span>`;
@@ -80,7 +87,7 @@ const Summarize = ({tabId}) => {
             function toggleShowOriginal() {
                 this.parentElement.classList.toggle('showsummarized'); // 'this' now refers to 'logoContainer'
                 const summaryId = this.parentNode.getAttribute('summaryid'); // Get summaryid from parent
-                const sameIdElements = document.querySelectorAll(`p.original-text[summaryid="${summaryId}"]`);
+                const sameIdElements = document.querySelectorAll(`.original-text[summaryid="${summaryId}"]`);
                 sameIdElements.forEach(elem => elem.classList.toggle('showsummarized'));
             }
             const logoContainer = summarizedEl.querySelector('.logoContainer');
