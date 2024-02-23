@@ -5,7 +5,7 @@ import { Document } from "langchain/document";
 import { extractSplits } from "./extractContent";
 import { db } from "~db";
 const storage = new Storage()
-const modelName = 'text-embedding-ada-002'
+const modelName = 'text-embedding-3-small'
 
 export type Metadata = { "data-type": string, "url": string };
 
