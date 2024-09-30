@@ -1,5 +1,12 @@
 
 
+## ShadeRunner Version 0.10.1
+
+**Security Updates**:
+This is only a security update, running `pnpm audit --fix`.
+
+-------
+
 
 ## ShadeRunner Version 0.10.0
 
